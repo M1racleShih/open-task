@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>open-task · UI 方案评审</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header class="review-bar"><a class="review-brand" href="?view=a">UI PREVIEW <span>01 / open-task</span></a><nav aria-label="选择预览方案" id="variants"></nav><button class="quiet" id="review-toggle">方案说明</button><button class="quiet" id="reset">重置示例</button></header>
+<section class="review-notes" id="review-notes" hidden></section>
+<div id="app"></div><div class="toast" id="toast" role="status" hidden></div>
+<dialog id="action-dialog"><form id="action-form"><div class="dialog-heading"><h2 id="dialog-title"></h2><button type="button" class="icon-button" id="dialog-close" aria-label="关闭对话框">×</button></div><p id="dialog-description"></p><label for="action-note">说明</label><textarea id="action-note" required rows="4" placeholder="写下具体需要补充的内容…"></textarea><div id="next-date"><label for="feedback-time">下次反馈时间</label><input id="feedback-time" type="datetime-local" value="2026-09-10T18:00"></div><p class="muted">仅演示交互，内容不会发送给团队。</p><button class="primary" type="submit">保存示例记录</button></form></dialog>
+<script src="app.js"></script>
+</body></html>
