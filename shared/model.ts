@@ -31,6 +31,7 @@ export type Terms = {
   ownerId: string;
   reviewerId: string;
   projectId: string | null;
+  plannedStart?: string;
   deadline: string;
   acceptBy: string;
   feedbackBy: string;
@@ -93,6 +94,7 @@ export type Task = Terms & {
     status: "pending" | "returned" | "accepted" | "superseded";
     reason?: string;
   }[];
+  viewSource?: "context" | "earlier";
   createdAt: string;
   updatedAt: string;
 };
@@ -125,6 +127,7 @@ export const terms = (t: Terms): Terms => ({
   ownerId: t.ownerId,
   reviewerId: t.reviewerId,
   projectId: t.projectId,
+  plannedStart: t.plannedStart ?? "",
   deadline: t.deadline,
   acceptBy: t.acceptBy,
   feedbackBy: t.feedbackBy,

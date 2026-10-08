@@ -79,3 +79,24 @@ test("comment-like events with only bookkeeping changes do not show duplicate sn
     { before: null, after: null },
   );
 });
+
+import { DateInput } from "../web/DateInput.js";
+import { dateText } from "../web/i18n.js";
+test("legacy optional invalid draft dates remain editable and cannot crash date presentation", () => {
+  for (const value of ["", "old invalid input"]) {
+    assert.equal(dateText(value, "en"), "—");
+    assert.equal(dateText(value, "zh"), "—");
+    const html = renderToStaticMarkup(
+      createElement(DateInput, {
+        label: "Planned start",
+        value,
+        onChange: () => {},
+      }),
+    );
+    assert(html.includes('value="' + value + '"'));
+  }
+  assert.equal(
+    dateText("2026-10-31T23:59:00+08:00", "en"),
+    "31 Oct 2026, 23:59",
+  );
+});

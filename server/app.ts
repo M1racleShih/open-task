@@ -22,6 +22,12 @@ import { createTask, action } from "./tasks.js";
 import { changeRelation } from "./relations.js";
 import { schedule } from "./jobs.js";
 import { describeAPI } from "./openapi.js";
+import {
+  taskQuerySchema,
+  matchedTasks,
+  timeFilterSchema,
+} from "./timeFilter.js";
+import { defaultTimeFilter } from "../shared/timeFilter.js";
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 declare module "fastify" {
   interface FastifyRequest {
@@ -195,6 +201,51 @@ export async function buildApp() {
         );
         return result;
       });
+  app.get("/api/v1/time-preferences", async (req) => {
+    const rows = (
+      await pool.query(
+        "SELECT scope,filter FROM time_preferences WHERE user_id=$1",
+        [req.user.id],
+      )
+    ).rows;
+    return {
+      global:
+        rows.find((r) => r.scope === "global")?.filter ?? defaultTimeFilter,
+      projects: Object.fromEntries(
+        rows
+          .filter((r) => r.scope !== "global")
+          .map((r) => [r.scope, r.filter]),
+      ),
+    };
+  });
+  app.put(
+    "/api/v1/time-preferences",
+    mutate(async (c, u, b) => {
+      const v = z
+        .object({
+          scope: z.union([z.literal("global"), z.string().uuid()]),
+          filter: timeFilterSchema.nullable(),
+        })
+        .parse(b);
+      ensure(v.scope !== "global" || v.filter !== null, "invalid");
+      if (v.scope !== "global")
+        ensure(
+          (await projects(c)).some((p) => p.id === v.scope),
+          "projectRequired",
+        );
+      if (v.filter === null)
+        await c.query(
+          "DELETE FROM time_preferences WHERE user_id=$1 AND scope=$2",
+          [u.id, v.scope],
+        );
+      else
+        await c.query(
+          "INSERT INTO time_preferences(user_id,scope,filter) VALUES($1,$2,$3) ON CONFLICT(user_id,scope) DO UPDATE SET filter=excluded.filter",
+          [u.id, v.scope, v.filter],
+        );
+      return { ok: true };
+    }),
+  );
   app.post(
     "/api/v1/users",
     mutate(async (c, u, b) => {
@@ -353,22 +404,44 @@ export async function buildApp() {
     }),
   );
   app.get("/api/v1/tasks", async (req) => {
-    const q = z
-      .object({
+    const q = taskQuerySchema
+      .extend({
         cursor: z.coerce.number().int().min(0).default(0),
         limit: z.coerce.number().int().min(1).max(200).default(100),
-        search: z.string().max(200).default(""),
-        projectId: z.string().optional(),
       })
       .parse(req.query);
+    const match = matchedTasks(req.user.id, q);
     const r = await pool.query(
-      "SELECT data FROM tasks WHERE (stage<>'draft' OR creator_id=$1) AND number>$2 AND ($3='' OR data->>'title' ILIKE '%'||$3||'%' OR number::text=$3) AND ($4::text IS NULL OR project_id::text=$4) ORDER BY number LIMIT $5",
-      [req.user.id, q.cursor, q.search, q.projectId ?? null, q.limit + 1],
+      `WITH RECURSIVE ${match.sql},
+      page AS (SELECT * FROM matched WHERE number>$9 ORDER BY number LIMIT $10),
+      ancestors(id) AS (
+        SELECT id FROM page
+        UNION
+        SELECT r.target_id FROM ancestors a JOIN relations r ON r.source_id=a.id AND r.kind='parent'
+          JOIN visible v ON v.id=r.target_id
+      )
+      SELECT
+        COALESCE((SELECT jsonb_agg(data || CASE WHEN source='earlier' THEN '{"viewSource":"earlier"}'::jsonb ELSE '{}'::jsonb END ORDER BY number) FROM page), '[]') AS items,
+        COALESCE((SELECT jsonb_agg(v.data || '{"viewSource":"context"}'::jsonb ORDER BY v.number)
+          FROM visible v JOIN ancestors a ON a.id=v.id WHERE v.id NOT IN (SELECT id FROM page)), '[]') AS context,
+        (SELECT count(*)::int FROM matched) AS total,
+        EXISTS (SELECT 1 FROM matched WHERE number > (SELECT max(number) FROM page)) AS more,
+        COALESCE((SELECT jsonb_object_agg(project, facts) FROM (
+          SELECT COALESCE(project_id::text,'') AS project,
+            jsonb_build_object('total',count(*),'done',count(*) FILTER (WHERE stage='done'),
+              'reviewing',count(*) FILTER (WHERE stage='reviewing'),
+              'blocked',count(*) FILTER (WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(data->'blocks') b WHERE b->>'resolved'='false'))) AS facts
+          FROM matched GROUP BY project_id
+        ) counts), '{}') AS counts`,
+      [...match.values, q.cursor, q.limit],
     );
-    const items = r.rows.slice(0, q.limit).map((x) => x.data);
+    const row = r.rows[0];
     return {
-      items,
-      nextCursor: r.rows.length > q.limit ? items.at(-1).number : null,
+      items: row.items,
+      context: row.context,
+      total: row.total,
+      counts: row.counts,
+      nextCursor: row.more ? row.items.at(-1).number : null,
     };
   });
   app.get("/api/v1/tasks/:id", async (req) =>
@@ -420,26 +493,42 @@ export async function buildApp() {
     };
   });
   app.get("/api/v1/events", async (req) => {
-    const q = z
-      .object({
+    const q = taskQuerySchema
+      .extend({
         cursor: z.coerce.number().int().min(0).default(0),
         limit: z.coerce.number().int().min(1).max(200).default(100),
         taskId: z.string().uuid().optional(),
         actorId: z.string().uuid().optional(),
-        projectId: z.string().uuid().optional(),
-        search: z.string().max(200).default(""),
+        taskSearch: z.string().max(200).optional(),
       })
       .parse(req.query);
+    // A selected task's history is always complete, independent of viewing filters.
+    const match = matchedTasks(
+      req.user.id,
+      q.taskId
+        ? {
+            ...q,
+            search: "",
+            projectId: undefined,
+            stage: undefined,
+            time: "all",
+          }
+        : { ...q, search: q.taskSearch ?? "" },
+    );
     const r = await pool.query(
-      "SELECT t.data->>'title' AS \"taskTitle\",t.number AS \"taskNumber\",e.id,e.task_id AS \"taskId\",e.actor_id AS \"actorId\",e.type,e.version,e.before_value AS before,e.after_value AS after,e.note,e.at FROM events e JOIN tasks t ON t.id=e.task_id WHERE (t.stage<>'draft' OR t.creator_id=$1) AND ($2::bigint=0 OR e.id<$2) AND ($3::uuid IS NULL OR e.task_id=$3) AND ($4::uuid IS NULL OR e.actor_id=$4) AND ($5::uuid IS NULL OR t.project_id=$5) AND ($6='' OR e.note ILIKE '%'||$6||'%' OR t.data->>'title' ILIKE '%'||$6||'%') ORDER BY e.id DESC LIMIT $7",
+      `WITH ${match.sql}
+      SELECT t.data->>'title' AS "taskTitle",t.number AS "taskNumber",e.id,e.task_id AS "taskId",e.actor_id AS "actorId",e.type,e.version,e.before_value AS before,e.after_value AS after,e.note,e.at
+      FROM events e JOIN matched t ON t.id=e.task_id
+      WHERE ($9::bigint=0 OR e.id<$9) AND ($10::uuid IS NULL OR e.task_id=$10)
+        AND ($11::uuid IS NULL OR e.actor_id=$11)
+        AND ($13::text='' OR e.note ILIKE '%'||$13||'%' OR t.data->>'title' ILIKE '%'||$13||'%') ORDER BY e.id DESC LIMIT $12`,
       [
-        req.user.id,
+        ...match.values,
         q.cursor,
         q.taskId ?? null,
         q.actorId ?? null,
-        q.projectId ?? null,
-        q.search,
         q.limit + 1,
+        q.taskId || q.taskSearch !== undefined ? "" : q.search,
       ],
     );
     return {
@@ -455,7 +544,7 @@ export async function buildApp() {
       })
       .parse(req.query);
     const r = await pool.query(
-      "SELECT f.task_id AS \"taskId\",f.reason,f.version,f.handler_id AS \"handlerId\",f.since,(f.task_id::text||':'||f.reason||':'||f.version::text) AS cursor FROM followups f JOIN tasks t ON t.id=f.task_id WHERE f.active AND (f.handler_id=$1 OR $2) AND (t.stage<>'draft' OR t.creator_id=$1) AND (f.task_id::text||':'||f.reason||':'||f.version::text)>$3 ORDER BY (f.task_id::text||':'||f.reason||':'||f.version::text) LIMIT $4",
+      "SELECT f.task_id AS \"taskId\",t.data->>'title' AS \"taskTitle\",t.number AS \"taskNumber\",f.reason,f.version,f.handler_id AS \"handlerId\",f.since,(f.task_id::text||':'||f.reason||':'||f.version::text) AS cursor FROM followups f JOIN tasks t ON t.id=f.task_id WHERE f.active AND (f.handler_id=$1 OR $2) AND (t.stage<>'draft' OR t.creator_id=$1) AND (f.task_id::text||':'||f.reason||':'||f.version::text)>$3 ORDER BY (f.task_id::text||':'||f.reason||':'||f.version::text) LIMIT $4",
       [req.user.id, isLeader(req.user), q.cursor, q.limit + 1],
     );
     return {

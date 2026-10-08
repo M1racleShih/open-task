@@ -6,6 +6,7 @@ const agreement = Object.fromEntries(
     "criteria",
     "ownerId",
     "reviewerId",
+    "plannedStart",
     "deadline",
     "acceptBy",
     "feedbackBy",
@@ -30,7 +31,7 @@ export function describeAPI(document: any) {
           ? []
           : [{ session: [] }];
       if (
-        ["post", "patch", "delete"].includes(method) &&
+        ["post", "put", "patch", "delete"].includes(method) &&
         path !== "/api/v1/sessions"
       ) {
         operation.parameters ??= [];
@@ -42,8 +43,92 @@ export function describeAPI(document: any) {
             schema: { type: "string" },
           });
       }
+      if (
+        ["/api/v1/tasks", "/api/v1/events"].includes(path) &&
+        method === "get"
+      ) {
+        operation.parameters ??= [];
+        const filters: Record<string, any> = {
+          time: {
+            type: "string",
+            enum: ["all", "week", "month", "custom"],
+            default: "all",
+          },
+          start: { type: "string", format: "date" },
+          end: { type: "string", format: "date" },
+          includeUnscheduled: {
+            type: "string",
+            enum: ["true", "false"],
+            default: "false",
+          },
+          includeEarlier: {
+            type: "string",
+            enum: ["true", "false"],
+            default: "false",
+          },
+          projectId: { type: "string", format: "uuid" },
+          search: { type: "string", maxLength: 200 },
+          stage: {
+            type: "string",
+            enum: [
+              "draft",
+              "approval",
+              "approvalReturned",
+              "pending",
+              "accepted",
+              "working",
+              "reviewing",
+              "done",
+              "cancelled",
+            ],
+          },
+          cursor: { type: "integer", minimum: 0, default: 0 },
+          limit: { type: "integer", minimum: 1, maximum: 200 },
+          ...(path.endsWith("/events")
+            ? {
+                taskId: { type: "string", format: "uuid" },
+                actorId: { type: "string", format: "uuid" },
+                taskSearch: { type: "string", maxLength: 200 },
+              }
+            : {}),
+        };
+        for (const [name, schema] of Object.entries(filters))
+          operation.parameters.push({
+            in: "query",
+            name,
+            required: false,
+            schema,
+          });
+        operation.description = path.endsWith("/tasks")
+          ? "Matches permission, project, task search, status and Shanghai plan overlap before paging. Returns items, nextCursor, total, counts and separate visible ancestor context. Context never consumes a match cursor."
+          : "Time filters select tasks by their latest plan, not by event time. taskSearch uses the task-list search contract; search retains the legacy event note/title search. A selected taskId bypasses viewing filters for full history.";
+      }
       let properties: any;
-      if (path === "/api/v1/tasks" && method === "post")
+      if (path === "/api/v1/time-preferences" && method === "put")
+        properties = {
+          scope: {
+            type: "string",
+            description:
+              "global or a project UUID; always belongs to the authenticated user",
+          },
+          filter: {
+            type: "object",
+            nullable: true,
+            description:
+              "null restores project inheritance; not allowed for global",
+            properties: {
+              mode: {
+                type: "string",
+                enum: ["all", "week", "month", "custom"],
+              },
+              start: { type: "string" },
+              end: { type: "string" },
+              includeUnscheduled: { type: "boolean" },
+              includeEarlier: { type: "boolean" },
+            },
+          },
+        };
+      else if (path === "/api/v1/tasks" && method === "post")
         properties = {
           ...agreement,
           projectId: { type: "string", nullable: true },

@@ -63,8 +63,8 @@ const messages = {
     "前置任务必须验收完成后才能通过。",
   ],
   projectFacts: [
-    "Loaded tasks: completed / awaiting review / blocked",
-    "已加载任务：已完成／待验收／受阻",
+    "Matching tasks: completed / awaiting review / blocked",
+    "匹配任务：已完成／待验收／受阻",
   ],
   locate: ["Locate selected", "定位选中任务"],
   fit: ["Fit view", "适应视图"],
@@ -112,6 +112,29 @@ const messages = {
   ownerId: ["Owner", "负责人"],
   reviewerId: ["Reviewer", "验收人"],
   projectId: ["Project", "项目"],
+  plannedStart: ["Planned start (optional)", "计划开始（可选）"],
+  startAfterDeadline: ["Planned start must not be after the delivery deadline.", "计划开始不能晚于交付截止。"],
+  timeGlobal: ["Global time", "全局时间"],
+  timeInherited: ["Following global", "跟随全局"],
+  timeOverride: ["Custom project time", "项目自定义"],
+  timeRange: ["Time range", "时间范围"],
+  time_all: ["All time", "全部"],
+  time_week: ["This week", "本周"],
+  time_month: ["This month", "本月"],
+  time_custom: ["Custom range", "自定义范围"],
+  rangeStart: ["From date", "开始日期"],
+  rangeEnd: ["Through date", "结束日期"],
+  includeUnscheduled: ["Include tasks without a deadline", "包含未设置周期"],
+  includeEarlier: ["Include earlier unfinished tasks", "包含此前未完成"],
+  applyTime: ["Apply range", "应用范围"],
+  followGlobal: ["Follow global", "恢复跟随全局"],
+  invalidTimeRange: ["Enter valid dates with the start on or before the end.", "请输入有效日期，开始日期不能晚于结束日期。"],
+  timePlanHint: ["Current plans · Shanghai dates · reminders remain complete", "当前计划 · 上海自然日 · 待办和提醒完整保留"],
+  ancestorContext: ["Ancestor context", "祖先上下文"],
+  earlierTask: ["Earlier unfinished", "此前未完成"],
+  matchedTasks: ["Matching tasks", "匹配任务"],
+  allStages: ["All statuses", "全部状态"],
+  outsideTimeResults: ["This task is outside the current results. Its details and history remain available.", "此任务不在当前筛选结果中，仍可查看详情和完整历史。"],
   deadline: ["Delivery deadline", "交付期限"],
   acceptBy: ["Accept by", "接收期限"],
   feedbackBy: ["Next feedback", "下次反馈"],
@@ -507,7 +530,7 @@ export function I18n({ children }: { children: ReactNode }) {
 }
 export const useI18n = () => useContext(Context);
 export const dateText = (date: string, lang: Lang) =>
-  date
+  date && Number.isFinite(Date.parse(date))
     ? new Intl.DateTimeFormat(lang === "en" ? "en-GB" : "zh-CN", {
         dateStyle: "medium",
         timeStyle: "short",

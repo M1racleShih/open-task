@@ -23,7 +23,7 @@ export function TaskForm({
   users: User[];
   projects: Project[];
   onClose: () => void;
-  onSaved: () => Promise<void>;
+  onSaved: (result: any) => Promise<void>;
 }) {
   const { t, lang, setLang } = useI18n();
   const [values, setValues] = useState(spec.values);
@@ -51,13 +51,13 @@ export function TaskForm({
     setBusy(true);
     setError(null);
     try {
-      await api(
+      const result = await api(
         spec.path,
         spec.method ?? "POST",
         spec.transform ? spec.transform(values) : values,
         key,
       );
-      await onSaved();
+      await onSaved(result);
       onClose();
     } catch (e) {
       setError(e as ApiError);
@@ -185,6 +185,7 @@ export function TaskForm({
                   ))}
                 </select>
               ) : [
+                  "plannedStart",
                   "deadline",
                   "acceptBy",
                   "feedbackBy",
@@ -258,6 +259,7 @@ export const termFields = [
   "outcome",
   "scope",
   "criteria",
+  "plannedStart",
   "deadline",
   "acceptBy",
   "feedbackBy",
@@ -270,6 +272,7 @@ export const emptyTerms = {
   outcome: "",
   scope: "",
   criteria: "",
+  plannedStart: "",
   deadline: "",
   acceptBy: "",
   feedbackBy: "",

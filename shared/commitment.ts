@@ -71,6 +71,7 @@ export const agreementFields = [
   "outcome",
   "scope",
   "criteria",
+  "plannedStart",
   "deadline",
   "acceptBy",
   "feedbackBy",
@@ -80,7 +81,7 @@ export const agreementFields = [
 export function agreementChanges(task: Task) {
   if (!task.confirmedTerms || task.confirmedVersion === task.version) return [];
   return agreementFields.filter(
-    (field) => task.confirmedTerms![field] !== task[field],
+    (field) => (task.confirmedTerms![field] ?? "") !== (task[field] ?? ""),
   );
 }
 

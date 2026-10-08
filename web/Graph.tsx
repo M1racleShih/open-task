@@ -13,7 +13,7 @@ import {
   labelCollision,
   edgeEndpoints,
 } from "../shared/graphLayout.js";
-import type { Task, Relation } from "../shared/model.js";
+import type { Task, Relation, Project } from "../shared/model.js";
 import "./graph-status.css";
 import { TaskIcon } from "./TaskIcon.js";
 import { lifecycleState, lifecycleStates } from "../shared/commitment.js";
@@ -27,11 +27,13 @@ type Node = SimulationNodeDatum & {
 };
 export function Graph({
   tasks,
+  projects,
   relations,
   selected,
   onSelect,
 }: {
   tasks: Task[];
+  projects: Project[];
   relations: Relation[];
   selected: string;
   onSelect: (id: string) => void;
@@ -401,9 +403,10 @@ export function Graph({
                   key={task.id}
                   data-node-id={task.id}
                   data-lifecycle={lifecycleState(task)}
+                  data-view-source={task.viewSource}
                   role="button"
                   tabIndex={0}
-                  aria-label={`OT-${task.number} · ${task.title} · ${t("lifecycle_" + lifecycleState(task))}`}
+                  aria-label={`OT-${task.number} · ${task.title} · ${t("lifecycle_" + lifecycleState(task))}${task.viewSource ? " · " + t(task.viewSource === "context" ? "ancestorContext" : "earlierTask") : ""}`}
                   className={"node " + (selected === task.id ? "selected" : "")}
                   transform={`translate(${n.x},${n.y})`}
                   onKeyDown={(e) => {
@@ -461,6 +464,17 @@ export function Graph({
                   <title>
                     {task.title}
                     {` · ${t("lifecycle_" + lifecycleState(task))}`}
+                    {task.viewSource &&
+                      " · " +
+                        t(
+                          task.viewSource === "context"
+                            ? "ancestorContext"
+                            : "earlierTask",
+                        )}
+                    {task.viewSource === "context" &&
+                      " · " +
+                        (projects.find((p) => p.id === task.projectId)?.name ??
+                          t("temporary"))}
                   </title>
                   <rect
                     className="task-node-frame"
@@ -489,7 +503,14 @@ export function Graph({
                     y="22"
                     clipPath={`url(#${clipId})`}
                   >
-                    OT-{task.number} · {t("lifecycle_" + lifecycleState(task))}
+                    OT-{task.number} ·{" "}
+                    {t(
+                      task.viewSource === "context"
+                        ? "ancestorContext"
+                        : task.viewSource === "earlier"
+                          ? "earlierTask"
+                          : "lifecycle_" + lifecycleState(task),
+                    )}
                   </text>
                 </g>
               );

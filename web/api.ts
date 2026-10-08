@@ -58,6 +58,7 @@ export async function pagesUntil(path: string, count: number) {
       path + "&cursor=" + encodeURIComponent(first.nextCursor),
     );
     first.items.push(...page.items);
+    first.context = [...(first.context ?? []), ...(page.context ?? [])];
     first.nextCursor = page.nextCursor;
   }
   return first;

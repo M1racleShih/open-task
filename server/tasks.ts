@@ -25,7 +25,8 @@ export const fields = z.object({
   ownerId: z.string(),
   reviewerId: z.string(),
   projectId: z.string().uuid().nullable(),
-  deadline: z.string(),
+  plannedStart: z.string().max(100).default(""),
+  deadline: z.string().max(100),
   acceptBy: z.string(),
   feedbackBy: z.string(),
   reviewBy: z.string(),
@@ -50,6 +51,14 @@ async function context(c: Client) {
   return { all, ps, leader };
 }
 async function validateAssignments(c: Client, t: Terms, required = false) {
+  if (t.plannedStart) date(t.plannedStart);
+  if (t.deadline) date(t.deadline);
+  ensure(
+    !t.plannedStart ||
+      !t.deadline ||
+      Date.parse(t.plannedStart) <= Date.parse(t.deadline),
+    "startAfterDeadline",
+  );
   const { all, ps } = await context(c);
   ensure(
     !t.projectId || ps.some((p) => p.id === t.projectId),
@@ -122,6 +131,7 @@ export async function createTask(c: Client, u: User, body: unknown) {
     ownerId: "",
     reviewerId: "",
     projectId: null,
+    plannedStart: "",
     deadline: "",
     acceptBy: "",
     feedbackBy: "",
@@ -178,7 +188,10 @@ export async function action(
     case "edit": {
       ensure(t.creatorId === u.id || isLeader(u), "forbidden", 403);
       stage(t, "draft", "approval", "approvalReturned");
-      Object.assign(t, fields.parse(b.fields));
+      Object.assign(
+        t,
+        fields.parse({ plannedStart: t.plannedStart ?? "", ...b.fields }),
+      );
       await validateAssignments(c, t);
       t.version++;
       if (t.stage === "approval") {
@@ -403,7 +416,10 @@ export async function action(
       stage(t, "pending", "accepted", "working", "reviewing");
       note(b.reason);
       const oldOwner = t.ownerId;
-      const next = fields.parse(b.fields);
+      const next = fields.parse({
+        plannedStart: t.plannedStart ?? "",
+        ...b.fields,
+      });
       await validate(c, next);
       date(b.confirmBy);
       Object.assign(t, next);

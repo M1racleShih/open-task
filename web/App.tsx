@@ -1,3 +1,12 @@
+import { TimeFilterControls } from "./TimeFilter.js";
+import {
+  defaultTimeFilter,
+  effectiveTimeFilter,
+  timeMatch,
+  timeQuery,
+  type TimeFilter,
+  type TimePreferences,
+} from "../shared/timeFilter.js";
 import { Markdown } from "./Markdown.js";
 import { eventDiff } from "../shared/eventDiff.js";
 import { fitPanels } from "../shared/panelLayout.js";
@@ -29,7 +38,7 @@ import {
 } from "lucide-react";
 import type { Task, User, Project, Relation, Event } from "../shared/model.js";
 import { reconcileChecklist } from "../shared/checklist.js";
-import { terminal } from "../shared/model.js";
+import { terminal, terms } from "../shared/model.js";
 import { api, ApiError, allPages, pagesUntil } from "./api.js";
 import { useI18n, dateText } from "./i18n.js";
 import { TaskForm, termFields, emptyTerms, type FormSpec } from "./Forms.js";
@@ -46,6 +55,20 @@ export function App() {
     [events, setEvents] = useState<Event[]>([]),
     [notices, setNotices] = useState<any[]>([]),
     [relations, setRelations] = useState<Relation[]>([]);
+  const [timePreferences, setTimePreferences] = useState<TimePreferences>({
+    global: defaultTimeFilter,
+    projects: {},
+  });
+  const [timeBusy, setTimeBusy] = useState(false);
+  const [stageFilter, setStageFilter] = useState("");
+  const [contextTasks, setContextTasks] = useState<Task[]>([]);
+  const [matchCount, setMatchCount] = useState(0);
+  const [projectCounts, setProjectCounts] = useState<
+    Record<
+      string,
+      { total: number; done: number; reviewing: number; blocked: number }
+    >
+  >({});
   const [linkedTasks, setLinkedTasks] = useState<Partial<Task>[]>([]);
   const [taskEventCursor, setTaskEventCursor] = useState<number | null>(null);
   const [projectMenu, setProjectMenu] = useState<ProjectMenuTarget | null>(
@@ -164,20 +187,57 @@ export function App() {
   const loadSequence = useRef(0);
   const leader = me?.roles.includes("leader");
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "—";
+  const timeFilter = effectiveTimeFilter(timePreferences, project);
+  const filterQuery =
+    "&" + timeQuery(timeFilter) + (stageFilter ? "&stage=" + stageFilter : "");
+  const taskQuery =
+    "&search=" +
+    encodeURIComponent(search) +
+    (project ? "&projectId=" + project : "") +
+    filterQuery;
+  async function saveTimeFilter(value: TimeFilter | null) {
+    if (timeBusy) return;
+    setTimeBusy(true);
+    try {
+      await api(
+        "/time-preferences",
+        "PUT",
+        { scope: project || "global", filter: value },
+        crypto.randomUUID(),
+      );
+      setTimePreferences((old) => {
+        if (!project) return { ...old, global: value! };
+        const projects = { ...old.projects };
+        if (value) projects[project] = value;
+        else delete projects[project];
+        return { ...old, projects };
+      });
+      setError("");
+    } catch (e) {
+      setError((e as ApiError).code);
+    } finally {
+      setTimeBusy(false);
+    }
+  }
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("open-task.theme", theme);
   }, [theme]);
   useEffect(() => {
     api("/me")
-      .then((x) => setMe(x.user))
+      .then(async (x) => {
+        setTimePreferences(await api("/time-preferences"));
+        setMe(x.user);
+      })
       .catch(() => {})
       .finally(() => setReady(true));
   }, []);
   async function loadTaskHistory() {
+    const sequence = loadSequence.current;
     const r = await api(
       "/events?taskId=" + selected + "&limit=200&cursor=" + taskEventCursor,
     );
+    if (sequence !== loadSequence.current) return;
     setTaskEvents((x) => [...x, ...r.items]);
     setTaskEventCursor(r.nextCursor);
   }
@@ -188,19 +248,17 @@ export function App() {
       const [us, ps, ts, ns, es, rs] = await Promise.all([
         api("/users"),
         api("/projects"),
-        pagesUntil(
-          "/tasks?limit=200&search=" +
-            encodeURIComponent(search) +
-            (project ? "&projectId=" + project : ""),
-          Math.max(200, tasks.length),
-        ),
+        pagesUntil("/tasks?limit=200" + taskQuery, Math.max(200, tasks.length)),
         allPages("/followups"),
         api(
           "/events?limit=100" +
             (project ? "&projectId=" + project : "") +
             (actor ? "&actorId=" + actor : "") +
             "&search=" +
-            encodeURIComponent(search),
+            encodeURIComponent(search) +
+            "&taskSearch=" +
+            encodeURIComponent(search) +
+            filterQuery,
         ),
         allPages("/relations?limit=1000"),
       ]);
@@ -211,6 +269,9 @@ export function App() {
       setUsers(us);
       setProjects(ps);
       setTasks(ts.items);
+      setContextTasks(ts.context ?? []);
+      setMatchCount(ts.total);
+      setProjectCounts(ts.counts);
       setNotices(ns.items);
       setEvents(es.items);
       if (selected) {
@@ -225,6 +286,7 @@ export function App() {
               ? Math.max(200, taskEvents.length)
               : 200,
           );
+          if (sequence !== loadSequence.current) return;
           setTaskEvents(history.items);
           setTaskEventCursor(history.nextCursor);
         }
@@ -236,14 +298,14 @@ export function App() {
   }
   useEffect(() => {
     void refresh();
-  }, [me, selected, search, project, actor]);
+  }, [me, selected, search, project, actor, filterQuery]);
   useEffect(() => {
     if (!me) return;
     const timer = setInterval(() => {
       void refresh();
     }, 15000);
     return () => clearInterval(timer);
-  }, [me, selected, search, project, actor]);
+  }, [me, selected, search, project, actor, filterQuery]);
   function select(id: string) {
     if (id !== selected && !discardChecklist()) return;
     setSelectedProject(null);
@@ -275,14 +337,13 @@ export function App() {
   }, []);
   async function loadMoreTasks() {
     if (!taskCursor) return;
-    const r = await api(
-      "/tasks?limit=200&cursor=" +
-        taskCursor +
-        "&search=" +
-        encodeURIComponent(search) +
-        (project ? "&projectId=" + project : ""),
-    );
+    const sequence = loadSequence.current;
+    const r = await api("/tasks?limit=200&cursor=" + taskCursor + taskQuery);
+    if (sequence !== loadSequence.current) return;
     setTasks((items) => [...items, ...r.items]);
+    setContextTasks((items) => [...items, ...r.context]);
+    setMatchCount(r.total);
+    setProjectCounts(r.counts);
     setTaskCursor(r.nextCursor);
   }
   async function login(e: FormEvent) {
@@ -290,6 +351,7 @@ export function App() {
     setBusy(true);
     try {
       const r = await api("/sessions", "POST", { username, password });
+      setTimePreferences(await api("/time-preferences"));
       setMe(r.user);
       setPassword("");
       setError("");
@@ -455,15 +517,23 @@ export function App() {
   const mine = detail?.ownerId === me.id;
   const actionable = detail && !terminal(detail);
   const activeNotices = notices.filter((n) => n.handlerId === me.id);
-  const visible = tasks;
+  const taskMap = new Map(contextTasks.map((task) => [task.id, task]));
+  for (const task of tasks) taskMap.set(task.id, task);
+  const visible = [...taskMap.values()];
+  const outsideResults =
+    detail &&
+    (!timeMatch(detail, timeFilter) ||
+      (project && detail.projectId !== project) ||
+      (stageFilter && detail.stage !== stageFilter) ||
+      (search &&
+        !detail.title.toLowerCase().includes(search.toLowerCase()) &&
+        String(detail.number) !== search));
   function treeOrder(id: string) {
     const path = [];
     const seen = new Set<string>();
     while (!seen.has(id)) {
       seen.add(id);
-      path.unshift(
-        String(tasks.find((x) => x.id === id)?.number ?? 0).padStart(10, "0"),
-      );
+      path.unshift(String(taskMap.get(id)?.number ?? 0).padStart(10, "0"));
       const r = allRelations.find(
         (r) => r.kind === "parent" && r.sourceId === id,
       );
@@ -584,7 +654,11 @@ export function App() {
             <button className="notice" key={id} onClick={() => select(id)}>
               <ClipboardList size={16} />
               <span>
-                <strong>{tasks.find((x) => x.id === id)?.title ?? id}</strong>
+                <strong>
+                  {tasks.find((x) => x.id === id)?.title ??
+                    ns?.[0]?.taskTitle ??
+                    id}
+                </strong>
                 {ns!.map((n) => (
                   <small key={n.reason}>
                     {t(n.reason)} · {name(n.handlerId)} ·{" "}
@@ -654,6 +728,7 @@ export function App() {
                   <strong>
                     {tasks.find((x) => x.id === id)?.title ??
                       linkedTasks.find((x) => x.id === id)?.title ??
+                      ns?.[0]?.taskTitle ??
                       id}
                   </strong>
                   {ns!.map((n) => (
@@ -864,6 +939,38 @@ export function App() {
                   </option>
                 ))}
               </select>
+              <select
+                aria-label={t("stage")}
+                value={stageFilter}
+                onChange={(e) => setStageFilter(e.target.value)}
+              >
+                <option value="">{t("allStages")}</option>
+                {[
+                  "draft",
+                  "approval",
+                  "approvalReturned",
+                  "pending",
+                  "accepted",
+                  "working",
+                  "reviewing",
+                  "done",
+                  "cancelled",
+                ].map((stage) => (
+                  <option key={stage} value={stage}>
+                    {t(stage)}
+                  </option>
+                ))}
+              </select>
+              <TimeFilterControls
+                value={timeFilter}
+                project={project}
+                inherited={!timePreferences.projects[project]}
+                busy={timeBusy}
+                onSave={saveTimeFilter}
+              />
+              <small aria-live="polite">
+                {matchCount} · {t("matchedTasks")}
+              </small>
             </div>
             <div className="tree-scroll">
               {[
@@ -876,7 +983,17 @@ export function App() {
                   color: "#7292c7",
                 },
               ]
-                .filter((p) => !project || p.id === project)
+                .filter((p) =>
+                  project
+                    ? p.id === project ||
+                      visible.some(
+                        (x) =>
+                          x.viewSource === "context" &&
+                          (x.projectId ?? "") === p.id,
+                      )
+                    : (!search && timeFilter.mode === "all" && !stageFilter) ||
+                      visible.some((x) => (x.projectId ?? "") === p.id),
+                )
                 .map((p) => (
                   <section
                     key={p.id}
@@ -956,29 +1073,9 @@ export function App() {
                       <strong>{p.name}</strong>
                     </button>
                     <small className="project-facts" title={t("projectFacts")}>
-                      {t("projectFacts")}:{" "}
-                      {
-                        visible.filter(
-                          (x) =>
-                            (x.projectId ?? "") === p.id && x.stage === "done",
-                        ).length
-                      }{" "}
-                      /{" "}
-                      {
-                        visible.filter(
-                          (x) =>
-                            (x.projectId ?? "") === p.id &&
-                            x.stage === "reviewing",
-                        ).length
-                      }{" "}
-                      /{" "}
-                      {
-                        visible.filter(
-                          (x) =>
-                            (x.projectId ?? "") === p.id &&
-                            x.blocks.some((b) => !b.resolved),
-                        ).length
-                      }
+                      {t("projectFacts")}: {projectCounts[p.id]?.done ?? 0} /{" "}
+                      {projectCounts[p.id]?.reviewing ?? 0} /{" "}
+                      {projectCounts[p.id]?.blocked ?? 0}
                     </small>
                     {!collapsed &&
                       !foldedProjects.has(p.id) &&
@@ -1022,6 +1119,9 @@ export function App() {
                             <button
                               className={
                                 "task-row " +
+                                (x.viewSource === "context"
+                                  ? "context-task "
+                                  : "") +
                                 (selected === x.id ? "selected" : "")
                               }
                               onClick={() => select(x.id)}
@@ -1031,6 +1131,19 @@ export function App() {
                                 <strong>{x.title}</strong>
                                 <small>
                                   OT-{x.number} · {t(x.stage)}
+                                  {x.viewSource &&
+                                    " · " +
+                                      t(
+                                        x.viewSource === "context"
+                                          ? "ancestorContext"
+                                          : "earlierTask",
+                                      )}
+                                  {x.viewSource === "context" &&
+                                    x.projectId !== project &&
+                                    " · " +
+                                      (projects.find(
+                                        (p) => p.id === x.projectId,
+                                      )?.name ?? t("temporary"))}
                                   {x.blocks.some((b) => !b.resolved)
                                     ? " · " + t("blocked")
                                     : ""}
@@ -1121,6 +1234,7 @@ export function App() {
                 <Graph
                   key={project + "|" + search}
                   tasks={visible}
+                  projects={projects}
                   relations={allRelations}
                   selected={selected}
                   onSelect={(id) => {
@@ -1186,14 +1300,19 @@ export function App() {
                   {eventCursor && (
                     <button
                       onClick={async () => {
+                        const sequence = loadSequence.current;
                         const r = await api(
                           "/events?cursor=" +
                             eventCursor +
                             (project ? "&projectId=" + project : "") +
                             (actor ? "&actorId=" + actor : "") +
                             "&search=" +
-                            encodeURIComponent(search),
+                            encodeURIComponent(search) +
+                            "&taskSearch=" +
+                            encodeURIComponent(search) +
+                            filterQuery,
                         );
+                        if (sequence !== loadSequence.current) return;
                         setEvents((x) => [...x, ...r.items]);
                         setEventCursor(r.nextCursor);
                       }}
@@ -1319,6 +1438,11 @@ export function App() {
                       ))}
                   </section>
                 )}
+                {outsideResults && (
+                  <p className="warning" role="status">
+                    {t("outsideTimeResults")}
+                  </p>
+                )}
                 <dl className="task-people">
                   <div className="meta-primary">
                     <dt>{t("ownerId")}</dt>
@@ -1352,6 +1476,7 @@ export function App() {
                 </dl>
                 <dl className="task-dates">
                   {[
+                    "plannedStart",
                     "deadline",
                     "acceptBy",
                     "feedbackBy",
@@ -1503,18 +1628,33 @@ export function App() {
                         <details open>
                           <summary>{t("versions")}</summary>
                           <div className="diff">
-                            <Facts
-                              value={detail.confirmedTerms}
-                              users={users}
-                              projects={projects}
-                              tasks={tasks}
-                            />
-                            <Facts
-                              value={detail}
-                              users={users}
-                              projects={projects}
-                              tasks={tasks}
-                            />
+                            <section>
+                              <b>
+                                {t("before")} · {t("version")}{" "}
+                                {detail.confirmedVersion}
+                              </b>
+                              <Facts
+                                value={{
+                                  ...detail.confirmedTerms,
+                                  plannedStart:
+                                    detail.confirmedTerms?.plannedStart ?? "",
+                                }}
+                                users={users}
+                                projects={projects}
+                                tasks={tasks}
+                              />
+                            </section>
+                            <section>
+                              <b>
+                                {t("after")} · {t("version")} {detail.version}
+                              </b>
+                              <Facts
+                                value={terms(detail)}
+                                users={users}
+                                projects={projects}
+                                tasks={tasks}
+                              />
+                            </section>
                           </div>
                         </details>
                       </section>
@@ -1839,7 +1979,7 @@ export function App() {
       <footer className="statusbar">
         <span>{t("timezone")}</span>
         <span>
-          {tasks.length} · {t("countsOnly")}
+          {matchCount} · {t("matchedTasks")}
         </span>
       </footer>
       {projectMenu && (
@@ -1876,7 +2016,13 @@ export function App() {
             }
             setForm(null);
           }}
-          onSaved={refresh}
+          onSaved={async (result) => {
+            if (form.title === "newTask" && result.id) {
+              setDetail(result);
+              setShowDetails(true);
+              select(result.id);
+            } else await refresh();
+          }}
         />
       )}
     </div>
@@ -1932,7 +2078,7 @@ function Facts({
     if (typeof v === "boolean") return <span>{v ? "☑" : "☐"}</span>;
     if (typeof v === "string") {
       if (
-        /^(deadline|acceptBy|feedbackBy|reviewBy|confirmBy|at|createdAt|lastFeedbackAt)$/.test(
+        /^(plannedStart|deadline|acceptBy|feedbackBy|reviewBy|confirmBy|at|createdAt|lastFeedbackAt)$/.test(
           key,
         )
       )

@@ -879,3 +879,485 @@ test("checklist batch submission is atomic and checks content version and owners
   );
   assert.equal((await api("member", "POST", path, body)).status, 409);
 });
+
+const octoberFilter = "time=custom&start=2026-10-01&end=2026-10-31";
+const timeFields = (patch: any = {}) => ({
+  title: prefix + " Time",
+  outcome: "Time result",
+  scope: "Current plan",
+  criteria: "Verify dates",
+  projectId,
+  ownerId: actors.member.id,
+  reviewerId: actors.leader.id,
+  deadline: "2026-10-10T12:00:00+08:00",
+  acceptBy: future,
+  feedbackBy: future,
+  reviewBy: "",
+  ...patch,
+});
+test("AC-66/69/70: legacy deadlines, cross-month intervals, Shanghai end boundary and draft date validation", async () => {
+  const title = prefix + " Time boundaries";
+  const cases = [
+    { deadline: "2026-10-31T23:59:59+08:00" },
+    { deadline: "2026-11-01T00:00:00+08:00" },
+    {
+      plannedStart: "2026-09-20T00:00:00+08:00",
+      deadline: "2026-10-10T10:00:00+08:00",
+    },
+    {
+      plannedStart: "2026-10-10T10:00:00+08:00",
+      deadline: "2026-10-10T10:00:00+08:00",
+    },
+    { deadline: "", plannedStart: "" },
+  ];
+  const tasks = [];
+  for (const dates of cases)
+    tasks.push(
+      await ok("member", "POST", "/tasks", timeFields({ title, ...dates })),
+    );
+  // Simulate a stored task from the pre-start-field version, preserving its title and old snapshots.
+  await pool.query("UPDATE tasks SET data=data-'plannedStart' WHERE id=$1", [
+    tasks[0].id,
+  ]);
+  const path = `/tasks?search=${encodeURIComponent(title)}&${octoberFilter}`;
+  const result = await ok("member", "GET", path);
+  assert.deepEqual(
+    result.items.map((t: any) => t.id),
+    [tasks[0].id, tasks[2].id, tasks[3].id],
+  );
+  assert.equal(result.total, 3);
+  const unscheduled = await ok(
+    "member",
+    "GET",
+    path + "&includeUnscheduled=true",
+  );
+  assert.equal(unscheduled.total, 4);
+  assert.equal(
+    (await ok("other", "GET", path + "&includeUnscheduled=true")).total,
+    0,
+  );
+  const invalid = await api(
+    "member",
+    "POST",
+    "/tasks",
+    timeFields({ plannedStart: "2026-10-11T00:00:00Z" }),
+  );
+  assert.equal(invalid.status, 422);
+  assert.equal(invalid.data.error.code, "startAfterDeadline");
+  assert.equal(
+    (
+      await api(
+        "member",
+        "POST",
+        "/tasks",
+        timeFields({ plannedStart: "not a date" }),
+      )
+    ).status,
+    422,
+  );
+  assert.equal(
+    (
+      await api(
+        "member",
+        "GET",
+        "/tasks?time=custom&start=2026-02-29&end=2026-10-31",
+      )
+    ).status,
+    422,
+  );
+  assert.equal(
+    (
+      await api(
+        "member",
+        "GET",
+        "/tasks?time=custom&start=2026-11-01&end=2026-10-31",
+      )
+    ).status,
+    422,
+  );
+  assert.equal(
+    (await api("member", "GET", "/tasks?includeEarlier=maybe")).status,
+    422,
+  );
+  const noDeadline = await ok(
+    "leader",
+    "POST",
+    "/tasks",
+    timeFields({ deadline: "" }),
+  );
+  assert.equal(
+    (
+      await api("leader", "POST", `/tasks/${noDeadline.id}/actions/issue`, {
+        version: 1,
+      })
+    ).data.error.code,
+    "dateRequired",
+  );
+  // Malformed optional old draft dates must never abort the list.
+  await pool.query(
+    "UPDATE tasks SET data=jsonb_set(data,'{deadline}','\"old invalid input\"') WHERE id=$1",
+    [tasks[4].id],
+  );
+  assert.equal(
+    (await ok("member", "GET", path + "&includeUnscheduled=true")).total,
+    4,
+  );
+});
+test("AC-67/68/71: server preferences are user-owned, durable, independently overridden and CSRF protected", async () => {
+  const global = {
+    mode: "custom",
+    start: "2026-10-01",
+    end: "2026-10-31",
+    includeUnscheduled: false,
+    includeEarlier: false,
+  };
+  const september = { ...global, start: "2026-09-01", end: "2026-09-30" };
+  await pool.query(
+    "DELETE FROM time_preferences WHERE user_id=ANY($1::uuid[])",
+    [[actors.member.id, actors.other.id]],
+  );
+  assert.equal(
+    (await ok("other", "GET", "/time-preferences")).global.mode,
+    "all",
+  );
+  await ok("member", "PUT", "/time-preferences", {
+    scope: "global",
+    filter: global,
+  });
+  await ok("member", "PUT", "/time-preferences", {
+    scope: projectId,
+    filter: september,
+  });
+  await ok("member", "PUT", "/time-preferences", {
+    scope: "global",
+    filter: { ...global, mode: "month" },
+  });
+  let prefs = await ok("member", "GET", "/time-preferences");
+  assert.deepEqual(prefs.projects[projectId], september);
+  assert.equal(prefs.global.mode, "month");
+  assert.equal(
+    (await ok("other", "GET", "/time-preferences")).global.mode,
+    "all",
+  );
+  const csrf = await app.inject({
+    method: "PUT",
+    url: "/api/v1/time-preferences",
+    headers: { cookie: actors.member.cookie, "idempotency-key": randomUUID() },
+    payload: { scope: "global", filter: global },
+  });
+  assert.equal(csrf.statusCode, 403);
+  await ok("member", "PUT", "/time-preferences", {
+    scope: projectId,
+    filter: null,
+  });
+  prefs = await ok("member", "GET", "/time-preferences");
+  assert.equal(prefs.projects[projectId], undefined);
+  assert.equal(
+    (
+      await api("member", "PUT", "/time-preferences", {
+        scope: "global",
+        filter: { ...global, start: "2026-11-01" },
+      })
+    ).status,
+    422,
+  );
+  assert.equal(
+    (
+      await api("member", "PUT", "/time-preferences", {
+        scope: randomUUID(),
+        filter: global,
+      })
+    ).data.error.code,
+    "projectRequired",
+  );
+});
+test("AC-72/73/76: match before pagination, transitive cross-project ancestors, no descendant expansion and private drafts", async () => {
+  const title = prefix + " Time pagination";
+  let parent = await ok(
+    "leader",
+    "POST",
+    "/tasks",
+    timeFields({
+      title: "Outside parent",
+      projectId: null,
+      deadline: "2026-09-01T00:00:00Z",
+    }),
+  );
+  let grandparent = await ok(
+    "leader",
+    "POST",
+    "/tasks",
+    timeFields({
+      title: "Outside grandparent",
+      projectId: null,
+      deadline: "2026-09-01T00:00:00Z",
+    }),
+  );
+  parent = await act("leader", parent, "issue");
+  grandparent = await act("leader", grandparent, "issue");
+  // Disposable rows: 210 non-matches precede 205 matching tasks in number order.
+  const template = await ok(
+    "member",
+    "POST",
+    "/tasks",
+    timeFields({ title, deadline: "2026-09-01T00:00:00Z" }),
+  );
+  const rows = await pool.query(
+    `INSERT INTO tasks(id,creator_id,stage,project_id,data)
+    SELECT gen_random_uuid(),$1,'draft',$2,$3::jsonb || jsonb_build_object('deadline', CASE WHEN n<=210 THEN '2026-09-01T00:00:00Z' ELSE '2026-10-10T00:00:00Z' END)
+    FROM generate_series(1,415) n RETURNING id,number`,
+    [actors.member.id, projectId, template],
+  );
+  for (const row of rows.rows)
+    await pool.query(
+      "UPDATE tasks SET data=data||jsonb_build_object('id',id,'number',number) WHERE id=$1",
+      [row.id],
+    );
+  const child = rows.rows[210],
+    sibling = rows.rows[0];
+  for (const [source, target] of [
+    [child.id, parent.id],
+    [parent.id, grandparent.id],
+    [sibling.id, parent.id],
+  ])
+    await pool.query(
+      "INSERT INTO relations(id,source_id,target_id,kind) VALUES($1,$2,$3,'parent')",
+      [randomUUID(), source, target],
+    );
+  const path = `/tasks?search=${encodeURIComponent(title)}&projectId=${projectId}&${octoberFilter}&limit=200`;
+  const page = await ok("member", "GET", path);
+  assert.equal(page.total, 205);
+  assert.equal(page.items.length, 200);
+  assert.equal(page.items[0].id, child.id);
+  assert.deepEqual(
+    new Set(page.context.map((t: any) => t.id)),
+    new Set([parent.id, grandparent.id]),
+  );
+  assert(page.context.every((t: any) => t.viewSource === "context"));
+  assert.equal(page.counts[projectId].total, 205);
+  const next = await ok("member", "GET", path + "&cursor=" + page.nextCursor);
+  assert.equal(next.items.length, 5);
+  assert.equal(next.total, 205);
+  assert.equal(next.nextCursor, null);
+  assert(!page.items.some((t: any) => t.id === sibling.id));
+  assert.equal((await ok("other", "GET", path)).total, 0);
+  // An unreadable private ancestor must be omitted even if an inconsistent legacy relation exists.
+  const hidden = await ok(
+    "other",
+    "POST",
+    "/tasks",
+    timeFields({ title: "Private ancestor" }),
+  );
+  await pool.query(
+    "INSERT INTO relations(id,source_id,target_id,kind) VALUES($1,$2,$3,'parent')",
+    [randomUUID(), grandparent.id, hidden.id],
+  );
+  assert(
+    !(await ok("member", "GET", path)).context.some(
+      (t: any) => t.id === hidden.id,
+    ),
+  );
+  // A parent matching by its own dates must not pull in outside children.
+  const parents = await ok(
+    "leader",
+    "GET",
+    `/tasks?search=Outside parent&time=custom&start=2026-09-01&end=2026-09-30`,
+  );
+  assert(!parents.items.some((t: any) => t.id === child.id));
+});
+test("AC-73/74/75: latest planned dates drive results, old agreement/history remain and out-of-range followups survive", async () => {
+  const title = prefix + " Time version";
+  let task = await ok(
+    "leader",
+    "POST",
+    "/tasks",
+    timeFields({ title, plannedStart: "2026-10-01T00:00:00+08:00" }),
+  );
+  task = await act("leader", task, "issue");
+  task = await act("member", task, "acceptStart");
+  // Legacy confirmed snapshot without plannedStart remains meaningful when dates are changed.
+  await pool.query(
+    "UPDATE tasks SET data=jsonb_set(data,'{confirmedTerms}',(data->'confirmedTerms')-'plannedStart') WHERE id=$1",
+    [task.id],
+  );
+  const invalidMember = await api(
+    "member",
+    "POST",
+    `/tasks/${task.id}/actions/adjust`,
+    {
+      version: task.version,
+      fields: {
+        ...task,
+        plannedStart: "2026-11-01T00:00:00Z",
+        deadline: "2026-11-10T00:00:00Z",
+      },
+      reason: "Move",
+      confirmBy: future,
+    },
+  );
+  assert.equal(invalidMember.status, 403);
+  task = await act("leader", task, "adjust", {
+    fields: {
+      ...task,
+      plannedStart: "2026-11-01T00:00:00Z",
+      deadline: "2026-11-10T00:00:00Z",
+    },
+    reason: "Move schedule",
+    confirmBy: future,
+  });
+  assert.equal(task.confirmedVersion, 1);
+  assert.equal(task.version, 2);
+  assert.equal(task.confirmedTerms.plannedStart, undefined);
+  assert.equal(task.confirmedTerms.deadline, "2026-10-10T12:00:00+08:00");
+  assert.equal(
+    (
+      await ok(
+        "member",
+        "GET",
+        `/tasks?search=${encodeURIComponent(title)}&${octoberFilter}`,
+      )
+    ).total,
+    0,
+  );
+  assert.equal(
+    (
+      await ok(
+        "member",
+        "GET",
+        `/tasks?search=${encodeURIComponent(title)}&time=custom&start=2026-11-01&end=2026-11-30`,
+      )
+    ).total,
+    1,
+  );
+  assert.equal(
+    (await ok("member", "GET", `/tasks/${task.id}`)).task.id,
+    task.id,
+  );
+  assert.equal(
+    (
+      await ok(
+        "member",
+        "GET",
+        `/events?search=${encodeURIComponent(title)}&${octoberFilter}`,
+      )
+    ).items.length,
+    0,
+  );
+  const history = await ok(
+    "member",
+    "GET",
+    `/events?taskId=${task.id}&${octoberFilter}`,
+  );
+  assert(history.items.some((e: any) => e.type === "created"));
+  assert(
+    history.items.some(
+      (e: any) =>
+        e.type === "adjust" && e.before.plannedStart !== e.after.plannedStart,
+    ),
+  );
+  assert(
+    (await ok("member", "GET", "/followups")).items.some(
+      (n: any) => n.taskId === task.id && n.reason === "confirm",
+    ),
+  );
+  const version = await pool.query(
+    "SELECT terms FROM versions WHERE task_id=$1 AND version=2",
+    [task.id],
+  );
+  assert.equal(version.rows[0].terms.plannedStart, task.plannedStart);
+  assert.equal(
+    (
+      await api("member", "POST", `/tasks/${task.id}/actions/confirm`, {
+        version: 1,
+      })
+    ).status,
+    409,
+  );
+  task = await act("member", task, "confirm");
+  assert.equal(task.confirmedTerms.plannedStart, task.plannedStart);
+  assert.equal(task.confirmedVersion, 2);
+  const freshDraft = await ok("member", "POST", "/tasks", {
+    title: prefix + " New without dates",
+  });
+  assert.equal(freshDraft.plannedStart, "");
+  assert.equal(freshDraft.deadline, "");
+  let datedDraft = await act("member", freshDraft, "edit", {
+    fields: timeFields({
+      title: prefix + " Legacy client",
+      plannedStart: "2026-10-01T00:00:00Z",
+    }),
+  });
+  const legacyFields = { ...datedDraft };
+  delete legacyFields.plannedStart;
+  datedDraft = await act("member", datedDraft, "edit", {
+    fields: legacyFields,
+  });
+  assert.equal(datedDraft.plannedStart, "2026-10-01T00:00:00Z");
+});
+test("AC-72/73: earlier unfinished labels honor project/search/status and outside dependencies still block acceptance", async () => {
+  const title = prefix + " Time earlier";
+  let previous = await ok(
+    "leader",
+    "POST",
+    "/tasks",
+    timeFields({ title, deadline: "2026-09-10T00:00:00Z" }),
+  );
+  previous = await act("leader", previous, "issue");
+  let current = await ok("leader", "POST", "/tasks", timeFields({ title }));
+  current = await act("leader", current, "issue");
+  await ok("leader", "POST", `/tasks/${current.id}/relations`, {
+    version: current.version,
+    targetId: previous.id,
+    kind: "dependency",
+    reason: "Prerequisite",
+  });
+  const path = `/tasks?search=${encodeURIComponent(title)}&projectId=${projectId}&${octoberFilter}`;
+  assert.equal((await ok("member", "GET", path)).total, 1);
+  const earlier = await ok("member", "GET", path + "&includeEarlier=true");
+  assert.equal(earlier.total, 2);
+  assert.equal(
+    earlier.items.find((t: any) => t.id === previous.id).viewSource,
+    "earlier",
+  );
+  assert.equal(
+    (await ok("member", "GET", path + "&includeEarlier=true&stage=working"))
+      .total,
+    0,
+  );
+  assert.equal(
+    (
+      await ok(
+        "member",
+        "GET",
+        path.replace(projectId, randomUUID()) + "&includeEarlier=true",
+      )
+    ).total,
+    0,
+  );
+  current = await act("member", current, "acceptStart");
+  current = await act("member", current, "submitResult", {
+    text: "Complete",
+    reviewBy: future,
+  });
+  assert.equal(
+    (
+      await api("leader", "POST", `/tasks/${current.id}/actions/pass`, {
+        version: current.version,
+        submissionId: current.submissions.at(-1).id,
+      })
+    ).data.error.code,
+    "dependencyIncomplete",
+  );
+  assert(
+    (await ok("member", "GET", `/tasks/${current.id}`)).targets.some(
+      (t: any) => t.id === previous.id,
+    ),
+  );
+  previous = await act("leader", previous, "cancel", {
+    reason: "No longer planned",
+  });
+  assert.equal(
+    (await ok("member", "GET", path + "&includeEarlier=true")).total,
+    1,
+  );
+});

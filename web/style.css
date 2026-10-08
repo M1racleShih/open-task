@@ -1210,3 +1210,18 @@ dd {
 .fact-field > small { display: block; margin-bottom: 3px; }
 .center > .workspace { overflow: hidden; flex: 1 1 0; }
 .center > .bottom { flex: 0 0 auto; min-height: 0; }
+
+.time-filter { font-size: 12px; min-width: 0; }
+.time-filter summary { cursor: pointer; line-height: 1.5; overflow-wrap: anywhere; }
+.time-filter form { display: grid; gap: 9px; padding: 10px 0; }
+.time-filter label { display: grid; gap: 4px; min-width: 0; margin: 0; }
+.time-filter .check-option { display: flex; flex-direction: row; align-items: center; gap: 7px; }
+.time-filter .check-option input { width: auto; }
+.range-dates { display: grid; gap: 8px; }
+.range-dates input { width: 100%; min-width: 0; }
+.time-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.time-filter small { color: var(--muted); line-height: 1.5; }
+.context-task { opacity: .7; }
+.node[data-view-source="context"] { opacity: .65; }
+
+.tree > .filters { max-height: 60%; overflow-y: auto; flex-shrink: 0; }

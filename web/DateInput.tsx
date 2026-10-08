@@ -13,14 +13,17 @@ export function DateInput({
   onChange: (value: string) => void;
 }) {
   const { lang } = useI18n();
-  const [text, setText] = useState(() =>
-    value
-      ? new Date(Date.parse(value) + 8 * 3600000)
+  const [text, setText] = useState(() => {
+    if (!value) return "";
+    const instant = Date.parse(value);
+    // Keep a malformed legacy draft editable rather than crashing the form.
+    return Number.isFinite(instant)
+      ? new Date(instant + 8 * 3600000)
           .toISOString()
           .slice(0, 16)
           .replace("T", " ")
-      : "",
-  );
+      : value;
+  });
   const hint =
     lang === "en" ? "YYYY-MM-DD HH:mm · 24-hour" : "年-月-日 时:分 · 24 小时";
   return (
