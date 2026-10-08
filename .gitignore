@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+artifacts/
+backups/
+.vscode/
+.code-reviwe-graph/

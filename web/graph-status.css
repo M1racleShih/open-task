@@ -1,0 +1,88 @@
+.state-graph {
+  --life-preparing: #78849b;
+  --life-pending: #ac7b32;
+  --life-active: #447bd0;
+  --life-changed: #a35ba7;
+  --life-review: #278b87;
+  --life-done: #42885a;
+  --life-cancelled: #9d7477;
+}
+[data-theme="dark"] .state-graph {
+  --life-preparing: #a5adce;
+  --life-pending: #e5c890;
+  --life-active: #8caaee;
+  --life-changed: #ca9ee6;
+  --life-review: #81c8be;
+  --life-done: #a6d189;
+  --life-cancelled: #e78284;
+}
+.state-graph [data-lifecycle="preparing"] {
+  --phase-color: var(--life-preparing);
+}
+.state-graph [data-lifecycle="pending"] {
+  --phase-color: var(--life-pending);
+}
+.state-graph [data-lifecycle="active"] {
+  --phase-color: var(--life-active);
+}
+.state-graph [data-lifecycle="changed"] {
+  --phase-color: var(--life-changed);
+}
+.state-graph [data-lifecycle="review"] {
+  --phase-color: var(--life-review);
+}
+.state-graph [data-lifecycle="done"] {
+  --phase-color: var(--life-done);
+}
+.state-graph [data-lifecycle="cancelled"] {
+  --phase-color: var(--life-cancelled);
+}
+.graph-state-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+  color: var(--muted);
+}
+.graph-state-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.graph-state-legend i {
+  width: 6px;
+  height: 6px;
+  background: var(--phase-color);
+  border-radius: 50%;
+}
+.state-graph .graph-tools {
+  flex-wrap: wrap;
+}
+.graph.state-graph .node .task-icon path {
+  stroke: none;
+  fill: var(--phase-color);
+}
+.graph.state-graph .node text {
+  fill: var(--phase-color);
+  font-weight: 600;
+}
+.graph.state-graph .node .task-node-frame {
+  stroke: transparent;
+  stroke-width: 1;
+  fill: transparent;
+}
+.graph.state-graph .node:hover .task-node-frame {
+  stroke: var(--phase-color);
+  fill: color-mix(in srgb, var(--phase-color) 7%, var(--panel));
+}
+.graph.state-graph .node.selected .task-node-frame,
+.graph.state-graph .node:focus-visible .task-node-frame {
+  stroke: var(--phase-color);
+  fill: color-mix(in srgb, var(--phase-color) 13%, var(--panel));
+}
+.graph.state-graph .node .task-node-frame[data-blocked="true"] {
+  stroke: var(--danger, #bd6265);
+  stroke-dasharray: 4 3;
+}

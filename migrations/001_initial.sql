@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS users (id uuid PRIMARY KEY, username text UNIQUE NOT NULL, name text NOT NULL, password_hash text NOT NULL, roles jsonb NOT NULL, active boolean NOT NULL DEFAULT true);
+CREATE TABLE IF NOT EXISTS sessions (token_hash text PRIMARY KEY, user_id uuid NOT NULL REFERENCES users(id), csrf text NOT NULL, expires_at timestamptz NOT NULL);
+CREATE TABLE IF NOT EXISTS projects (id uuid PRIMARY KEY, name text NOT NULL, manager_id uuid NOT NULL REFERENCES users(id), member_ids jsonb NOT NULL DEFAULT '[]');
+CREATE SEQUENCE IF NOT EXISTS task_number;
+CREATE TABLE IF NOT EXISTS tasks (id uuid PRIMARY KEY, number integer UNIQUE NOT NULL DEFAULT nextval('task_number'), creator_id uuid NOT NULL REFERENCES users(id), stage text NOT NULL, project_id uuid REFERENCES projects(id), data jsonb NOT NULL);
+CREATE INDEX IF NOT EXISTS tasks_visibility ON tasks(stage, creator_id);
+CREATE INDEX IF NOT EXISTS tasks_project ON tasks(project_id,number);
+CREATE TABLE IF NOT EXISTS events (id bigserial PRIMARY KEY, task_id uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE, actor_id uuid NOT NULL REFERENCES users(id), type text NOT NULL, version integer NOT NULL, before_value jsonb, after_value jsonb, note text NOT NULL DEFAULT '', at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS events_task ON events(task_id,id DESC);
+CREATE INDEX IF NOT EXISTS events_actor ON events(actor_id,id DESC);
+CREATE TABLE IF NOT EXISTS versions (task_id uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE, version integer NOT NULL, terms jsonb NOT NULL, PRIMARY KEY(task_id,version));
+CREATE TABLE IF NOT EXISTS relations (id uuid PRIMARY KEY, source_id uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE, target_id uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE, kind text NOT NULL CHECK(kind IN ('parent','dependency','related')), CHECK(source_id <> target_id), UNIQUE(source_id,target_id,kind));
+CREATE UNIQUE INDEX IF NOT EXISTS one_parent ON relations(source_id) WHERE kind='parent';
+CREATE INDEX IF NOT EXISTS relations_target ON relations(target_id);
+CREATE TABLE IF NOT EXISTS idempotency (user_id uuid NOT NULL REFERENCES users(id), key text NOT NULL, fingerprint text NOT NULL, response jsonb NOT NULL, PRIMARY KEY(user_id,key));
+CREATE TABLE IF NOT EXISTS followups (task_id uuid NOT NULL REFERENCES tasks(id) ON DELETE CASCADE, reason text NOT NULL, version integer NOT NULL, handler_id uuid NOT NULL REFERENCES users(id), since timestamptz NOT NULL, active boolean NOT NULL, PRIMARY KEY(task_id,reason,version));
+CREATE TABLE IF NOT EXISTS worker_health (name text PRIMARY KEY, checked_at timestamptz NOT NULL, error text);

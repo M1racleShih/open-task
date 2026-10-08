@@ -1,6 +1,6 @@
 # open-task UI previews
 
-Current candidate: [Task IDE](http://127.0.0.1:4174/frappe.html). The user explicitly requested an IDE workflow: task explorer on the left, relationship graph in the center, inspector on the right, and a collapsible bottom panel. Implementation details await review.
+UI requirements demo: [Task IDE](http://127.0.0.1:4174/frappe.html). The user explicitly requested an IDE workflow: task explorer on the left, relationship graph in the center, inspector on the right, and a collapsible bottom panel. The user is broadly satisfied with this UI direction and explicitly confirmed that this directory is only a demo for aligning UI requirements, not the final implementation. Production code, architecture, components, data models, and business behavior must be designed from the confirmed specs.
 
 ## Open
 
@@ -17,7 +17,7 @@ From this directory, run `python3 -m http.server 4174 --bind 127.0.0.1`, then op
 - Update checklist states, approve or return a submission, accept a task, or record a follow-up. Progress does not automatically approve a task or clear a blocker.
 - Switch light / Frappé dark themes. On narrow screens, switch among tree, workspace (graph or team updates), and detail views.
 
-The palette restores the pre-Studio cool light theme and Frappé dark. A shared mist-blue/slate-blue frame fills the outer edge and 7px panel gaps; the main panels have 10px corners. The frame colors are candidates for review. Functional icons are local Lucide SVGs; see [asset notices](ATTRIBUTION.md). The supplied Obsidian and VS Code screenshots informed layout and interaction, not copied assets or source.
+The palette restores the pre-Studio cool light theme and Frappé dark. A shared mist-blue/slate-blue frame fills the outer edge and 7px panel gaps; the main panels have 10px corners. The frame colors are accepted visual references that may be refined during real use. Functional icons are local Lucide SVGs; see [asset notices](ATTRIBUTION.md). The supplied Obsidian and VS Code screenshots informed layout and interaction, not copied assets or source.
 
 ## Verification and limits
 
