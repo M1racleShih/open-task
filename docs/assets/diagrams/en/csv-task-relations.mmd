@@ -1,0 +1,16 @@
+flowchart TB
+  accTitle: Parent and prerequisite relations in the CSV export case
+  accDescr: A is the delivery parent of B, C and D. B is required for C to pass review, and C for D. The parent requires its own result submission and acceptance.
+  A["A · Deliver CSV export v0.1<br/>manager owns / leader reviews"]
+  B["B · Confirm export rules<br/>manager / leader"]
+  C["C · Implement CSV export<br/>member / manager"]
+  D["D · Verify and prepare delivery notes<br/>other / manager"]
+  A -.->|Primary parent · breakdown| B
+  A -.->|Primary parent · breakdown| C
+  A -.->|Primary parent · breakdown| D
+  B ==>|B must complete before C passes review| C
+  C ==>|C must complete before D passes review| D
+  classDef task fill:#EDF3F8,stroke:#365FAC,color:#28344B,stroke-width:1.5px;
+  classDef parent fill:#DCE7FA,stroke:#365FAC,color:#28344B,stroke-width:2px;
+  class A parent;
+  class B,C,D task;

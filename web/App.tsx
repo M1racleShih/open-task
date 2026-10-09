@@ -477,8 +477,13 @@ export function App() {
       <main className="login">
         <section>
           <div className="brand">
-            <ClipboardList />
-            <strong>Open Task</strong>
+            <img
+              className="brand-logo"
+              src="/brand/opentask-cat-logo.png"
+              alt="OpenTask"
+              width={168}
+              height={168}
+            />
             {language}
           </div>
           <h1>{t("login")}</h1>
@@ -675,8 +680,16 @@ export function App() {
   return (
     <div className="app">
       <header className="top">
-        <ClipboardList size={20} />
-        <strong>Open Task</strong>
+        <div className="product-brand">
+          <img
+            className="brand-mark"
+            src="/brand/opentask-cat-mark.png"
+            alt="OpenTask"
+            width={34}
+            height={34}
+          />
+          <strong aria-hidden="true">OpenTask</strong>
+        </div>
         <span className="workspace-label">{t("tasks")}</span>
         <div className="spacer" />
         {language}
@@ -759,7 +772,7 @@ export function App() {
           popoverTarget="account-popover"
           aria-label={t("account")}
         >
-          {me.name}
+          <span className="account-name">{me.name}</span>
           <ChevronDown size={14} />
         </button>
         <div

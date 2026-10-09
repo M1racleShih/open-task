@@ -1,0 +1,18 @@
+flowchart TB
+  accTitle: OpenTask 任务交付主流程
+  accDescr: 草稿经创建审核成为待接收，负责人接受并开始后提交成果，由验收人通过或退回。清单完成不等于任务完成。
+  draft["草稿 · 创建者可见"] -->|创建者提交审核| approval["待创建审核"]
+  approval -->|审批人退回| returned["审核退回修改"]
+  returned -->|创建者修改后重提| approval
+  approval -->|最后一级由团队负责人通过| pending["待接收 · 团队可见"]
+  draft -.->|团队负责人创建并直接下发| pending
+  pending -->|负责人接收任务| accepted["已接收"]
+  accepted -->|负责人开始执行| working["进行中"]
+  pending -->|负责人接收并开始| working
+  working -->|负责人提交成果<br/>需已确认当前约定版本| review["待验收"]
+  review -->|验收人退回<br/>说明缺口与下次反馈时间| working
+  review -->|验收人通过<br/>前置任务必须已验收完成| done["已完成 · 不可重开"]
+  classDef active fill:#EDF3F8,stroke:#365FAC,color:#28344B,stroke-width:1.5px;
+  classDef terminal fill:#DCE7FA,stroke:#365FAC,color:#28344B,stroke-width:2px;
+  class draft,approval,returned,pending,accepted,working,review active;
+  class done terminal;

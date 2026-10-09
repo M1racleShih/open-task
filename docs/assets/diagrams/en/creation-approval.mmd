@@ -1,0 +1,15 @@
+sequenceDiagram
+  accTitle: Creation approval and acceptance for an ordinary project member
+  accDescr: After submission, the project manager reviews first, the team leader gives final approval and issues the task, then the owner accepts. Assignment alone is not an execution commitment.
+  actor C as Creator
+  actor P as Project manager
+  actor L as Team leader
+  actor O as Task owner
+  C->>P: Submit for approval
+  Note over C,O: Team-visible after submission<br/>Creator and owner may differ
+  P->>L: Approve first level
+  Note over P,L: Still in Creation approval<br/>Waiting for team leader
+  L->>O: Final approval and issue
+  Note over L,O: State: Awaiting acceptance
+  O->>O: Accept (optionally start)
+  Note over O: Accepting the agreement<br/>creates the execution commitment

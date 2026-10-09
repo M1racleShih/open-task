@@ -138,6 +138,7 @@ a {
 .login {
   min-height: 100vh;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 24px;
 }
@@ -152,7 +153,38 @@ a {
 .brand {
   display: flex;
   gap: 10px;
+  align-items: flex-start;
+}
+.brand-logo {
+  display: block;
+  width: 168px;
+  height: 168px;
+  flex-shrink: 0;
+  padding: 8px;
+  border-radius: 16px;
+  background: #fff8ed;
+  object-fit: contain;
+}
+.product-brand {
+  display: flex;
+  gap: 8px;
   align-items: center;
+  flex-shrink: 0;
+}
+.brand-mark {
+  display: block;
+  width: 34px;
+  height: 34px;
+  padding: 2px;
+  border-radius: 9px;
+  background: #fff8ed;
+  object-fit: contain;
+}
+.account-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .brand select {
   width: auto;
@@ -586,6 +618,10 @@ dd {
   }
 }
 @media (max-width: 760px) {
+  .brand-logo {
+    width: 140px;
+    height: 140px;
+  }
   .app {
     padding: 0 4px;
   }
@@ -593,7 +629,15 @@ dd {
     height: 48px;
   }
   .top select {
-    width: 112px;
+    width: 96px;
+    flex-shrink: 0;
+  }
+  .top .account-button {
+    min-width: 0;
+    max-width: 100px;
+  }
+  .account-button svg {
+    flex-shrink: 0;
   }
   .top strong {
     font-size: 13px;

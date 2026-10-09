@@ -1,27 +1,33 @@
 # API v1
 
-The frontend is the first client. Cookie sessions, CSRF headers and idempotency keys are required as described in README. Read-after-write consistency is provided by PostgreSQL transactions; business mutations share a short advisory lock so relation edits cannot race result acceptance. No external calls run inside business transactions. Schema evolution is additive within v1.
+[简体中文](../zh-CN/API.md)
 
-| Method / path under /api/v1 | Request / response |
-| --- | --- |
-| POST /sessions | `{username,password}` → `{user,csrf}` and session cookie |
-| DELETE /sessions | Revokes the current session |
-| GET /me | `{user,csrf}` |
-| GET /users | Public team identity fields; password hashes excluded |
-| POST /users | Admin: `{username,name,password,roles}` |
-| PATCH /users/:id | Admin: `{active}`; outstanding responsibilities block disabling |
-| GET /projects | `{id,name,managerId,memberIds}[]` |
-| POST /projects | Leader: `{name,managerId,memberIds}` |
-| PATCH /projects/:id | Manager: `{memberIds}`; leader may transfer `managerId` after responsibilities are moved |
-| GET /tasks | `cursor`, `limit` ≤ 200, `search`, `projectId` → `{items,nextCursor}` |
-| POST /tasks | `title` required; optional agreement fields from shared/model.ts |
-| GET /tasks/:id | `{task,relations}` filtered by draft visibility |
-| DELETE /tasks/:id | Only the creator's unsubmitted draft |
-| POST /tasks/:id/actions/:action | `{version,...actionFields}` → updated task |
-| POST /tasks/:id/relations | `{version,targetId,kind,reason,remove?}` |
-| GET /relations | UUID `cursor`, `limit` ≤ 1000 → `{items,nextCursor}` |
-| GET /events | Cursor, limit ≤ 200, taskId/projectId/actorId/search filters |
-| GET /followups | Active facts visible to the current handler or team leader |
+The frontend is the first client. The same-origin API is under `/api/v1`. Sessions use an HttpOnly, SameSite=Strict cookie. Mutation calls require the session's `X-CSRF-Token`; business writes also require an `Idempotency-Key` unique to the logical operation. Retrying the same payload with the same key returns the original result.
+
+Task actions carry the viewed `version`. Result review also carries `submissionId`, and checklist toggles carry `expectedDone`. Lists use bounded cursor pagination; task and event lists return `{items,nextCursor}`. Errors use `{error:{code,requestId,details}}` with 401/403/404/409/422/429/500 statuses. The frontend translates stable error codes. The OpenAPI description is available at `/api/v1/openapi.json` after login.
+
+PostgreSQL transactions provide read-after-write consistency. Business mutations share a short advisory lock so relation edits cannot race result acceptance. No external calls run inside business transactions. Schema evolution is additive within v1.
+
+| Method / path under /api/v1     | Request / response                                                                        |
+| ------------------------------- | ----------------------------------------------------------------------------------------- |
+| POST /sessions                  | `{username,password}` → `{user,csrf}` and session cookie                                  |
+| DELETE /sessions                | Revokes the current session                                                               |
+| GET /me                         | `{user,csrf}`                                                                             |
+| GET /users                      | Public team identity fields; password hashes excluded                                     |
+| POST /users                     | Admin: `{username,name,password,roles}`                                                   |
+| PATCH /users/:id                | Admin: `{active}`; outstanding responsibilities block disabling                           |
+| GET /projects                   | `{id,name,managerId,memberIds}[]`                                                         |
+| POST /projects                  | Leader: `{name,managerId,memberIds}`                                                      |
+| PATCH /projects/:id             | Manager: `{memberIds}`; leader may transfer `managerId` after responsibilities are moved  |
+| GET /tasks                      | `cursor`, `limit` ≤ 200, `search`, `projectId` → `{items,nextCursor}`                     |
+| POST /tasks                     | `title` required; optional agreement fields from [shared/model.ts](../../shared/model.ts) |
+| GET /tasks/:id                  | `{task,relations}` filtered by draft visibility                                           |
+| DELETE /tasks/:id               | Only the creator's unsubmitted draft                                                      |
+| POST /tasks/:id/actions/:action | `{version,...actionFields}` → updated task                                                |
+| POST /tasks/:id/relations       | `{version,targetId,kind,reason,remove?}`                                                  |
+| GET /relations                  | UUID `cursor`, `limit` ≤ 1000 → `{items,nextCursor}`                                      |
+| GET /events                     | Cursor, limit ≤ 200, taskId/projectId/actorId/search filters                              |
+| GET /followups                  | Active facts visible to the current handler or team leader                                |
 
 Action fields are validated on the server. `edit` and `adjust` use `fields` containing all agreement fields; adjust additionally requires reason and confirmBy. `progress` requires text, next and feedbackBy. `submitResult` requires text, reviewBy and optional links. `pass` and `returnResult` require submissionId; return requires reason and feedbackBy. Checklist requests carry stable item IDs, text, scopeChanged and reason; approval carries requestId and confirmBy for scope changes. Relation kinds are parent (child → parent), dependency (dependent → prerequisite), and related (symmetric).
 

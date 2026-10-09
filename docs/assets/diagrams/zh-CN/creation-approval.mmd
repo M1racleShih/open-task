@@ -1,0 +1,15 @@
+sequenceDiagram
+  accTitle: 普通项目成员创建任务的审批和接受
+  accDescr: 创建者提交后，项目负责人先审核，团队负责人最后审核并下发，任务负责人再接受。指定负责人不会自动形成执行承诺。
+  actor C as 创建者
+  actor P as 项目负责人
+  actor L as 团队负责人
+  actor O as 任务负责人
+  C->>P: 提交创建审核
+  Note over C,O: 提交后团队可见；创建者与负责人可以不同
+  P->>L: 通过第一级创建审核
+  Note over P,L: 仍是待创建审核<br/>等待团队负责人
+  L->>O: 最后一级通过，下发任务
+  Note over L,O: 状态：待接收
+  O->>O: 接收（可同时开始）
+  Note over O: 接受约定后<br/>才形成执行承诺

@@ -1,10 +1,44 @@
-# Open Task
+<p align="center">
+  <img src="web/public/brand/opentask-cat-logo.png" width="180" alt="OpenTask cat logo">
+</p>
 
-A local, single-team task workspace with creation approval, explicit acceptance, progress, checklist approval, version confirmation and result review. The React task IDE uses the Fastify API and PostgreSQL; `ui-previews/` is a separate requirements demo.
+# OpenTask
 
-## Requirements and local start
+English · [简体中文](README.zh-CN.md)
 
-Node.js 24 LTS, npm, Docker Engine and Compose. Ports 4310 and 55432 must be available. These commands do not modify existing services:
+OpenTask helps a team agree on what to deliver, confirm who will do it, and review the result. Each task keeps its agreement, progress, changes and review decisions together, so the team can see what was promised and what happened.
+
+The current release candidate is **0.1.0-alpha**, a local, single-team MVP with an English and Simplified Chinese interface. See the [release notes](docs/en/RELEASE-NOTES.md).
+
+## What you can do
+
+| Capability          | How it helps                                                                                                                       |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Agree on work       | Define the expected result, acceptance criteria, owner, reviewer and deadlines; get creation approval from the responsible people. |
+| Follow execution    | Use approved checklists, formal progress updates and blocker requests; followups show who needs to act next.                       |
+| Review delivery     | Submit results and evidence links, accept or return them, and retain earlier submissions and review reasons.                       |
+| Understand the work | Use the project tree and task graph for parent/child, prerequisite and related tasks; filter by project, status, search and time.  |
+
+Language and light/dark theme choices persist in the browser. Task content is not translated automatically. Dates are entered and displayed in **Asia/Shanghai** time.
+
+## Design philosophy in practice
+
+These rules explain how OpenTask handles responsibility, changes and delivery:
+
+- **The owner accepts the work.** Assigning someone a CSV export task leaves it awaiting acceptance. The owner reads the expected result and deadlines before accepting; creation approval and the owner's commitment are separate decisions.
+- **The reviewer decides when it is complete.** Checking every execution step helps track work. To finish, the owner submits a result and the reviewer accepts it against the agreed criteria.
+- **The owner confirms changes.** If the team leader changes the scope or deadline, the owner confirms the new version. A replacement owner must accept the task again.
+- **Keep rework in the same task.** If the reviewer returns a result, the owner improves and resubmits in the same task. Earlier submissions and return reasons remain available to both people.
+- **Parents group work; prerequisites constrain review.** A parent groups smaller tasks. A prerequisite means another task's result must be accepted before this result can be accepted; it does not prevent work from starting early. Completing child tasks does not automatically complete their parent.
+- **Follow-up work gets a new task.** Completed and cancelled tasks cannot reopen. Later fixes become new tasks related to the original, preserving the earlier delivery decision.
+
+See the [user guide](docs/en/USER-GUIDE.md) for approval routes, roles and the full lifecycle.
+
+## Quick start
+
+You need **Node.js 24 LTS**, npm, Docker Engine and Docker Compose. Ports `4310` (app) and `55432` (PostgreSQL) must be free; both services listen only on localhost. For an existing workspace, [back up before updating](docs/en/RELEASE-CHECK.md).
+
+From the repository root:
 
 ```sh
 npm ci
@@ -15,92 +49,64 @@ npm run build
 npm start
 ```
 
-In a second terminal in this directory:
+In a second terminal, from the same directory:
 
 ```sh
 npm run worker
 ```
 
-Open http://127.0.0.1:4310. The app binds to loopback only. The independent database volume is `open-task-mvp_database`. Stop the API and worker with Ctrl+C; stop PostgreSQL with `docker compose stop db`. Do not use `down -v` unless deliberately deleting all application data. Restart with the same commands without recreating the volume. Migration and account seeding are repeatable; seeding does not reset existing passwords.
+Open <http://127.0.0.1:4310/>. **Keep both the API and worker running.** The worker handles background jobs, including overdue reminders.
 
-Local acceptance accounts (explicit test identities):
+The seed command creates these local test accounts in a new database, with initial password **`OpenTask-Test-2026!`**:
 
-| Username | Role |
-| --- | --- |
-| admin | Account administrator; no business approval privileges |
-| leader | Team leader |
-| manager | Member; designate as project manager when creating a project |
-| member | Member / task owner |
-| other | Additional member for visibility and authorization checks |
+| Username  | Responsibility                                                          |
+| --------- | ----------------------------------------------------------------------- |
+| `leader`  | Team leader; creates projects and gives final creation approval.        |
+| `manager` | Member; can be assigned as a project's manager.                         |
+| `member`  | Member; can own and execute tasks.                                      |
+| `other`   | Additional member for collaboration and permission checks.              |
+| `admin`   | Account administrator; this role grants no business approval authority. |
 
-With the seed command above, the initial password is `OpenTask-Test-2026!`. These are local test credentials. No public registration, directory login, outbound messaging, uploads, model or Agent integration is included.
+Migration and seeding are repeatable. Seeding does not reset existing passwords. The interface starts in English; use **Language** to switch to Simplified Chinese.
 
-## Working through the lifecycle
+Stop the API and worker with Ctrl+C, then run `docker compose stop db` to stop PostgreSQL. Data stays in the `open-task-mvp_database` volume. **`docker compose down -v` deletes that data.** See [local setup](docs/en/QUICKSTART.md) for restarts, troubleshooting and an isolated case environment.
 
-1. As leader, create a project, choose `manager` as project manager and add members.
-2. As member, create a draft, choose the project and owner, enter expected result, criteria and explicit acceptance, feedback and delivery times. Submit for approval. All non-draft tasks are visible to the team.
-3. As manager, approve creation. The task still waits for leader. As leader, approve to issue.
-4. As owner, accept and start; record formal progress and the next feedback time. Comments do not count as progress. Checklist content changes require leader approval; ordinary check marks do not.
-5. Submit a written result and optional HTTP(S) links with an explicit review time. The designated reviewer returns with a reason and next feedback time, or accepts. Returned work continues in the same task.
-6. Leader agreement changes require owner confirmation. Reassignment returns to acceptance. Completed/cancelled tasks are not reopened; create related follow-up tasks.
+## Documentation
 
-Times are entered and displayed in Asia/Shanghai. English is the initial language regardless of browser locale; language and theme preferences persist in this browser. User-authored text is never translated. Forms preserve input on failed requests. Refresh and read a changed version before retrying a stale operation.
+The full documentation is available in [English](docs/en/README.md) and [简体中文](docs/zh-CN/README.md). Each page links to its counterpart.
 
-## Development and checks
+| Read                                                                                               | Covers                                                               |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [User guide](docs/en/USER-GUIDE.md)                                                                | Roles, approval, execution, changes, review and task relations.      |
+| [CSV export case](docs/en/CASE-CSV-EXPORT.md)                                                      | A complete delivery with synthetic accounts and tasks.               |
+| [Development](docs/en/DEVELOPMENT.md)                                                              | Build commands, database tests, browser checks and load testing.     |
+| [API v1](docs/en/API.md)                                                                           | Sessions, write requirements, endpoints and time filters.            |
+| [Release checks](docs/en/RELEASE-CHECK.md) · [Verification report](docs/en/RELEASE-CASE-RESULT.md) | Backup and recovery, recorded checks, evidence and remaining limits. |
+
+Build the bilingual documentation as offline HTML:
+
+```sh
+npm run docs:build
+```
+
+Output: `artifacts/docs/index.html`. See the [documentation entry](docs/README.md) for preview and maintenance instructions.
+
+## Development
+
+The app uses React and Vite, a Fastify API, PostgreSQL and a separate pg-boss worker. `ui-previews/` contains the earlier requirements demo.
 
 ```sh
 npm run typecheck
 npm run build
-scripts/test-db.sh
-npx tsx scripts/browser-check.ts
-npx tsx scripts/browser-workflow.ts
+bash scripts/test-db.sh
 ```
 
-`test-db.sh` uses a separate `open_task_test` database and explicit synthetic fixtures. Integration tests include an actual database trigger failure; never point them at production data. Browser scripts operate through the running local application and preserve their explicitly labeled acceptance records. They require Chrome at `/usr/bin/google-chrome`. Screenshots and detailed run outputs go in `artifacts/`.
+The database checks use synthetic fixtures in `open_task_test`. With the Compose database running, `npm run case:check` verifies the API lifecycle and backup/restore in `open_task_release_case`. Follow the [development guide](docs/en/DEVELOPMENT.md) for the scope and prerequisites of each check.
 
-To run the five-minute, 30-user local load test after integration fixtures:
+## Current scope and licenses
 
-```sh
-DATABASE_URL='postgres://open_task:open-task-local-only@127.0.0.1:55432/open_task_test' npx tsx scripts/performance.ts
-```
+This version supports one team running locally. Non-draft tasks are visible to the whole team; project membership does not make them private. External identity or directory login, file uploads, outbound messaging, and model or Agent integration are not included. Approval overhead, long-term usability and capacity still need trial use in real teams.
 
-The performance script starts a separate API on 4312 and creates 5,000 explicitly labeled test tasks. It never connects to the acceptance database by default. Results: `artifacts/performance.json`.
+Product specifications and historical reviews live in the separate [open-task-specs repository](../open-task-specs/README.md). That link assumes sibling checkouts; the specifications repository is not required to build or run OpenTask.
 
-## Backup and isolated restore
-
-```sh
-scripts/backup.sh
-scripts/restore-check.sh backups/<backup-file>.dump
-```
-
-Backups contain PostgreSQL business data and pg-boss jobs, including account password hashes. Keep them private. The restore script creates a new isolated database and reports row-count comparisons. It does not overwrite the active database. External evidence URLs and original submission text are backed up; the remote files themselves are not.
-
-For exact comparisons, stop application writes and the worker while taking and checking the backup. Before upgrades, create a backup, apply migrations, build and restart the API and worker. Check `/health` and the worker's `worker_health` row; pg-boss job failure details remain in PostgreSQL.
-
-## API contract
-
-The same-origin API is under `/api/v1`. Sessions use an HttpOnly SameSite=Strict cookie; mutation calls also require the session's `X-CSRF-Token`. All business writes require an `Idempotency-Key` unique to the logical operation. Retrying the same payload with the same key returns the original result. Task actions carry the viewed `version`; results also carry `submissionId`, and checklist toggles carry `expectedDone`.
-
-Lists use bounded cursor pagination. Task/event responses are `{items,nextCursor}`. Errors are `{error:{code,requestId,details}}` with 401/403/404/409/422/429/500 statuses. The frontend translates stable error codes. `/api/v1/openapi.json` is available after login. See `docs/API.md` for request shapes and [verification history](../open-task-specs/reviews/mvp/VERIFICATION.md) for evidence and outstanding work.
-
-## UI reference and icon licenses
-
-See [UI comparison](../open-task-specs/reviews/mvp/UI-COMPARISON.md) for the formal task IDE versus the approved preview, and [third-party notices](docs/THIRD-PARTY-NOTICES.md) for Lucide ISC / Feather MIT permissions. The complete icon license is included in the built application at `/lucide-LICENSE.txt`.
-
-## Latest UI fixes and ready-to-open examples
-
-The local UI polish delivery, test evidence and known limits are in [UI polish report](../open-task-specs/reviews/mvp/UI-POLISH.md). Open [OT-38 checklist/blocker example](http://127.0.0.1:4310/?task=58c649c9-740c-433f-9134-f7725a6b4b4e) or [OT-39 result-review example](http://127.0.0.1:4310/?task=0c3421bc-4f74-4742-9d09-880caa6167f0). These are explicitly marked API-persisted acceptance examples. Apply the additive project-color migration with `npm run db:migrate` before restarting updated code. Dates now accept `YYYY-MM-DD HH:mm` in Shanghai time, with localized format hints.
-
-## Documentation ownership
-
-This repository keeps setup, development, API and distribution-license documentation. Product specifications and historical review/acceptance reports live in [open-task-specs](../open-task-specs/README.md), with an [MVP report index](../open-task-specs/reviews/mvp/README.md). Cross-repository links assume sibling checkouts; the specifications repository is not required to build or run the app. Scripts, artifacts and backups remain here.
-
-On hosts with a read-only default npm cache, `.npmrc` uses `/tmp/open-task-npm`. The Compose project is `open-task-mvp`; ports 4173/4174 belong to separate UI demos, not the application.
-
-## Task plans and time filters
-
-The task tree filter offers All time / This week / This month / Custom range with optional unscheduled and earlier unfinished tasks. All-project views use your global range. Selecting a project initially follows global; applying a range creates a personal project override, and Follow global removes it. Preferences persist per account in PostgreSQL, while theme/language remain browser preferences. The tree, graph, match counts and team activity share the task match; reminders and selected task history remain complete. Task creation leaves planned dates empty and out-of-range details remain viewable.
-
-Apply `npm run db:migrate` before starting the updated API (adds only user time preferences; existing task JSON and history need no backfill). Follow the existing backup/build/restart procedure above for the main local database. Task dates add optional `plannedStart` and reuse `deadline`; both use existing agreement confirmation. See [API contract](docs/API.md).
-
-For an isolated browser run, after `scripts/test-db.sh` and `npm run build`, start the API with `DATABASE_URL=postgres://open_task:open-task-local-only@127.0.0.1:55432/open_task_test PORT=4316 npm start`, then run `DATABASE_URL=postgres://open_task:open-task-local-only@127.0.0.1:55432/open_task_test npx tsx scripts/browser-time-filter.ts`. `TIME_TEST_URL` may select a different isolated port. The script requires the isolated database guard, labels fixture records, and writes screenshots/results under `artifacts/time-filter`. In environments where standalone Chrome cannot access localhost, use the Codex browser against the isolated service and record that verification separately.
+OpenTask is licensed under [Apache-2.0](LICENSE). [Third-party notices](docs/en/THIRD-PARTY-NOTICES.md) cover the separate Lucide ISC and Feather MIT icon licenses; the complete Lucide license is also distributed with the app at `/lucide-LICENSE.txt`.

@@ -1,0 +1,52 @@
+
+> open-task@0.1.0 case:check
+> bash scripts/release-case.sh
+
+
+> open-task@0.1.0 db:migrate
+> tsx server/migrate.ts
+
+Database migration applied
+
+> open-task@0.1.0 db:seed
+> tsx server/seed.ts
+
+Local acceptance accounts created if absent; existing passwords unchanged.
+
+> open-task@0.1.0 build
+> vite build
+
+vite v8.2.2 building client environment for production...
+transforming...
+✓ 2147 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.39 kB │ gzip:   0.26 kB
+dist/assets/index-D6-ObiHg.css   19.97 kB │ gzip:   5.17 kB
+dist/assets/index-BKQZ0X-O.js   475.48 kB │ gzip: 149.09 kB
+
+✓ built in 1.40s
+PASS: 五个独立会话登录；会话凭据不写入报告
+PASS: 负责人建项目；普通成员越权及缺失 CSRF 被拒绝
+PASS: 私有草稿、自动验收人和幂等重试保持同一任务
+PASS: 项目负责人批准后仍等团队负责人；管理员无业务审批特权；提交后团队可见
+PASS: 四个任务、三个父子关系、两条前置依赖持久化
+PASS: 接受任务；清单先申请、待办指向负责人、批准后才生效
+PASS: 调整保留原承诺；旧版本与未确认提交被拒绝；确认后使用新约定
+PASS: 阻塞待办 → 协助回复 → 负责人解除；评论不更新正式反馈期限
+PASS: 正式进展保留下一步；清单全部完成不会关闭任务
+PASS: 非验收人被拒绝；未完成依赖阻止验收；退回保存成果及理由
+PASS: 依赖完成后重交通过；旧成果 ID 被拒绝；两次成果保留
+PASS: 子任务不自动完成父任务；显式验收后四任务完成、待办清空且不可重开
+PASS: 完整历史、API 重启与会话可用、worker 消费停机队列并重启，数据保持一致
+Release case passed: 13 checks; artifacts/release-case/629cde03/result.json
+users count and canonical content match: 5:8b8c17a8d4ba21dffb33908a7832a3d2
+projects count and canonical content match: 3:ddfe1854f488762b0b1debdb0c5fddc4
+tasks count and canonical content match: 9:8f1bd7a64d69e5f9ea10d07ce8fb9d86
+events count and canonical content match: 93:a5b47aae1f93056c4d46459dfe68211b
+versions count and canonical content match: 12:09183535b6b76f8d66b92d565efed368
+relations count and canonical content match: 10:77d7118c0a4a145eda4d7796523e2e1c
+followups count and canonical content match: 41:c9dfe972e188369ca81af05f0df52f58
+time_preferences count and canonical content match: 0:empty
+pgboss.job count and canonical content match: 74:cf269040b8120bb19b0ee177a85f0cfe
+Case backup restored and verified; temporary backup and own restore database cleaned up.

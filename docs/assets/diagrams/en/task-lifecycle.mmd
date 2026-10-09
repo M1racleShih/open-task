@@ -1,0 +1,18 @@
+flowchart TB
+  accTitle: OpenTask task delivery lifecycle
+  accDescr: A draft passes creation approval, awaits acceptance, is accepted and started by its owner, and has its result accepted or returned by the reviewer. Checklist completion does not complete the task.
+  draft["Draft · creator only"] -->|Creator submits for approval| approval["Creation approval"]
+  approval -->|Approver returns| returned["Returned for editing"]
+  returned -->|Creator edits and resubmits| approval
+  approval -->|Team leader gives final approval| pending["Awaiting acceptance · team-visible"]
+  draft -.->|Team leader creates and issues directly| pending
+  pending -->|Owner accepts task| accepted["Accepted"]
+  accepted -->|Owner starts work| working["In progress"]
+  pending -->|Owner accepts and starts| working
+  working -->|Owner submits result<br/>Current agreement must be confirmed| review["Awaiting review"]
+  review -->|Reviewer returns result<br/>Gaps and next feedback time required| working
+  review -->|Reviewer accepts result<br/>Prerequisites must be complete| done["Completed · cannot reopen"]
+  classDef active fill:#EDF3F8,stroke:#365FAC,color:#28344B,stroke-width:1.5px;
+  classDef terminal fill:#DCE7FA,stroke:#365FAC,color:#28344B,stroke-width:2px;
+  class draft,approval,returned,pending,accepted,working,review active;
+  class done terminal;

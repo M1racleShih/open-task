@@ -1,0 +1,16 @@
+flowchart TB
+  accTitle: CSV 导出案例的父子归属与前置依赖
+  accDescr: A 是交付父任务，B、C、D 是子任务；B 是 C 的验收前置，C 是 D 的验收前置。父任务需单独提交成果并验收。
+  A["A · 交付 CSV 导出 v0.1<br/>manager 负责 / leader 验收"]
+  B["B · 确认导出规则<br/>manager / leader"]
+  C["C · 实现 CSV 导出<br/>member / manager"]
+  D["D · 验证并整理交付说明<br/>other / manager"]
+  A -.->|主归属 · 拆分| B
+  A -.->|主归属 · 拆分| C
+  A -.->|主归属 · 拆分| D
+  B ==>|B 完成后 C 才能验收通过| C
+  C ==>|C 完成后 D 才能验收通过| D
+  classDef task fill:#EDF3F8,stroke:#365FAC,color:#28344B,stroke-width:1.5px;
+  classDef parent fill:#DCE7FA,stroke:#365FAC,color:#28344B,stroke-width:2px;
+  class A parent;
+  class B,C,D task;

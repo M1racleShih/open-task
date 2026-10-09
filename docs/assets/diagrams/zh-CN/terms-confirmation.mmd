@@ -1,0 +1,16 @@
+flowchart TB
+  accTitle: 约定版本变更后的确认流程
+  accDescr: 调整约定产生新版本，原负责人阅读差异后确认；若更换负责人，新负责人重新接收。未确认当前版本时不能提交成果。
+  old["负责人已接受约定 vN"] --> adjust["团队负责人调整约定<br/>填写原因与确认期限"]
+  adjust --> latest["产生新约定 vN+1<br/>此前承诺保留，等待新版本确认"]
+  latest --> changed{"负责人是否更换？"}
+  changed -->|否| compare["原负责人阅读差异"]
+  compare -->|确认当前版本| confirm["当前约定 vN+1 已确认"]
+  changed -->|是| pending["回到待接收<br/>新负责人重新接收"]
+  pending --> confirm
+  confirm --> result["进行中时，可基于 vN+1 提交成果"]
+  latest -.-> blocked["未确认当前版本<br/>提交成果会被拒绝"]
+  classDef normal fill:#EDF3F8,stroke:#365FAC,color:#28344B,stroke-width:1.5px;
+  classDef attention fill:#FFF4E5,stroke:#AA7431,color:#704A20;
+  class old,adjust,latest,changed,compare,confirm,pending,result normal;
+  class blocked attention;

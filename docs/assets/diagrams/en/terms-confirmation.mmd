@@ -1,0 +1,16 @@
+flowchart TB
+  accTitle: Confirmation after an agreement version change
+  accDescr: An adjustment creates a new version. The existing owner reads differences and confirms; a new owner accepts again. Results cannot be submitted before confirming the current version.
+  old["Owner has accepted agreement vN"] --> adjust["Team leader adjusts agreement<br/>Reason and confirmation deadline required"]
+  adjust --> latest["New agreement vN+1<br/>Prior commitment retained; awaiting confirmation"]
+  latest --> changed{"Owner changed?"}
+  changed -->|No| compare["Existing owner reads differences"]
+  compare -->|Confirm this version| confirm["Current agreement vN+1 confirmed"]
+  changed -->|Yes| pending["Return to Awaiting acceptance<br/>New owner accepts again"]
+  pending --> confirm
+  confirm --> result["While In progress, submit a result under vN+1"]
+  latest -.-> blocked["Current version unconfirmed<br/>Result submission is rejected"]
+  classDef normal fill:#EDF3F8,stroke:#365FAC,color:#28344B,stroke-width:1.5px;
+  classDef attention fill:#FFF4E5,stroke:#AA7431,color:#704A20;
+  class old,adjust,latest,changed,compare,confirm,pending,result normal;
+  class blocked attention;

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenTask · Logo 提案</title>
+  <style>
+    :root { color-scheme: light; color: #28344b; background: #f2f4f8; font-family: "IBM Plex Sans", "Noto Sans CJK SC", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1280px; margin: auto; padding: 40px 24px 56px; }
+    .eyebrow { color: #365fac; font-size: 13px; letter-spacing: .1em; font-weight: 600; }
+    h1 { font-size: clamp(28px, 4vw, 44px); letter-spacing: -.035em; margin: 16px 0; }
+    p { color: #64718a; line-height: 1.7; }
+    .board { display: block; width: 100%; height: auto; margin: 24px 0; border-radius: 12px; }
+    .variants { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .variant { padding: 32px; border-radius: 12px; background: white; }
+    .variant img { display: block; width: min(100%, 350px); height: auto; margin: 24px auto 40px; }
+    .dark { background: #28344b; color: #f2f5fc; }
+    .dark a { color: #b9cdf9; }
+    a { color: #365fac; text-underline-offset: 4px; }
+    a:focus-visible { outline: 3px solid #8caaee; outline-offset: 5px; }
+    footer { border-top: 1px solid #d7deeb; margin-top: 32px; padding-top: 16px; }
+    nav { display: flex; flex-wrap: wrap; gap: 20px; }
+    @media (max-width: 640px) { main { padding: 28px 16px; } .variants { grid-template-columns: 1fr; } .variant { padding: 24px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">OPENTASK / IDENTITY STUDY 01</div>
+    <h1>开放协作，承诺落地。</h1>
+    <p>一个右上方打开的 O，连接一个向前的勾。沿用产品蓝色，适合工作台、项目文档与应用图标。</p>
+    <img class="board" src="preview.png" width="1600" height="1060" alt="OpenTask Logo 提案：浅色完整字标、深色独立图形、标题栏应用示意、16至32像素图标与应用图标">
+    <div class="variants">
+      <section class="variant" aria-label="浅色背景 Logo">
+        <strong>浅色背景</strong>
+        <img src="opentask-logo-light.svg" width="280" height="64" alt="OpenTask">
+        <a href="opentask-logo-light.svg" download>下载 SVG</a> · <a href="opentask-logo-light.png" download>下载透明 PNG</a>
+      </section>
+      <section class="variant dark" aria-label="深色背景 Logo">
+        <strong>深色背景</strong>
+        <img src="opentask-logo-dark.svg" width="280" height="64" alt="OpenTask">
+        <a href="opentask-logo-dark.svg" download>下载 SVG</a> · <a href="opentask-logo-dark.png" download>下载透明 PNG</a>
+      </section>
+    </div>
+    <footer>
+      <nav aria-label="设计文件">
+        <a href="README.md">使用规范</a>
+        <a href="opentask-mark-blue.svg" download>独立图形</a>
+        <a href="opentask-app-icon.svg" download>应用图标</a>
+        <a href="opentask-favicon.ico" download>Favicon</a>
+        <a href="opentask-logo-editable.svg" download>可编辑字标</a>
+      </nav>
+      <p>设计提案 v1 · 分发字标已转曲 · 尚未接入产品界面</p>
+    </footer>
+  </main>
+</body>
+</html>
