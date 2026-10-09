@@ -2,7 +2,7 @@
 
 [简体中文](../zh-CN/RELEASE-CHECK.md)
 
-The release target here is that other developers can obtain the code, initialize and run single-team OpenTask locally, and complete a synthetic delivery using the documentation. Public hosting, departmental production use and real-team acceptance require separate verification.
+The release target here is that other developers can obtain the code, initialize and run single-team OpenTask locally, and complete a synthetic delivery using the documentation. Public hosting, production deployment and real-team acceptance require separate verification.
 
 ## Check order for each candidate
 

@@ -4,7 +4,7 @@
 
 OpenTask organizes a team's task delivery by keeping expected results, owners, feedback deadlines and acceptance decisions in one traceable task record. The current version is a **local, single-team MVP**.
 
-These documents follow one case: adding CSV export to the IssueLite issue tracker. All accounts, projects and results are explicitly marked as synthetic. No departmental September data is used. The case verifies the OpenTask workflow; it does not mean a CSV feature has been developed.
+These documents follow one case: adding CSV export to the IssueLite issue tracker. All accounts, projects and results use synthetic data. The case verifies the OpenTask workflow; it does not mean a CSV feature has been developed.
 
 ## Where to start
 

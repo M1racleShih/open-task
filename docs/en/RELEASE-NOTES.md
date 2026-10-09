@@ -22,7 +22,7 @@ For existing workspaces, stop writes and the worker, back up and verify an isola
 
 ## Scope and known limits
 
-The API and database listen only on localhost. Sessions target local HTTP. Public HTTPS, reverse proxies, remote team access and production departmental use require separate work and verification.
+The API and database listen only on localhost. Sessions target local HTTP. Public HTTPS, reverse proxies, remote team access and production use require separate work and verification.
 
 Non-draft tasks are team-visible. There is no directory login, upload storage, outbound messaging, model or Agent integration. Evidence links preserve URLs, not remote files. Human usability acceptance and sustained real-team trials remain open; this alpha provides the version to try.
 

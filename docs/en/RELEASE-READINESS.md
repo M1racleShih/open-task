@@ -4,9 +4,9 @@
 
 Verified on 2026-10-09 (Asia/Shanghai), under Node 24.18.0 and npm 11.8.0. Candidate version: `0.1.0-alpha`; project license: Apache-2.0. Base commit: `c51e608e3faf01e7a7d022699b317b7a11283811`, plus the release preparation, bilingual documentation, branding and dependency changes in this candidate. This is evidence for the candidate tree, not for the base commit alone.
 
-## Decision
+## Verification scope
 
-The technical checks support merging and distributing this local, single-team source alpha. Human usability acceptance remains a trial objective. No merge, tag, push or public release is included in this verification.
+This report records technical checks of the `0.1.0-alpha` candidate source in a local, single-team environment. Long-term usability still requires real-team trials.
 
 ## Current checks
 
@@ -36,12 +36,10 @@ Project and lockfile versions now agree on `0.1.0-alpha`. Apache-2.0 is included
 
 Clean installation exposed the development dependency advisory GHSA-68fv-2mgg-jv7q. The lockfile received a targeted source-map-js patch from 1.2.1 to 1.2.2; a second clean `npm ci`, typecheck, build, all 55 tests, full audit and case/restore passed afterward. Earlier Fastify and indirect dependency patches remain included.
 
-Private raw logs and the source manifest are in ignored `artifacts/release-alpha/`. The SHA-256 of the sorted per-file source manifest is `3d2ea6519528d9e73c275fdf205bfeb7d5130a2d6d333c17eb09ea1ff3777bc9`; it excludes this paired report and its screenshots to avoid a self-reference. The candidate copy is compared against the final source files before handoff. No database dumps or session credentials are documentation attachments.
+The SHA-256 of the sorted per-file source manifest at verification time was `3d2ea6519528d9e73c275fdf205bfeb7d5130a2d6d333c17eb09ea1ff3777bc9`; it excludes this paired report and its screenshots to avoid a self-reference. This digest identifies the candidate files at verification time; it does not establish verification of later changes.
 
-Standalone Chrome failed to start under this environment's sandbox, so UI verification used the supported in-app browser. Two browser tool approval checks timed out; reading state and retrying explicit local operations allowed verification to continue. These tool timeouts were not application test passes or application failures.
+## Reproduction and limits
 
-## Release handoff and limits
-
-The intended release is the source tree tagged `v0.1.0-alpha` and marked as a prerelease. See [release notes](RELEASE-NOTES.md) and [release checks](RELEASE-CHECK.md). Any further relevant changes require affected checks to run again. Verify that the final tag resolves to this same source tree.
+See [release checks](RELEASE-CHECK.md) for commands and prerequisites, and [release notes](RELEASE-NOTES.md) for version scope. Later relevant changes require affected checks to run again; this report is not evidence for later source trees.
 
 This was a clean source-directory installation on the current host with its existing PostgreSQL container, not a brand-new-machine or public-hosting test. There was no new load test, real-team trial or normal-workspace backup exercise. Synthetic recovery does not replace checking the actual backup before upgrading an existing workspace. Public HTTPS, remote team access and integrations remain outside this alpha.

@@ -1,6 +1,6 @@
 # open-task UI previews
 
-UI requirements demo: [Task IDE](http://127.0.0.1:4174/frappe.html). The user explicitly requested an IDE workflow: task explorer on the left, relationship graph in the center, inspector on the right, and a collapsible bottom panel. The user is broadly satisfied with this UI direction and explicitly confirmed that this directory is only a demo for aligning UI requirements, not the final implementation. Production code, architecture, components, data models, and business behavior must be designed from the confirmed specs.
+Interactive UI prototype: [Task IDE](http://127.0.0.1:4174/frappe.html). It has a task explorer on the left, a relationship graph in the center, an inspector on the right, and a collapsible bottom panel. This directory contains standalone demos; the application lives in `server/`, `shared/` and `web/`.
 
 ## Open
 
@@ -17,7 +17,7 @@ From this directory, run `python3 -m http.server 4174 --bind 127.0.0.1`, then op
 - Update checklist states, approve or return a submission, accept a task, or record a follow-up. Progress does not automatically approve a task or clear a blocker.
 - Switch light / Frappé dark themes. On narrow screens, switch among tree, workspace (graph or team updates), and detail views.
 
-The palette restores the pre-Studio cool light theme and Frappé dark. A shared mist-blue/slate-blue frame fills the outer edge and 7px panel gaps; the main panels have 10px corners. The frame colors are accepted visual references that may be refined during real use. Functional icons are local Lucide SVGs; see [asset notices](ATTRIBUTION.md). The supplied Obsidian and VS Code screenshots informed layout and interaction, not copied assets or source.
+The palette restores the pre-Studio cool light theme and Frappé dark. A shared mist-blue/slate-blue frame fills the outer edge and 7px panel gaps; the main panels have 10px corners. Functional icons are local Lucide SVGs; see [asset notices](ATTRIBUTION.md). The layout and interactions draw inspiration from IDE workspaces.
 
 ## Verification and limits
 
@@ -25,6 +25,6 @@ Checked 2157×1035 and 1440×960 layouts, 1024×768, 390×844, and shrinking res
 
 All task data is fictional and in-memory; refreshing resets actions, while theme choice is saved locally. Initial graph positions are arranged for this sample. Dragging uses local springs, short-range repulsion, a light positional anchor, and damping; reduced-motion preferences omit release inertia. This is not a general-purpose automatic layout engine or a large-graph performance claim. Manual node positions persist per graph view until restoring layout or reloading the page; dragging does not change task hierarchy or dependencies. Zooming out scales labels with the canvas. No backend, real messaging, tree drag-and-drop reparenting, or real task editing is included.
 
-## History
+## Earlier prototypes
 
-The A/B/C/D comparison and earlier screenshots remain as rejected visual history. Studio was also rejected. They do not describe the current design.
+The A/B/C/D and Studio demos and screenshots are earlier UI explorations. Use `frappe.html` for the Task IDE prototype.

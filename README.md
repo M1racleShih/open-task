@@ -1,46 +1,58 @@
 <p align="center">
-  <img src="web/public/brand/opentask-cat-logo.png" width="180" alt="OpenTask cat logo">
+  <img src="web/public/brand/opentask-cat-logo.png" width="140" alt="OpenTask cat logo">
 </p>
 
 # OpenTask
 
-English · [简体中文](README.zh-CN.md)
+### Less chasing updates. More clarity on delivery.
 
-OpenTask helps a team agree on what to deliver, confirm who will do it, and review the result. Each task keeps its agreement, progress, changes and review decisions together, so the team can see what was promised and what happened.
+**English** · [简体中文](README.zh-CN.md)
 
-The current release candidate is **0.1.0-alpha**, a local, single-team MVP with an English and Simplified Chinese interface. See the [release notes](docs/en/RELEASE-NOTES.md).
+OpenTask is an open-source team task workspace that brings **work agreements, progress and result review** together. See who has accepted the work, what a good result looks like, where things are stuck and who needs to act next—all in the context of the task.
 
-## What you can do
+We want team leads to spend less time chasing and relaying updates, and contributors to spend less time guessing expectations. Next, we want AI agents to help carry that day-to-day coordination work alongside people.
 
-| Capability          | How it helps                                                                                                                       |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Agree on work       | Define the expected result, acceptance criteria, owner, reviewer and deadlines; get creation approval from the responsible people. |
-| Follow execution    | Use approved checklists, formal progress updates and blocker requests; followups show who needs to act next.                       |
-| Review delivery     | Submit results and evidence links, accept or return them, and retain earlier submissions and review reasons.                       |
-| Understand the work | Use the project tree and task graph for parent/child, prerequisite and related tasks; filter by project, status, search and time.  |
+**[Try it locally](#try-it-locally)** · [Walk through a delivery](docs/en/CASE-CSV-EXPORT.md) · [What's next](#next-agents-that-connect-tasks-and-conversations) · [Documentation](docs/en/README.md)
 
-Language and light/dark theme choices persist in the browser. Task content is not translated automatically. Dates are entered and displayed in **Asia/Shanghai** time.
+**0.1.0-alpha candidate** · Runs locally · Single team · English & 简体中文 · Apache-2.0
 
-## Design philosophy in practice
+![OpenTask workspace with a task tree on the left, a relationship graph in the center, and work agreements and delivery records on the right](docs/assets/release-case/graph.jpg)
 
-These rules explain how OpenTask handles responsibility, changes and delivery:
+*Actual app screenshot, in Simplified Chinese, from the simulated CSV export case: a team goal, its subtasks and the delivered results in one workspace.*
 
-- **The owner accepts the work.** Assigning someone a CSV export task leaves it awaiting acceptance. The owner reads the expected result and deadlines before accepting; creation approval and the owner's commitment are separate decisions.
-- **The reviewer decides when it is complete.** Checking every execution step helps track work. To finish, the owner submits a result and the reviewer accepts it against the agreed criteria.
-- **The owner confirms changes.** If the team leader changes the scope or deadline, the owner confirms the new version. A replacement owner must accept the task again.
-- **Keep rework in the same task.** If the reviewer returns a result, the owner improves and resubmits in the same task. Earlier submissions and return reasons remain available to both people.
-- **Parents group work; prerequisites constrain review.** A parent groups smaller tasks. A prerequisite means another task's result must be accepted before this result can be accepted; it does not prevent work from starting early. Completing child tasks does not automatically complete their parent.
-- **Follow-up work gets a new task.** Completed and cancelled tasks cannot reopen. Later fixes become new tasks related to the original, preserving the earlier delivery decision.
+## Why OpenTask?
 
-See the [user guide](docs/en/USER-GUIDE.md) for approval routes, roles and the full lifecycle.
+“Has anyone picked this up?” “What's blocking it?” “You said it's done—where's the result?”
 
-## Quick start
+Everyday questions can turn into repeated trips through chat, meetings and documents. After a few scope changes, people may even disagree on what “done” means.
 
-You need **Node.js 24 LTS**, npm, Docker Engine and Docker Compose. Ports `4310` (app) and `55432` (PostgreSQL) must be free; both services listen only on localhost. For an existing workspace, [back up before updating](docs/en/RELEASE-CHECK.md).
+OpenTask organizes collaboration around a delivery. Agree on the expected result and acceptance criteria before work begins. Record progress and requests for help as work proceeds. Submit the outcome to the agreed reviewer when it's ready. Each task carries the decisions behind its status.
 
-From the repository root:
+If you lead a small team, coordinate work across several people, or want to turn scattered chat requests into work you can follow through, try it with one small project.
+
+## From “could you handle this?” to an agreed delivery
+
+**1. Agree before starting.** Define the expected result, acceptance criteria, owner, reviewer and deadlines. After creation approval, the owner explicitly accepts the task, giving both sides a clear agreement to work from.
+
+**2. Keep progress in context and help within reach.** Break execution into checklist items, post formal progress and set the next feedback time. Request help when blocked; followups show who needs to act now.
+
+**3. Keep the agreement current.** When scope or deadlines change, the owner confirms the new version. Changes and confirmations stay with the task so the team can revisit the decision.
+
+**4. Deliver a result that someone can review.** Submit an outcome and evidence links for the reviewer to accept or return. Rework continues in the same task, with earlier submissions and return reasons preserved.
+
+Use the task tree to understand the breakdown, the graph to explore parent/child, prerequisite and related work, and task details to read agreements and history. Filter by project, status, keyword or time, and share a task URL with teammates.
+
+**A detail worth trying: finishing the checklist still leaves the result to be reviewed.** If a prerequisite's result hasn't been accepted, the dependent task's result can't be accepted either. Execution and delivery each have an explicit record.
+
+Switch between English and Simplified Chinese, and between light and dark themes. Language and theme choices persist; task content stays as written. Dates use Asia/Shanghai time.
+
+## Try it locally
+
+This alpha runs from source. You need **Node.js 24 LTS, npm, Docker Engine and Docker Compose**, with ports `4310` for the app and `55432` for PostgreSQL available.
 
 ```sh
+git clone https://github.com/M1racleShih/open-task.git
+cd open-task
 npm ci
 docker compose up -d --wait db
 npm run db:migrate
@@ -49,64 +61,72 @@ npm run build
 npm start
 ```
 
-In a second terminal, from the same directory:
+In a second terminal, start the background worker from the repository directory:
 
 ```sh
 npm run worker
 ```
 
-Open <http://127.0.0.1:4310/>. **Keep both the API and worker running.** The worker handles background jobs, including overdue reminders.
+Open **<http://127.0.0.1:4310/>** and sign in as `leader` with initial password **`OpenTask-Test-2026!`**. Keep both the API and worker running; the worker handles background jobs, including overdue reminders. The interface starts in English; use **Language** at the top to switch to Simplified Chinese.
 
-The seed command creates these local test accounts in a new database, with initial password **`OpenTask-Test-2026!`**:
+### On your first visit, try this workflow
 
-| Username  | Responsibility                                                          |
-| --------- | ----------------------------------------------------------------------- |
-| `leader`  | Team leader; creates projects and gives final creation approval.        |
-| `manager` | Member; can be assigned as a project's manager.                         |
-| `member`  | Member; can own and execute tasks.                                      |
-| `other`   | Additional member for collaboration and permission checks.              |
-| `admin`   | Account administrator; this role grants no business approval authority. |
+1. As `leader`, create a project, assign `manager` as its project manager and add `member` to the project.
+2. Create a task called “Collect trial feedback” in that project, with `member` as owner and `manager` as reviewer. Define the expected result, acceptance criteria and required deadlines, then issue the task.
+3. Switch to `member`, accept and start the task, record progress and submit an outcome clearly marked as simulated.
+4. Switch to `manager` and review against the criteria. Try returning it once, then have `member` improve and resubmit it to see how both submissions are preserved.
 
-Migration and seeding are repeatable. Seeding does not reset existing passwords. The interface starts in English; use **Language** to switch to Simplified Chinese.
+Use the account menu to switch users, and copy the task URL to continue as another role. In a new database, `leader`, `manager`, `member`, `other` and `admin` share the initial password above; repeated seeding does not reset existing passwords. `admin` manages accounts and does not automatically gain task approval authority.
 
-Stop the API and worker with Ctrl+C, then run `docker compose stop db` to stop PostgreSQL. Data stays in the `open-task-mvp_database` volume. **`docker compose down -v` deletes that data.** See [local setup](docs/en/QUICKSTART.md) for restarts, troubleshooting and an isolated case environment.
+Want to explore scope changes, checklist approval, blocker collaboration and prerequisites? Follow the **[CSV export case](docs/en/CASE-CSV-EXPORT.md)** through a simulated delivery with four connected tasks.
 
-## Documentation
+To stop, press Ctrl+C in both terminals and run `docker compose stop db`; your data stays in place. See [local setup](docs/en/QUICKSTART.md) for restarts and troubleshooting. Before updating an existing workspace, back it up using [release checks](docs/en/RELEASE-CHECK.md).
 
-The full documentation is available in [English](docs/en/README.md) and [简体中文](docs/zh-CN/README.md). Each page links to its counterpart.
+## Next: agents that connect tasks and conversations
 
-| Read                                                                                               | Covers                                                               |
-| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [User guide](docs/en/USER-GUIDE.md)                                                                | Roles, approval, execution, changes, review and task relations.      |
-| [CSV export case](docs/en/CASE-CSV-EXPORT.md)                                                      | A complete delivery with synthetic accounts and tasks.               |
-| [Development](docs/en/DEVELOPMENT.md)                                                              | Build commands, database tests, browser checks and load testing.     |
-| [API v1](docs/en/API.md)                                                                           | Sessions, write requirements, endpoints and time filters.            |
-| [Release checks](docs/en/RELEASE-CHECK.md) · [Verification report](docs/en/RELEASE-CASE-RESULT.md) | Backup and recovery, recorded checks, evidence and remaining limits. |
+Much of the effort in task management goes into gathering information, asking for updates, reminding people to respond and copying decisions from chat back into tasks. We want AI agents to take on more of that coordination so people can focus on judgment, collaboration and delivery.
 
-Build the bilingual documentation as offline HTML:
+We plan to build an **MCP or CLI interface for OpenTask**, giving agents access to task context so they can help break down work, update progress and assemble delivery materials. We also plan to connect agents to **Feishu**, bringing task management into everyday IM conversations.
 
-```sh
-npm run docs:build
-```
+| Direction | The experience we want to enable |
+| --- | --- |
+| **MCP / CLI** | Let agents access agreements, relationships and history from their own working environment, and help move tasks forward. |
+| **Agents × Feishu** | Turn conversations into tasks for confirmation, and bring progress, blockers and pending reviews back into the conversation with less manual copying. |
+| **People and agents working together** | Let agents assist with followups, summaries and reminders while people retain decisions on key agreements and result acceptance. |
 
-Output: `artifacts/docs/index.html`. See the [documentation entry](docs/README.md) for preview and maintenance instructions.
+For example, you could eventually tell an agent in Feishu: “Turn this discussion into tasks and send them to the relevant teammates for confirmation.” The agent would help gather updates, surface blockers and prepare results for review, keeping everyone working from the same task agreement.
 
-## Development
+**This is the product direction, not functionality included in 0.1.0-alpha. Interface details and timing are still to be determined.** If this is how you'd like your team to work, [tell us about your use case](https://github.com/M1racleShih/open-task/issues).
 
-The app uses React and Vite, a Fastify API, PostgreSQL and a separate pg-boss worker. `ui-previews/` contains the earlier requirements demo.
+## What to expect from this alpha
+
+This version is for trying a single team's workflow on your own machine. The app and database listen only on localhost by default; remote team access and public deployment need further configuration, development and verification.
+
+Non-draft tasks are visible to the entire team; project membership does not isolate project data. External identity login, file uploads, outbound messaging and AI agent integration are not available yet. Evidence is stored as links. Long-term usability still needs feedback from real teams. See the [release notes](docs/en/RELEASE-NOTES.md).
+
+## Help shape OpenTask
+
+The most useful feedback is a concrete collaboration experience: where the agreement became clearer, where the process added overhead, and which information you still had to find in chat. Share feedback, bugs and ideas in [Issues](https://github.com/M1racleShih/open-task/issues), or contribute code and documentation through a pull request.
+
+| What you want to do | Start here |
+| --- | --- |
+| Understand roles and the full workflow | [User guide](docs/en/USER-GUIDE.md) |
+| Change code and run checks | [Development guide](docs/en/DEVELOPMENT.md) |
+| Explore the existing HTTP API | [API v1](docs/en/API.md) |
+| Inspect release verification and backup/recovery | [Readiness report](docs/en/RELEASE-READINESS.md) · [Release checks](docs/en/RELEASE-CHECK.md) |
+| Browse all documentation | [English documentation home](docs/en/README.md) |
+
+Built with **React + Vite · Fastify · PostgreSQL · pg-boss**. Development checks and offline documentation build:
 
 ```sh
 npm run typecheck
 npm run build
 bash scripts/test-db.sh
+npm run docs:build
 ```
 
-The database checks use synthetic fixtures in `open_task_test`. With the Compose database running, `npm run case:check` verifies the API lifecycle and backup/restore in `open_task_release_case`. Follow the [development guide](docs/en/DEVELOPMENT.md) for the scope and prerequisites of each check.
+Database tests use the dedicated `open_task_test` database; see the development guide for prerequisites and scope. The offline documentation entry is `artifacts/docs/index.html`.
 
-## Current scope and licenses
+## License
 
-This version supports one team running locally. Non-draft tasks are visible to the whole team; project membership does not make them private. External identity or directory login, file uploads, outbound messaging, and model or Agent integration are not included. Approval overhead, long-term usability and capacity still need trial use in real teams.
-
-Product specifications and historical reviews live in the separate [open-task-specs repository](../open-task-specs/README.md). That link assumes sibling checkouts; the specifications repository is not required to build or run OpenTask.
-
-OpenTask is licensed under [Apache-2.0](LICENSE). [Third-party notices](docs/en/THIRD-PARTY-NOTICES.md) cover the separate Lucide ISC and Feather MIT icon licenses; the complete Lucide license is also distributed with the app at `/lucide-LICENSE.txt`.
+OpenTask is licensed under [Apache-2.0](LICENSE). Third-party resources, including icons, retain their own licenses; see [third-party notices](docs/en/THIRD-PARTY-NOTICES.md).

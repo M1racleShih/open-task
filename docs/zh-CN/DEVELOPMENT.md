@@ -75,10 +75,10 @@ npm run docs:build
 
 命令生成 `artifacts/docs/` 中的离线 HTML，并检查页面配对、本地链接和流程图源码。两种语言应一起维护。同步规则见[文档入口](../README.md)，预览和流程图生成命令见[中文文档首页](README.md)。
 
-## 备份与仓库分工
+## 备份与仓库结构
 
 备份、独立恢复和升级步骤见[发布检查](RELEASE-CHECK.md)。认证、写入请求头和请求字段见 [API v1](API.md)。
 
-本仓库维护应用代码、运行说明、脚本、产物和备份。产品规格和历史评审位于同一父目录下的 `open-task-specs` 仓库，构建和运行应用不需要该仓库。应用仓库根目录的 README 提供该仓库的链接。
+应用代码位于 `server/`、`shared/` 和 `web/`；测试和运行脚本位于 `tests/` 和 `scripts/`。`docs/` 包含使用、开发和发布文档，`ui-previews/` 包含早期界面演示。
 
 Compose 项目名为 `open-task-mvp`；端口 `4173` 和 `4174` 属于独立的界面演示。默认 npm 缓存只读时，`.npmrc` 会选用 `/tmp/open-task-npm`。

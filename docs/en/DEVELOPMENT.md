@@ -79,6 +79,6 @@ This builds offline HTML in `artifacts/docs/` and validates page pairs, local li
 
 For backup, isolated restore and upgrades, follow [release checks](RELEASE-CHECK.md). For authentication, write headers and request fields, use [API v1](API.md).
 
-This repository keeps application code, operational documentation, scripts, artifacts and backups. Product specifications and historical reviews live in the sibling `open-task-specs` repository, which is not needed to build or run the app. The application repository's root README links to it.
+Application code lives in `server/`, `shared/` and `web/`; tests and operational scripts live in `tests/` and `scripts/`. The `docs/` directory contains usage, development and release documentation, and `ui-previews/` contains the earlier UI demos.
 
 The Compose project is `open-task-mvp`; ports `4173` and `4174` belong to separate UI demos. On hosts with a read-only default npm cache, `.npmrc` selects `/tmp/open-task-npm`.

@@ -2,13 +2,13 @@
 
 [简体中文](../zh-CN/RELEASE-CASE-RESULT.md)
 
-Verification date: 2026-10-09 (Shanghai time). The candidate was the workspace based on `c51e608e3faf01e7a7d022699b317b7a11283811`, including the then-uncommitted case scripts, user documentation, HTML generator and dependency patches. These are not verification results for that historical commit alone.
+Verification date: 2026-10-09 (Shanghai time). The candidate was the workspace based on `c51e608e3faf01e7a7d022699b317b7a11283811`, including the case scripts, user documentation, HTML generator and dependency patches evaluated in this report. These are not verification results for that historical commit alone.
 
 ## Conclusion
 
-The recorded candidate passed local single-team MVP functionality, persistence and dependency checks and can serve as a candidate for local demos and source delivery. The four-task synthetic development project completed approval, execution, collaboration, change confirmation, prerequisites and result review. The three-role UI walkthrough also completed return, resubmission and final acceptance. No formal release or deployment was performed.
+The recorded candidate passed local single-team MVP functionality, persistence and dependency checks and can serve as a candidate for local demos and source delivery. The four-task synthetic development project completed approval, execution, collaboration, change confirmation, prerequisites and result review. The three-role UI walkthrough also completed return, resubmission and final acceptance.
 
-This conclusion applies only to the recorded local environment and synthetic data. Public deployment, actual departmental use, real development efficiency and sustained capacity are outside its scope. No departmental September data was used, and no real CSV feature was developed.
+This conclusion applies only to the recorded local environment and synthetic data. Public deployment, production use, real development efficiency and sustained capacity are outside its scope. The case verifies task collaboration, not the implementation of a real CSV feature.
 
 ## Environment and results
 
@@ -20,7 +20,7 @@ This conclusion applies only to the recorded local environment and synthetic dat
 | Unit and database regression | `scripts/test-db.sh`: 48 passed, 0 failed, 0 skipped                                                                                                                                                                  |
 | HTTP case                    | `npm run case:check`: 13 assertion groups passed, run `629cde03`; all four tasks were done                                                                                                                            |
 | Case backup and restore      | The same case command restored into a new database; nine tables had matching row counts and content hashes; temporary backup and restore database were removed                                                        |
-| Browser                      | The environment denied standalone Chrome access to localhost; the Codex in-app browser completed a three-role UI loop on a newly started instance after patching                                                      |
+| Browser                      | A three-role UI loop completed on a newly started instance after patching                                                      |
 | Dependency audit             | Post-patch `npm audit --omit=dev`: 0 known vulnerabilities                                                                                                                                                            |
 | New script formatting        | Two TypeScript scripts passed Prettier; two Bash scripts passed `bash -n`                                                                                                                                             |
 | Documentation rendering      | The recorded `docs:build` generated eight pages and checked 24 local references; three tutorial screenshots loaded, desktop and 390px layouts had no page-wide horizontal overflow, and browser error logs were empty |
@@ -93,6 +93,6 @@ Permissions, private drafts, CSRF, versions and submission IDs were checked with
 
 The API and database bind locally, with test accounts for local cases. Session cookies, same-origin checks and startup retain the local HTTP design. This verification did not extend listening scope or change external identity or reverse-proxy policy.
 
-Case recovery verifies a synthetic database. Before upgrading a real existing workspace, verify its actual backup using [release checks](RELEASE-CHECK.md). Load tests were not rerun; cross-machine access, attachment uploads, external notifications and long-term real-team use were not verified. Source distribution terms and the project's own license need clarification for a formal public release; third-party icon notices remain included.
+Case recovery verifies a synthetic database. Before upgrading a real existing workspace, verify its actual backup using [release checks](RELEASE-CHECK.md). Load tests were not rerun; cross-machine access, attachment uploads, external notifications and long-term real-team use were not verified. See [release notes](RELEASE-NOTES.md) for distribution and licensing, and [third-party notices](THIRD-PARTY-NOTICES.md) for asset licenses.
 
-All changes in the recorded verification remained in the workspace: no commit, push, npm publication or service deployment was performed. Markdown is the documentation source; HTML can be rebuilt with `npm run docs:build`.
+Markdown is the documentation source; HTML can be rebuilt with `npm run docs:build`.
