@@ -29,6 +29,8 @@ python3 -m http.server 4320 --bind 127.0.0.1 --directory artifacts/docs
 
 ## 维护规则 / Maintenance
 
+以下每条规则先中文、后英文。Each rule below is given in Chinese first, then in English.
+
 - 两种语言使用相同的文件名、章节顺序与内容范围。修改行为说明时，在同一次变更中更新对应译文；新增或删除页面时同步处理两套目录。
 - Both editions use matching filenames, section order and scope. Update the counterpart in the same change when behavior descriptions change; add or remove pages in both directories together.
 - 命令、API 字段、账号、任务编号与证据数据保持原样。验收报告保留原验证日期和范围，翻译不代表重新执行业务验收。

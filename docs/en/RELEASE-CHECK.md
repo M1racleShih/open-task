@@ -18,9 +18,9 @@ npm audit --omit=dev
 npm run docs:build
 ```
 
-`test-db.sh` uses the fixed `open_task_test` database and intentionally injects transaction write failures. `Injected integration write failure` in its logs is part of rollback acceptance; the final result should have 0 failures. Never point integration tests at a normal or production database. The case uses `open_task_release_case` separately and does not clean up existing case projects.
+`test-db.sh` uses the fixed `open_task_test` database and deliberately injects one transaction write failure there to check rollback. `Injected integration write failure` in its logs is part of that rollback check, and the final result should have 0 failures. Never point integration tests at a normal or production database. The case command (`npm run case:check`) uses `open_task_release_case` separately and does not clean up existing case projects.
 
-Passing type checks and builds does not prove usability. Follow at least C's three-role UI loop in the [case tutorial](CASE-CSV-EXPORT.md): creation approval, checklist approval, agreement confirmation, formal progress, return, resubmission, completion and retained history after refresh. If standalone Chrome is available, you can also run the existing browser scripts. Some are fixed to `4310` and save test tasks; first confirm their target workspace.
+Passing type checks and builds does not prove usability. In the [case tutorial](CASE-CSV-EXPORT.md), follow at least the three-role UI loop for task C (Implement CSV export): creation approval, checklist approval, agreement confirmation, formal progress, return, resubmission, completion and retained history after refresh. If standalone Chrome is available, you can also run the existing browser scripts. Some are fixed to `4310` and save test tasks; first confirm their target workspace.
 
 ## Acceptance conditions
 
@@ -32,10 +32,10 @@ Passing type checks and builds does not prove usability. Follow at least C's thr
 | Delivery                        | All four API case tasks complete and all 13 assertion groups pass                                                    |
 | Interface                       | Three-role UI loop passes; results and language selection survive refresh                                            |
 | Data continuity                 | Consistent data after API/worker restart; queued work resumes after downtime                                         |
-| Case restore                    | Backup restores into a new database with matching row counts and content hashes for 12 tables                      |
+| Case restore                    | Backup restores into a new database and all 12 tables match in row count and content                                  |
 | Dependency security             | No unresolved production audit findings; a network failure is recorded as unverified, not passed                     |
 | Documentation                   | Markdown links, screenshots and HTML render correctly; roles, button labels and commands match the current version   |
-| Recovery                        | Actually verify backup and isolated restore before releasing or upgrading an existing workspace, and retain evidence |
+| Recovery                        | Backup and isolated restore have been rehearsed before releasing or upgrading an existing workspace, with evidence retained |
 
 Record the date, candidate commit and uncommitted changes, command output, case run ID, screenshots and limitations in the verification report. Fix failures, then rerun affected checks; a historical report is not a current-version result.
 
@@ -50,7 +50,7 @@ bash scripts/restore-check.sh backups/<actual-backup-file>.dump
 
 Their source database is fixed to `open_task`; they do not follow `DATABASE_URL` automatically. Do not use them to claim case-database verification. For precise comparisons, first pause application writes and the worker. Both restore scripts use the same read-only comparator for all 11 application tables and `pgboss.job`, including time preferences, sessions and idempotency records. A content mismatch fails even when row counts match. The normal restore database is retained for inspection. The restore script creates a new isolated database without overwriting the original. Backups contain business data, account password hashes and pg-boss jobs; keep them as private operational material rather than publishing them with documentation. They preserve submission text and external evidence URLs, but not the remote files those URLs point to. Job failure details remain in PostgreSQL.
 
-At the end, `case:check` calls `scripts/release-case-restore.sh`, which backs up only the synthetic case database, restores into a new temporary database and compares row counts and content hashes for 12 tables. It then removes the temporary database and backup. Do not write to the case database or start additional workers during this run. Successful case recovery does not replace checking an actual backup before upgrading a normal existing workspace.
+At the end, `case:check` calls `scripts/release-case-restore.sh`. It backs up only the synthetic case database, restores it into a new temporary database, compares row counts and content for 12 tables (a content difference fails the check), and then removes the temporary database and backup. While `case:check` runs, do not write to the case database and do not start additional workers. This restore verifies the case database only; before upgrading a normal existing workspace, still verify that workspace's actual backup as described above.
 
 Upgrade a normal existing workspace in this order: stop writes and back up → retain the old code version → install dependencies → migrate → build → restart API and worker → check `/health`, worker heartbeat and an actual task. Migrations are currently additive, but recovery must still be rehearsed; deleting volumes or databases is not the default rollback procedure.
 
@@ -68,7 +68,7 @@ Release materials include source code, `package.json` and lockfile, database mig
 
 The current `private: true` prevents direct `npm publish`. This candidate is for source or local-installation delivery and does not change npm distribution policy. The project release process determines version numbers, official channels and deployment operations.
 
-Network boundaries: the API and database bind to loopback; sessions are designed for local HTTP, and server writes also validate a same-origin Origin. Public HTTPS, reverse proxies, cross-host access and external identity integration are not verified by this case. Changing the listen address alone does not turn local results into public-hosting verification.
+Network boundaries: the API and database bind to loopback; sessions are designed for local HTTP, and server writes also validate a same-origin Origin. This case did not verify public HTTPS, reverse proxies, cross-host access or external identity integration. Changing the listen address to an external one does not complete public verification; these items still need their own tests.
 
 See the [verification report](RELEASE-CASE-RESULT.md) for the recorded evidence.
 

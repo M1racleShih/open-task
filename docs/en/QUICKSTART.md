@@ -6,7 +6,7 @@
 
 You need Node.js 24 LTS, npm, Docker Engine and Docker Compose. The normal application uses port `4310`, and PostgreSQL uses `55432`; both listen only on localhost.
 
-Run the following commands from the repository root. For an existing workspace, first back it up as described in [release checks](RELEASE-CHECK.md). Initialization does not clear existing tasks, and repeated seeding does not reset existing passwords.
+Run the following commands from the repository root. Initialization does not clear existing tasks, and repeated `npm run db:seed` runs do not reset existing account passwords. Back up an existing workspace first, as described in [release checks](RELEASE-CHECK.md).
 
 ```sh
 npm ci
@@ -27,7 +27,7 @@ Open <http://127.0.0.1:4310/>. The API and worker are separate processes; both m
 
 ## Demo accounts
 
-In a new database, the seed command above creates these test accounts, all with initial password `OpenTask-Test-2026!`.
+Running the `npm run db:seed` command above in a new database creates these test accounts, all with initial password `OpenTask-Test-2026!`.
 
 | Username | Display name         | Responsibility in the case                                                                  |
 | -------- | -------------------- | ------------------------------------------------------------------------------------------- |
@@ -41,15 +41,15 @@ The project manager is assigned by a project, rather than being a separate globa
 
 ## Using an isolated case environment
 
-To keep examples out of your normal workspace, first run:
+To keep examples out of your normal workspace, first make sure PostgreSQL is running and port `4318` is free, then run:
 
 ```sh
 npm run case:check
 ```
 
-This command uses the fixed `open_task_release_case` database, migrates, seeds, builds and runs the API case automatically. It temporarily starts the API and worker on `4318` and closes these processes when finished. An existing `4310` workspace is unaffected. PostgreSQL must already be running and `4318` must be free. On failure, inspect the terminal or `artifacts/release-case/<run>/failure.json`.
+This command uses the fixed `open_task_release_case` database and automatically migrates it, initializes data, builds the app and runs the API case. It temporarily starts the API and worker on `4318` and closes these processes when finished, so an existing `4310` workspace is unaffected. On failure, inspect the terminal output or `artifacts/release-case/<run>/failure.json`.
 
-Each run adds a synthetic project with a random identifier; previous data is not deleted. API success prints `Release case passed: 13 checks`, after which the case database backup and isolated restore are verified. Only a final exit code of 0 means the complete check passed. The raw API report is at `artifacts/release-case/<run>/result.json`; the latest successful API report is at `artifacts/release-case/latest.json`. That file does not prove the later restore step passed; use the terminal restore output. Follow the [case tutorial](CASE-CSV-EXPORT.md) separately for the interface.
+Each run adds a synthetic project with a random identifier and deletes no previous data. When the API case passes it prints `Release case passed: 13 checks`, after which the command verifies the case database backup and isolated restore. Only a final exit code of 0 means the complete check passed. The raw API report is at `artifacts/release-case/<run>/result.json`; the latest successful API report is at `artifacts/release-case/latest.json`. `latest.json` only proves the API case passed, not the restore step that follows; use the terminal restore output. Follow the [case tutorial](CASE-CSV-EXPORT.md) separately for the interface.
 
 To view a saved case, run these commands in two terminals:
 
@@ -71,7 +71,7 @@ Press Ctrl+C in the API and worker terminals. To stop the database, run `docker 
 
 | Symptom                                             | Check                                                                                                             |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Login fails                                         | Correct database and password; seeding does not reset existing accounts                                           |
+| Login fails                                         | Correct database and password; repeated seeding does not reset existing accounts                                  |
 | The page opens, but overdue reminders do not update | A worker is running against the same database                                                                     |
 | Database errors after an update                     | Run `npm run db:migrate` before starting                                                                          |
 | Address already in use                              | Keep existing services intact; the case runner fails immediately, so inspect the process using the port and retry |

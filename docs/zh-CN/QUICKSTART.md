@@ -6,7 +6,7 @@
 
 需要 Node.js 24 LTS、npm、Docker Engine 和 Docker Compose。正常应用使用端口 `4310`，PostgreSQL 使用 `55432`；均仅监听本机。
 
-在代码仓库根目录执行下列命令。已有工作区先按[发布检查](RELEASE-CHECK.md)备份；初始化不清空现有任务，重复播种也不会重置已有密码。
+在代码仓库根目录执行下列命令。初始化不会清空现有任务，重复运行 `npm run db:seed` 也不会重置已有账号的密码。已有工作区请先按[发布检查](RELEASE-CHECK.md)备份。
 
 ```sh
 npm ci
@@ -27,7 +27,7 @@ npm run worker
 
 ## 演示账号
 
-以上播种命令在新数据库里创建以下测试账号，初始密码统一为 `OpenTask-Test-2026!`。
+在新数据库里运行上面的 `npm run db:seed` 会创建以下测试账号，初始密码统一为 `OpenTask-Test-2026!`。
 
 | 用户名  | 显示名称             | 在案例中的职责                           |
 | ------- | -------------------- | ---------------------------------------- |
@@ -41,15 +41,15 @@ npm run worker
 
 ## 使用独立案例环境
 
-不想把示例放进正常工作区时，先运行：
+不想把示例放进正常工作区时，先确认 PostgreSQL 已启动、`4318` 端口空闲，再运行：
 
 ```sh
 npm run case:check
 ```
 
-该命令使用固定的 `open_task_release_case` 数据库，自动迁移、播种、构建并运行 API 案例；在 `4318` 临时启动 API 和 worker，结束后关闭这些进程。已有 `4310` 工作区不受影响。运行前 PostgreSQL 必须已启动，`4318` 必须空闲；失败时看终端或 `artifacts/release-case/<run>/failure.json`。
+该命令使用固定的 `open_task_release_case` 数据库，自动完成数据库迁移、初始化数据和生产构建，并运行 API 案例。它在 `4318` 临时启动 API 和 worker，结束后关闭这些进程，所以已有的 `4310` 工作区不受影响。失败时查看终端输出，或查看 `artifacts/release-case/<run>/failure.json`。
 
-每次运行新增一个带随机编号的模拟项目，不删除前次数据。API 成功输出 `Release case passed: 13 checks`，随后验证案例数据库的备份与独立恢复；最终命令退出 0 才表示整套检查通过。原始 API 报告位于 `artifacts/release-case/<run>/result.json`；最近一次 API 成功报告位于 `artifacts/release-case/latest.json`。该文件不代表随后的恢复步骤已通过，以终端恢复输出为准。界面需另按[案例教程](CASE-CSV-EXPORT.md)跟做。
+每次运行会新增一个带随机编号的模拟项目，不删除前次数据。API 部分成功后输出 `Release case passed: 13 checks`，之后还会验证案例数据库的备份与独立恢复。只有整条命令最终退出 0，才表示整套检查通过。原始 API 报告位于 `artifacts/release-case/<run>/result.json`；最近一次 API 成功报告位于 `artifacts/release-case/latest.json`。`latest.json` 只说明 API 案例通过，不代表随后的恢复步骤也通过；恢复结果以终端输出为准。界面流程需另按[案例教程](CASE-CSV-EXPORT.md)跟做。
 
 查看保存的案例，在两个终端分别运行：
 
@@ -71,7 +71,7 @@ API 和 worker 的终端按 Ctrl+C；需要停止数据库时运行 `docker comp
 
 | 现象                                 | 检查                                                                |
 | ------------------------------------ | ------------------------------------------------------------------- |
-| 登录失败                             | 是否使用正确的数据库与密码；播种不会重置已有账号密码                |
+| 登录失败                             | 是否使用正确的数据库与密码；重复运行 `db:seed` 不会重置已有账号密码 |
 | 页面可打开，但逾期提醒没有更新       | 是否启动同一数据库上的 worker                                       |
 | 新版本访问数据库报错                 | 先执行 `npm run db:migrate` 再启动                                  |
 | 地址已被占用                         | 不替换已有服务；案例运行器会直接失败，查看占用进程后再运行          |

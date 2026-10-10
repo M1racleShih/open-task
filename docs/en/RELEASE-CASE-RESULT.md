@@ -4,6 +4,8 @@
 
 Verification date: 2026-10-09 (Shanghai time). The candidate was the workspace based on `c51e608e3faf01e7a7d022699b317b7a11283811`, including the case scripts, user documentation, HTML generator and dependency patches evaluated in this report. These are not verification results for that historical commit alone.
 
+This report preserves the historical results of run `629cde03` and its accompanying interface walkthroughs. See the [candidate readiness report](RELEASE-READINESS.md) for later candidate verification; increases in test count or comparison coverage do not update this report.
+
 ## Conclusion
 
 The recorded candidate passed local single-team MVP functionality, persistence and dependency checks and can serve as a candidate for local demos and source delivery. The four-task synthetic development project completed approval, execution, collaboration, change confirmation, prerequisites and result review. The three-role UI walkthrough also completed return, resubmission and final acceptance.
@@ -14,14 +16,14 @@ This conclusion applies only to the recorded local environment and synthetic dat
 
 | Check                        | Result and evidence                                                                                                                                                                                                   |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Installation                 | Node 24.18.0 / npm 11.8.0; `npm ci` succeeded after patching                                                                                                                                                          |
+| Installation                 | Node 24.18.0 / npm 11.8.0; `npm ci` succeeded after the dependency upgrades                                                                                                                                                          |
 | Type checking                | `npm run typecheck` exited 0                                                                                                                                                                                          |
 | Production build             | `npm run build` exited 0; Vite 8.2.2                                                                                                                                                                                  |
 | Unit and database regression | `scripts/test-db.sh`: 48 passed, 0 failed, 0 skipped                                                                                                                                                                  |
 | HTTP case                    | `npm run case:check`: 13 assertion groups passed, run `629cde03`; all four tasks were done                                                                                                                            |
-| Case backup and restore      | The same case command restored into a new database; nine tables had matching row counts and content hashes; temporary backup and restore database were removed                                                        |
-| Browser                      | A three-role UI loop completed on a newly started instance after patching                                                      |
-| Dependency audit             | Post-patch `npm audit --omit=dev`: 0 known vulnerabilities                                                                                                                                                            |
+| Case backup and restore      | The same case command restored into a new database and nine tables matched in row count and content hashes; temporary backup and restore database were removed                                                        |
+| Browser                      | A three-role UI loop completed on a newly started instance after the dependency upgrades                                                      |
+| Dependency audit             | After the dependency upgrades, `npm audit --omit=dev`: 0 known vulnerabilities                                                                                                                                                            |
 | New script formatting        | Two TypeScript scripts passed Prettier; two Bash scripts passed `bash -n`                                                                                                                                             |
 | Documentation rendering      | The recorded `docs:build` generated eight pages and checked 24 local references; three tutorial screenshots loaded, desktop and 390px layouts had no page-wide horizontal overflow, and browser error logs were empty |
 
@@ -51,7 +53,7 @@ The runner starts its own API on fixed loopback port `4318` and cannot target an
 
 ## Interface walkthrough coverage
 
-The initial walkthrough created `[模拟UI验收] IssueLite CSV 导出` and implementation task OT-5 through real forms in the isolated case database. After dependency patching, a new instance on `4321` created OT-10 `[模拟UI复核] 实现 CSV 导出` in the same synthetic project and repeated:
+The initial walkthrough created `[模拟UI验收] IssueLite CSV 导出` and implementation task OT-5 through real forms in the isolated case database. After the dependency upgrades, a new instance on `4321` created OT-10 `[模拟UI复核] 实现 CSV 导出` in the same synthetic project and repeated:
 
 ```text
 member creates draft → submits for approval
@@ -65,13 +67,13 @@ member submits result v2 → manager accepts result
 switch to Chinese → refresh → Completed, both submissions retained
 ```
 
-Post-patch task link: [OT-10](http://127.0.0.1:4321/?task=ff691604-bb31-4d92-8ac4-848ab9731367). It works only on this machine with the corresponding case database and service running; the tutorial does not depend on a fixed UUID. The collected browser error log returned an empty list.
+Task link after the dependency upgrades: [OT-10](http://127.0.0.1:4321/?task=ff691604-bb31-4d92-8ac4-848ab9731367). It works only on this machine with the corresponding case database and service running; the tutorial does not depend on a fixed UUID. The collected browser error log returned an empty list.
 
 This additional UI walkthrough primarily verified C's interaction path. B/D/A's complete lifecycle, blocker collaboration, unauthorized actions and prerequisite rejection were covered by the automated API case. Those API checks were not listed as full UI acceptance.
 
 The original verification screenshots below use Chinese controls and retain project and task text as entered. They are linked as historical evidence; translating this report does not change or repeat the recorded checks.
 
-- [Completed task after patching — original Chinese interface](../assets/release-case/completed.jpg).
+- [Completed task after the dependency upgrades — original Chinese interface](../assets/release-case/completed.jpg).
 - [Parent/child and prerequisite relations in the four-task automated case — original Chinese interface](../assets/release-case/graph.jpg).
 
 ## Dependency issues found and fixed during release checks
@@ -85,7 +87,7 @@ The initial production audit reported one high and three moderate findings; this
 | fast-uri        | 3.1.7 / 4.1.4    | 3.1.8 / 4.1.5 | Separate patches for both branches; URI normalization and mailto parsing advisories |
 | ip-address      | 10.7.0           | 10.7.1        | Transitive patch; address-family detection and excessively long input advisories    |
 
-Transitive dependencies use `package.json` overrides, with the two fast-uri version families pinned separately. The lockfile was updated and checked with `npm ci`. Continue auditing future updates; pinned versions are not a permanent security guarantee. After patching, all 48 tests, the complete API case, backup/restore and the three-role browser loop were rerun and passed.
+Transitive dependencies use `package.json` overrides, with the two fast-uri version families pinned separately. The lockfile was updated and checked with `npm ci`. Continue auditing future updates; pinned versions are not a permanent security guarantee. After the upgrades, all 48 tests, the complete API case, backup/restore and the three-role browser loop were rerun and passed.
 
 ## Verification scope and release boundaries
 

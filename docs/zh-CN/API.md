@@ -33,7 +33,7 @@ PostgreSQL 事务保证写入完成后能读到相应结果。业务写入共用
 
 权限失败不改变状态。无效输入为 422，版本过期和图关系冲突为 409，隐藏或私有资源为 404。同一幂等键配不同载荷返回 409。数据库失败时，任务、事件、待办与队列插入一并回滚。
 
-### 界面完善新增项（2026-09-10）
+### 项目颜色与人员默认值（2026-09-10）
 
 项目现在返回精确六位 CSS 十六进制颜色 `color`。`POST /projects` 接受可选 `color`（默认 `#7292c7`）。`PATCH /projects/:id` 接受仅颜色补丁，并保留省略的成员和负责人字段；项目负责人或团队负责人可改色，只有团队负责人能转移项目管理职责。无效颜色返回 422，越权写入通过既有错误结构返回 403。会话、CSRF 与幂等要求不变。更新锁定项目行，防止独立局部变更互相覆盖。迁移 `002_project_color.sql` 为增量且可重复执行。
 
@@ -41,12 +41,22 @@ PostgreSQL 事务保证写入完成后能读到相应结果。业务写入共用
 
 ## 任务计划与时间筛选（2026-10-08）
 
+### 计划开始时间
+
 `plannedStart` 是可选约定时间戳（缺失或为空表示未设置）。`deadline` 仍是唯一计划结束时间，下发或提交审核时必填。已填开始时间不能晚于 deadline，可以相等。创建、编辑、调整均校验日期。开始时间参与版本、已确认约定、审计差异，以及团队负责人调整与负责人确认。旧任务与版本 JSON 可直接读取，不改写历史记录；缺失开始时间显示为空。旧客户端编辑时省略开始时间会保留当前值。
+
+### 任务列表筛选
 
 `GET /tasks` 接受 `time=all|week|month|custom`（默认 all）；自定义范围的 `start` 和 `end` 为含首尾的上海自然日 `YYYY-MM-DD`；还接受 `includeUnscheduled=true|false`、`includeEarlier=true|false` 和可选 `stage`。一周为周一至周日。相对范围每次请求重新计算。最新计划开始与交付期限区间重叠即匹配；仅有 deadline 的任务按该时间点匹配。无日期草稿与范围之前未完成的任务受两个开关控制；全部时间包含所有任务。搜索、项目和可见权限在游标分页前应用。
 
-响应新增 `total`（全部匹配数）、`counts`（各项目 total/done/reviewing/blocked 数）与 `context`（当前页可读祖先）。`items` 仍为匹配页；`nextCursor` 仍为任务编号。此前未完成任务附带 `viewSource: "earlier"`，上下文附带 `viewSource: "context"`。这些仅为读取投影，不保存为任务字段。上下文不消耗游标、不增加匹配数，不包含不可读私有草稿，也不扩展后代。
+### 任务列表响应字段
+
+响应新增 `total`（全部匹配数）、`counts`（各项目 total/done/reviewing/blocked 数）与 `context`（当前页可读祖先）。`items` 仍为匹配页；`nextCursor` 仍为任务编号。此前未完成任务附带 `viewSource: "earlier"`，上下文附带 `viewSource: "context"`。这些字段只在响应中计算出来，不会写入任务记录。上下文不消耗游标、不增加匹配数，不包含不可读私有草稿，也不扩展后代。
+
+### 事件列表筛选
 
 `GET /events` 接受相同时间与状态筛选。`taskSearch` 将事件限制到与任务树和图谱相同的任务搜索范围；既有 `search` 仍搜索事件说明或标题，保持 API 兼容性。指定 `taskId` 时返回完整可读历史，不受视图筛选影响。待办不受筛选影响，并包含 `taskTitle`/`taskNumber`，让范围外提醒仍有可理解的标签。
+
+### 时间偏好接口
 
 `GET /time-preferences` 返回当前会话用户的 `{global: TimeFilter, projects: Record<projectId, TimeFilter>}`。`PUT /time-preferences` 接受 `{scope: "global" | projectId, filter: TimeFilter | null}`，使用常规 CSRF 与幂等请求头。项目 filter 为 null 时删除覆盖；global 不能为 null。没有操作人选择参数。`TimeFilter` 包含 `mode`、`start`、`end`、`includeUnscheduled`、`includeEarlier`。项目覆盖完整替代全局筛选，不求交集。迁移 `003_time_preferences.sql` 为增量且可重复执行。

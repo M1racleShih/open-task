@@ -8,7 +8,7 @@ The team leader creates projects, issues tasks, gives final creation approval, a
 
 The creator, owner and reviewer may be different people. For a project task owned by an ordinary member, the project manager is the default reviewer; for a task owned by the project manager, the team leader is the default. You can explicitly choose a valid reviewer. Only a team leader may review their own task. Administrators manage accounts and cannot bypass business approvals through their administrator role.
 
-Drafts are visible only to their creators. After submission, tasks are visible within the team; project membership does not isolate project data. Use this for team-visible work, rather than assuming sensitive materials are visible only to project members.
+Drafts are visible only to their creators. After submission, tasks are visible to the whole team. Project membership does not control visibility, so do not treat sensitive material as visible only to project members.
 
 ## Workspace
 
@@ -28,7 +28,7 @@ After approval, the task is Awaiting acceptance. The owner may choose Accept tas
 
 ![Task delivery lifecycle: creation approval, owner acceptance, execution, result submission and review; returned work can be revised and resubmitted](../assets/diagrams/en/task-lifecycle.svg)
 
-The diagram shows the main delivery flow. A complete checklist does not complete a task; the reviewer must accept its result. If the owner refuses to accept, the task remains Awaiting acceptance for the issuer to handle. The team leader may cancel unfinished tasks; completed and cancelled tasks cannot reopen. Blockers and pending version confirmation are additional facts, rather than separate task states in this diagram.
+The diagram shows the main delivery flow. A complete checklist does not complete a task; the reviewer must accept its result. If the owner refuses to accept, the task remains Awaiting acceptance for the issuer to handle. The team leader may cancel unfinished tasks; completed and cancelled tasks cannot reopen. Blockers and pending version confirmation are recorded on the task without changing its state, so the diagram has no states for them.
 
 ### Who acts when
 
@@ -38,9 +38,9 @@ This example shows a task created by an ordinary project member; the creator and
 
 ## Execution checklist and formal progress
 
-Use Request checklist change to submit one execution step per line, a reason, and whether the change affects scope or acceptance criteria. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
+Use Request checklist change to submit the execution checklist (one item per line), a reason, and whether the change affects scope or acceptance criteria. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
 
-After checking items, click Confirm submission to save them; unsaved checks are not server-side progress. A checklist at 100% still requires result submission and review, and does not end the task automatically.
+Checking checklist items saves nothing until you click Confirm submission; unsaved checks do not count as server-side progress. A checklist at 100% still does not end the task: the owner must submit a result and the reviewer must accept it.
 
 Record progress requires the current result, next step and next feedback time. Comments are for discussion; neither comments nor checklist checks count as formal feedback or postpone its deadline.
 
@@ -64,11 +64,16 @@ Completed and cancelled tasks cannot reopen. Create a new task for follow-up fix
 
 ## Three task relation types
 
-| Relation       | Purpose                                  | How to add                                      | Effect on completion                                                                                                                                  |
-| -------------- | ---------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Primary parent | Split a goal into tasks                  | Select the parent from a child task             | Children do not complete the parent automatically; the reviewer must explain any unfinished children                                                  |
-| Prerequisite   | One result is needed by another task     | Select the prerequisite from the dependent task | The prerequisite must be completed through review; otherwise acceptance is rejected, and cancelling the prerequisite does not release this constraint |
-| Related task   | Keep background or follow-up connections | Select the other task from either task          | Does not block review or change dates or status                                                                                                       |
+| Relation       | Purpose                                  | How to add                                      | Effect on completion                                                          |
+| -------------- | ---------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------- |
+| Primary parent | Split a goal into tasks                  | Select the parent from a child task             | Children do not complete the parent automatically                             |
+| Prerequisite   | One result is needed by another task     | Select the prerequisite from the dependent task | The dependent task cannot pass review until the prerequisite completes review |
+| Related task   | Keep background or follow-up connections | Select the other task from either task          | Does not block review or change dates or status                               |
+
+Two additional rules:
+
+- A parent task is never completed by its children; while children are unfinished, accepting the parent requires the reviewer to explain why.
+- Cancelling the prerequisite does not release the rule that a dependent task cannot pass review first.
 
 Under Connections & delivery → Relations → Add relation, search by title or task number, select the target and relation type, and explain why. The team leader maintains relations for issued tasks. Parent/child tasks cannot depend on one another; parent and dependency relations cannot form cycles. Prerequisites are enforced at result acceptance and do not prevent dependent tasks from starting early.
 
@@ -78,7 +83,7 @@ Title or number search, project, status and time range jointly filter the tree, 
 
 All projects uses the user's global time range. Projects initially follow it; applying a range inside a project creates a personal project override. Follow global removes the override. Time preferences are saved per account in the database; language and theme are saved per browser.
 
-Include tasks without a deadline and Include earlier unfinished tasks can include drafts without dates and unfinished tasks before the range. Time filters do not truncate followups. A selected task outside the current filters still shows its details and complete history; ancestor context does not add new matching tasks.
+Include tasks without a deadline and Include earlier unfinished tasks can include drafts without dates and unfinished tasks before the range. Time filters do not hide followups. A selected task outside the current filters still shows its details and complete history; the ancestor context shown for it does not count as a new matching task.
 
 ## When an operation fails
 

@@ -24,7 +24,7 @@ For existing workspaces, stop writes and the worker, back up and verify an isola
 
 The API and database listen only on localhost. Sessions target local HTTP. Public HTTPS, reverse proxies, remote team access and production use require separate work and verification.
 
-Non-draft tasks are team-visible. There is no directory login, upload storage, outbound messaging, model or Agent integration. Evidence links preserve URLs, not remote files. Human usability acceptance and sustained real-team trials remain open; this alpha provides the version to try.
+Non-draft tasks are visible to the whole team. This version has no enterprise LDAP directory login, no upload storage, no outbound messaging, and no model or AI Agent integration. Evidence links preserve URLs; the remote files they point to are not backed up. Human usability acceptance and sustained real-team trials remain open; this alpha provides the version to try.
 
 Seed accounts and their documented password are synthetic local test identities. Do not expose this setup to a public network. Backups and session material are private operational data and are not release attachments.
 

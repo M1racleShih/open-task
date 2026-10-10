@@ -89,7 +89,7 @@ Use the schedule below. D0 is the demo day and D1 is the next day. Replace these
 
 Submit in the new-task form saves only a draft. Open the task, confirm Draft status, then choose Submit for approval → Submit. The task becomes team-visible only after submission for approval.
 
-The automated case runner uses times relative to execution, rather than fixed tutorial dates that would cause overdue tasks.
+`npm run case:check` uses times relative to when it runs instead of the fixed tutorial dates, which would otherwise make tasks overdue.
 
 ## 4. manager and leader approve in sequence
 
@@ -99,7 +99,7 @@ At this point, **the task should still be in Creation approval, with Test Leader
 
 Log in as leader, open the same task and choose Approve creation. It should become Awaiting acceptance, with Test Member as the current handler.
 
-admin manages accounts and should not be a business approver at any level.
+One point to check in this step: admin manages accounts and should not be a business approver at any level.
 
 ## 5. leader creates A/B/D and adds relations
 
@@ -161,6 +161,8 @@ Check all three checklist items and choose Confirm submission to save. Completio
 
 ![Recorded English interface: the checklist is complete, but the task is still in progress](../assets/release-case/checklist.jpg)
 
+A Chinese-interface screenshot captured on 2026-10-10 after reopening synthetic task OT-6437 in the isolated test database: [all three checklist items are saved as complete while the task is still in progress](../assets/release-case/checklist-zh-CN.png). It illustrates this step's state and is not part of the historical verification run.
+
 ## 9. Submit the first result, check prerequisites and return it
 
 As member, choose Submit result. Enter "Synthetic result v1: filtered export and Chinese encoding described; special-character evidence is still missing", with Review by set to D1 19:00. Evidence links can remain empty; do not invent PR or test-report links.
@@ -172,6 +174,8 @@ As manager, choose Return result with reason "Missing verification descriptions 
 C should return to In progress. Submissions should retain the first result and return reason.
 
 ![Recorded English interface: the first submission and return reason remain after a return](../assets/release-case/returned.jpg)
+
+A Chinese-interface reproduction of the same step: [the first submission and return reason remain](../assets/release-case/returned-zh-CN.jpg).
 
 ## 10. Complete the prerequisite, resubmit and accept
 
