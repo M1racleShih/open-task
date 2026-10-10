@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/public/brand/opentask-cat-logo.png" width="140" alt="OpenTask cat logo">
+  <img src="web/public/brand/opentask-cat-logo.png" width="200" alt="OpenTask cat logo">
 </p>
 
 # OpenTask

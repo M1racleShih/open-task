@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/public/brand/opentask-cat-logo.png" width="140" alt="OpenTask 猫咪标志">
+  <img src="web/public/brand/opentask-cat-logo.png" width="200" alt="OpenTask 猫咪标志">
 </p>
 
 # OpenTask
