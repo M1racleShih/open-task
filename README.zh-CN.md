@@ -16,9 +16,9 @@ OpenTask 是一个开源的团队任务协作工具，把**交付约定、执行
 
 **0.1.0-alpha 候选版** · 本地运行 · 单团队 · 中英双语 · Apache-2.0
 
-![OpenTask 实际界面：左侧任务树、中间任务关系图谱、右侧交付约定与成果记录](docs/assets/release-case/graph.jpg)
+![OpenTask 英文界面：左侧任务树、中间任务图谱、右侧任务详情](docs/assets/release-alpha/ui-completed-en.jpg)
 
-*来自 CSV 导出模拟案例的实际界面：从团队目标到子任务，再到交付成果，在同一处查看。*
+*采用英文界面的实际应用截图，展示 CSV 导出模拟示例。任务标题和说明保留原始中文输入。*
 
 ## 为什么做 OpenTask
 

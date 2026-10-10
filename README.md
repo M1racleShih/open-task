@@ -16,9 +16,9 @@ We want team leads to spend less time chasing and relaying updates, and contribu
 
 **0.1.0-alpha candidate** · Runs locally · Single team · English & 简体中文 · Apache-2.0
 
-![OpenTask workspace with a task tree on the left, a relationship graph in the center, and work agreements and delivery records on the right](docs/assets/release-case/graph.jpg)
+![OpenTask English interface with a task tree, task graph and task details](docs/assets/release-alpha/ui-completed-en.jpg)
 
-*Actual app screenshot, in Simplified Chinese, from the simulated CSV export case: a team goal, its subtasks and the delivered results in one workspace.*
+*Actual app screenshot with English controls, using a synthetic CSV export example. Task titles and descriptions retain their original Chinese input.*
 
 ## Why OpenTask?
 
