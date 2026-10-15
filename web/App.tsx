@@ -1628,9 +1628,9 @@ export function App() {
                   {detail.latestProgress && (
                     <section className="detail-section">
                       <h3>{t("progress")}</h3>
-                      <p>{detail.latestProgress.text}</p>
+                      <Markdown text={detail.latestProgress.text} />
                       <h3>{t("next")}</h3>
-                      <p>{detail.latestProgress.next}</p>
+                      <Markdown text={detail.latestProgress.next} />
                       <small>{dateText(detail.latestProgress.at, lang)}</small>
                     </section>
                   )}
