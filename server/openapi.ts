@@ -49,11 +49,17 @@ export function describeAPI(document: any) {
       ) {
         operation.parameters ??= [];
         const filters: Record<string, any> = {
+          relatedUserId: {
+            type: "string",
+            format: "uuid",
+            description:
+              "Member whose task relationships to match. Defaults to the session user; applies only with related. Visibility always uses the authenticated viewer. Selected taskId bypasses this filter.",
+          },
           related: {
             type: "string",
             maxLength: 40,
             description:
-              "Comma-separated owned,created,reviewing scopes for the session user, combined with OR. Omit for all tasks; empty matches none. reviewing includes all approvalIds and reviewerId at every stage. Selected taskId bypasses this filter.",
+              "Comma-separated owned,created,reviewing scopes for relatedUserId (defaults to the session user), combined with OR. Omit for all tasks; empty matches none. reviewing includes all approvalIds and reviewerId at every stage. Selected taskId bypasses this filter.",
             example: "owned,reviewing",
           },
           time: {

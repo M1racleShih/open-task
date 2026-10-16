@@ -59,7 +59,7 @@ PostgreSQL 事务保证写入完成后能读到相应结果。业务写入共用
 
 ### 与我相关筛选
 
-`GET /tasks` 和 `GET /events` 接受可选的 `related`，以逗号分隔 `owned`（ownerId）、`created`（creatorId 或 issuerId）、`reviewing`（reviewerId 或 approvalIds 中任一项）。身份始终取自当前登录会话。多个范围按“或”合并，结果去重。职责关系适用于所有流程阶段，包括尚未轮到的审批和已完成任务。省略参数返回全部可见任务；`related=` 不匹配任何任务。无效范围返回 422；字符串最多 40 个字符，最多三个选项。
+`GET /tasks` 和 `GET /events` 接受可选的 `related`，以逗号分隔 `owned`（ownerId）、`created`（creatorId 或 issuerId）、`reviewing`（reviewerId 或 approvalIds 中任一项）。可选的 `relatedUserId` 以 UUID 指定一个成员，省略时默认当前登录用户，兼容已有调用。它仅在传入 `related` 时生效；不存在的 UUID 不匹配任何任务关系。可见权限始终按当前查看者计算，选择其他成员不会暴露该成员的私有草稿或私有上级任务。无效 UUID 返回 422。多个范围按“或”合并，结果去重。职责关系适用于所有流程阶段，包括尚未轮到的审批和已完成任务。省略参数返回全部可见任务；`related=` 不匹配任何任务。无效范围返回 422；字符串最多 40 个字符，最多三个选项。
 
 关系筛选与搜索、项目、状态、时间共同在分页和计数之前执行。可见上级任务作为独立上下文返回，不消耗匹配计数或游标。团队动态使用同样的关系范围；显式指定 `taskId` 时忽略关系筛选，返回完整可读历史。既有私有草稿权限仍生效。
 

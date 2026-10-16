@@ -1504,6 +1504,51 @@ test("Related to me: relationship unions, session identity, private drafts and c
     [ids.approver],
   );
   await result("reviewing", ["reviewer", "approver", "overlap"]);
+  const forMember = (who: string, member: string, scopes: string) =>
+    ok(
+      who,
+      "GET",
+      path + `&related=${scopes}&relatedUserId=${actors[member].id}`,
+    );
+  assert.equal((await forMember("leader", "member", "created")).total, 3);
+  assert.equal(
+    (
+      await ok(
+        "leader",
+        "GET",
+        path + "&related=owned&relatedUserId=" + actors.member.id.toUpperCase(),
+      )
+    ).total,
+    2,
+  );
+  assert.equal((await forMember("member", "leader", "created")).total, 5);
+  assert.equal((await forMember("member", "other", "created")).total, 0);
+  assert.deepEqual(
+    (await forMember("other", "other", "created")).items.map((t: any) => t.id),
+    [ids.hidden],
+  );
+  assert.equal((await forMember("other", "member", "owned")).total, 3);
+  assert.equal((await forMember("leader", "member", "reviewing")).total, 3);
+  assert.equal(
+    (
+      await ok(
+        "member",
+        "GET",
+        path + "&related=owned&relatedUserId=" + randomUUID(),
+      )
+    ).total,
+    0,
+  );
+  assert.equal(
+    (await ok("member", "GET", path + "&relatedUserId=" + actors.other.id))
+      .total,
+    7,
+  );
+  assert.equal(
+    (await api("member", "GET", path + "&related=owned&relatedUserId=invalid"))
+      .status,
+    422,
+  );
   await result("", []);
   assert.equal((await ok("member", "GET", path)).total, 7);
   assert.equal((await ok("other", "GET", path + "&related=owned")).total, 5);
@@ -1557,6 +1602,16 @@ test("Related to me: relationship unions, session identity, private drafts and c
   );
   const eventPath = `/events?taskSearch=${encodeURIComponent(title)}`;
   const ownEvents = await ok("member", "GET", eventPath + "&related=owned");
+  const leaderCreatedEvents = await ok(
+    "member",
+    "GET",
+    eventPath + "&related=created&relatedUserId=" + actors.leader.id,
+  );
+  assert(leaderCreatedEvents.items.some((e: any) => e.taskId === commented.id));
+  assert.equal(
+    (await api("member", "GET", eventPath + "&relatedUserId=invalid")).status,
+    422,
+  );
   assert(ownEvents.items.some((e: any) => e.taskId === commented.id));
   assert.equal(
     (await ok("member", "GET", eventPath + "&related=reviewing")).items.length,
@@ -1567,7 +1622,7 @@ test("Related to me: relationship unions, session identity, private drafts and c
       await ok(
         "member",
         "GET",
-        `/events?taskId=${commented.id}&related=&stage=draft`,
+        `/events?taskId=${commented.id}&related=&stage=draft&relatedUserId=${actors.other.id}`,
       )
     ).items.length > 0,
   );
@@ -1596,7 +1651,11 @@ test("Related to me: server pagination skips unrelated rows, deduplicates and se
     [randomUUID(), rows.rows[210].id, issued.id, randomUUID(), hidden.id],
   );
   const path = `/tasks?search=${encodeURIComponent(title)}&projectId=${projectId}&stage=done&related=owned,reviewing&limit=200`;
-  const first = await ok("member", "GET", path);
+  const first = await ok(
+    "leader",
+    "GET",
+    path + "&relatedUserId=" + actors.member.id,
+  );
   assert.equal(first.total, 205);
   assert.equal(first.items.length, 200);
   assert.equal(first.items[0].id, rows.rows[210].id);
@@ -1605,7 +1664,11 @@ test("Related to me: server pagination skips unrelated rows, deduplicates and se
     first.context.map((t: any) => [t.id, t.viewSource]),
     [[issued.id, "context"]],
   );
-  const next = await ok("member", "GET", path + "&cursor=" + first.nextCursor);
+  const next = await ok(
+    "leader",
+    "GET",
+    path + "&relatedUserId=" + actors.member.id + "&cursor=" + first.nextCursor,
+  );
   assert.equal(next.items.length, 5);
   assert.equal(next.total, 205);
   assert.equal(next.nextCursor, null);
