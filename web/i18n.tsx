@@ -1,3 +1,4 @@
+import { localPreferences } from "../shared/storage.js";
 import {
   createContext,
   useContext,
@@ -69,6 +70,17 @@ const messages = {
   locate: ["Locate selected", "定位选中任务"],
   fit: ["Fit view", "适应视图"],
   workspaceNavigation: ["Workspace navigation", "工作区导航"],
+  toggleWorkspace: ["Toggle center workspace", "开关中间工作区"],
+  hideWorkspace: ["Hide center workspace", "折叠中间工作区"],
+  focusDetails: ["Focus details", "聚焦详情"],
+  restoreLayout: ["Restore layout", "恢复布局"],
+  panelsHidden: [
+    "All panels are hidden. Choose a panel to resume.",
+    "所有面板已隐藏，选择面板即可继续。",
+  ],
+  showTree: ["Show task tree", "显示任务目录"],
+  showWorkspace: ["Show center workspace", "显示中间工作区"],
+  showDetails: ["Show task details", "显示任务详情"],
   toggleTree: ["Toggle task tree", "开关任务目录"],
   toggleDetails: ["Toggle task details", "开关任务详情"],
   openGraph: ["Open task graph", "打开任务图谱"],
@@ -584,13 +596,13 @@ const Context = createContext<{
 }>({ lang: "en", setLang: () => {}, t: (k) => k });
 export function I18n({ children }: { children: ReactNode }) {
   const [lang, set] = useState<Lang>(() =>
-    localStorage.getItem("open-task.language") === "zh" ? "zh" : "en",
+    localPreferences.getItem("open-task.language") === "zh" ? "zh" : "en",
   );
   useEffect(() => {
     document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
   }, [lang]);
   const setLang = (l: Lang) => {
-    localStorage.setItem("open-task.language", l);
+    localPreferences.setItem("open-task.language", l);
     document.documentElement.lang = l === "en" ? "en" : "zh-CN";
     set(l);
   };

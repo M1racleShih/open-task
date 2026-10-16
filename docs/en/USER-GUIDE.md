@@ -14,6 +14,12 @@ Drafts are visible only to their creators. After submission, tasks are visible t
 
 The left task tree groups tasks by project and parent/child structure. The center opens with a Gantt chart; switch to the retained task graph or team updates using the workspace buttons. The Gantt chart and task graph share project, search, state and time filters and the selected task, while preserving their own view state. The task graph retains zoom, drag and focus controls; dragging changes only layout, not business relations. Selecting a task opens its agreement, checklist, progress, connections, results and activity in the right panel. Open followups from the side navigation or bottom-panel button; team updates show operation history.
 
+### Panel layout
+
+On desktop, **Hide center workspace** in the center header hides the whole center, including Gantt, graph, updates and the bottom panel. Task details take the released space. **Focus details** in the detail header temporarily hides the tree and center; **Restore layout** restores the previous panels and widths. Focus is temporary: refreshing restores the saved layout.
+
+The fixed side navigation can show or hide the task tree, center workspace and details, even when all panels are hidden. Opening Gantt, graph, updates or the inbox also restores the center. Hiding panels preserves the selected task, filters and the current Gantt/graph view. Use Tab and Enter/Space for buttons; focused dividers resize with arrow keys. Desktop panel visibility, widths and bottom-panel height are saved in this browser for each signed-in account. If browser storage is unavailable, controls still work for the current session. Phones keep their existing three tabs, independently of desktop panel visibility.
+
 ### Gantt chart
 
 Choose Overview, Day, Week or Month to change the time scale, and use Today or Locate selected to navigate. Project groups can collapse. Dates use Shanghai calendar days. A bar shows the planned start through the delivery deadline, rather than a completion percentage. Tasks with both dates show a bar; a deadline without a planned start shows a due flag; an absent deadline shows Not scheduled. Creation dates never fill in missing durations.
