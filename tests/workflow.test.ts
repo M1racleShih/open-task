@@ -1425,3 +1425,192 @@ test("AC-72/73: earlier unfinished labels honor project/search/status and outsid
     1,
   );
 });
+
+test("Related to me: relationship unions, session identity, private drafts and complete selected history", async () => {
+  const title = prefix + " Related relationships";
+  const template = await create("leader", projectId, "other");
+  const ids: Record<string, string> = {};
+  async function fixture(
+    label: string,
+    patch: any = {},
+    creator = "leader",
+    stage = "done",
+  ) {
+    const id = randomUUID();
+    const task = {
+      ...template,
+      ...patch,
+      id,
+      title,
+      creatorId: actors[creator].id,
+      stage,
+    };
+    const r = await pool.query(
+      "INSERT INTO tasks(id,creator_id,stage,project_id,data) VALUES($1,$2,$3,$4,$5) RETURNING number",
+      [id, actors[creator].id, stage, projectId, task],
+    );
+    await pool.query(
+      "UPDATE tasks SET data=data||jsonb_build_object('number',number) WHERE id=$1",
+      [id],
+    );
+    ids[label] = id;
+    return { ...task, number: r.rows[0].number };
+  }
+  const owned = await fixture("owned", { ownerId: actors.member.id });
+  await fixture("created", {}, "member");
+  await fixture("issued", { issuerId: actors.member.id });
+  await fixture("reviewer", { reviewerId: actors.member.id });
+  await fixture(
+    "approver",
+    { approvalIds: [actors.manager.id, actors.member.id], approvalIndex: 0 },
+    "leader",
+    "approval",
+  );
+  await fixture(
+    "overlap",
+    { ownerId: actors.member.id, reviewerId: actors.member.id },
+    "member",
+  );
+  await fixture("unrelated");
+  await fixture(
+    "hidden",
+    { ownerId: actors.member.id, reviewerId: actors.member.id },
+    "other",
+    "draft",
+  );
+  const path = `/tasks?search=${encodeURIComponent(title)}`;
+  async function result(scopes: string, expected: string[]) {
+    const r = await ok("member", "GET", path + "&related=" + scopes);
+    assert.deepEqual(
+      new Set(r.items.map((t: any) => t.id)),
+      new Set(expected.map((key) => ids[key])),
+    );
+    assert.equal(r.total, expected.length);
+    return r;
+  }
+  await result("owned", ["owned", "overlap"]);
+  await result("created", ["created", "issued", "overlap"]);
+  await result("reviewing", ["reviewer", "approver", "overlap"]);
+  await result("owned,created,reviewing", [
+    "owned",
+    "created",
+    "issued",
+    "reviewer",
+    "approver",
+    "overlap",
+  ]);
+  await pool.query(
+    `UPDATE tasks SET stage='done', data=data||'{"stage":"done","approvalIndex":2}'::jsonb WHERE id=$1`,
+    [ids.approver],
+  );
+  await result("reviewing", ["reviewer", "approver", "overlap"]);
+  await result("", []);
+  assert.equal((await ok("member", "GET", path)).total, 7);
+  assert.equal((await ok("other", "GET", path + "&related=owned")).total, 5);
+  for (const bad of [
+    "all",
+    "owned,unknown",
+    "owned,",
+    "owned,created,reviewing,owned",
+  ]) {
+    assert.equal(
+      (await api("member", "GET", path + "&related=" + bad)).status,
+      422,
+    );
+  }
+  assert.equal(
+    (await ok("member", "GET", path + "&related=owned&stage=working")).total,
+    0,
+  );
+  assert.equal(
+    (
+      await ok(
+        "member",
+        "GET",
+        path + `&related=owned&projectId=${projectId}&stage=done`,
+      )
+    ).total,
+    2,
+  );
+  assert.equal(
+    (
+      await ok(
+        "member",
+        "GET",
+        path + "&related=owned&time=custom&start=2000-01-01&end=2000-01-02",
+      )
+    ).total,
+    0,
+  );
+  // Use a real event, on a task that is outside the selected relationship scope.
+  await pool.query(
+    `UPDATE tasks SET stage='pending',data=data||'{"stage":"pending"}'::jsonb WHERE id=$1`,
+    [owned.id],
+  );
+  const commented = await act(
+    "leader",
+    { ...owned, stage: "pending" },
+    "comment",
+    {
+      text: "Related history fixture",
+    },
+  );
+  const eventPath = `/events?taskSearch=${encodeURIComponent(title)}`;
+  const ownEvents = await ok("member", "GET", eventPath + "&related=owned");
+  assert(ownEvents.items.some((e: any) => e.taskId === commented.id));
+  assert.equal(
+    (await ok("member", "GET", eventPath + "&related=reviewing")).items.length,
+    0,
+  );
+  assert(
+    (
+      await ok(
+        "member",
+        "GET",
+        `/events?taskId=${commented.id}&related=&stage=draft`,
+      )
+    ).items.length > 0,
+  );
+});
+
+test("Related to me: server pagination skips unrelated rows, deduplicates and separates visible ancestor context", async () => {
+  const title = prefix + " Related pagination";
+  const template = await create("leader", projectId, "other");
+  // Unrelated records precede all matches; the 205 matches have two selected relationships.
+  const rows = await pool.query(
+    `INSERT INTO tasks(id,creator_id,stage,project_id,data)
+     SELECT gen_random_uuid(),$1::uuid,'done',$2::uuid,$3::jsonb || jsonb_build_object('title',$4::text,'stage','done',
+       'ownerId',CASE WHEN n<=210 THEN $1::text ELSE $5::text END,'reviewerId',CASE WHEN n<=210 THEN $1::text ELSE $5::text END)
+     FROM generate_series(1,415) n RETURNING id,number`,
+    [actors.leader.id, projectId, template, title, actors.member.id],
+  );
+  await pool.query(
+    "UPDATE tasks SET data=data||jsonb_build_object('id',id,'number',number) WHERE id=ANY($1::uuid[])",
+    [rows.rows.map((r) => r.id)],
+  );
+  const parent = await create("leader", null, "other");
+  const issued = await act("leader", parent, "issue");
+  const hidden = await create("other", null, "other");
+  await pool.query(
+    "INSERT INTO relations(id,source_id,target_id,kind) VALUES($1,$2,$3,'parent'),($4,$3,$5,'parent')",
+    [randomUUID(), rows.rows[210].id, issued.id, randomUUID(), hidden.id],
+  );
+  const path = `/tasks?search=${encodeURIComponent(title)}&projectId=${projectId}&stage=done&related=owned,reviewing&limit=200`;
+  const first = await ok("member", "GET", path);
+  assert.equal(first.total, 205);
+  assert.equal(first.items.length, 200);
+  assert.equal(first.items[0].id, rows.rows[210].id);
+  assert.equal(first.counts[projectId].total, 205);
+  assert.deepEqual(
+    first.context.map((t: any) => [t.id, t.viewSource]),
+    [[issued.id, "context"]],
+  );
+  const next = await ok("member", "GET", path + "&cursor=" + first.nextCursor);
+  assert.equal(next.items.length, 5);
+  assert.equal(next.total, 205);
+  assert.equal(next.nextCursor, null);
+  assert.equal(
+    new Set([...first.items, ...next.items].map((t: any) => t.id)).size,
+    205,
+  );
+});

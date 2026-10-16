@@ -57,6 +57,12 @@ PostgreSQL 事务保证写入完成后能读到相应结果。业务写入共用
 
 `GET /events` 接受相同时间与状态筛选。`taskSearch` 将事件限制到与任务树和图谱相同的任务搜索范围；既有 `search` 仍搜索事件说明或标题，保持 API 兼容性。指定 `taskId` 时返回完整可读历史，不受视图筛选影响。待办不受筛选影响，并包含 `taskTitle`/`taskNumber`，让范围外提醒仍有可理解的标签。
 
+### 与我相关筛选
+
+`GET /tasks` 和 `GET /events` 接受可选的 `related`，以逗号分隔 `owned`（ownerId）、`created`（creatorId 或 issuerId）、`reviewing`（reviewerId 或 approvalIds 中任一项）。身份始终取自当前登录会话。多个范围按“或”合并，结果去重。职责关系适用于所有流程阶段，包括尚未轮到的审批和已完成任务。省略参数返回全部可见任务；`related=` 不匹配任何任务。无效范围返回 422；字符串最多 40 个字符，最多三个选项。
+
+关系筛选与搜索、项目、状态、时间共同在分页和计数之前执行。可见上级任务作为独立上下文返回，不消耗匹配计数或游标。团队动态使用同样的关系范围；显式指定 `taskId` 时忽略关系筛选，返回完整可读历史。既有私有草稿权限仍生效。
+
 ### 时间偏好接口
 
 `GET /time-preferences` 返回当前会话用户的 `{global: TimeFilter, projects: Record<projectId, TimeFilter>}`。`PUT /time-preferences` 接受 `{scope: "global" | projectId, filter: TimeFilter | null}`，使用常规 CSRF 与幂等请求头。项目 filter 为 null 时删除覆盖；global 不能为 null。没有操作人选择参数。`TimeFilter` 包含 `mode`、`start`、`end`、`includeUnscheduled`、`includeEarlier`。项目覆盖完整替代全局筛选，不求交集。迁移 `003_time_preferences.sql` 为增量且可重复执行。

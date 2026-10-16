@@ -49,6 +49,13 @@ export function describeAPI(document: any) {
       ) {
         operation.parameters ??= [];
         const filters: Record<string, any> = {
+          related: {
+            type: "string",
+            maxLength: 40,
+            description:
+              "Comma-separated owned,created,reviewing scopes for the session user, combined with OR. Omit for all tasks; empty matches none. reviewing includes all approvalIds and reviewerId at every stage. Selected taskId bypasses this filter.",
+            example: "owned,reviewing",
+          },
           time: {
             type: "string",
             enum: ["all", "week", "month", "custom"],
@@ -100,7 +107,7 @@ export function describeAPI(document: any) {
             schema,
           });
         operation.description = path.endsWith("/tasks")
-          ? "Matches permission, project, task search, status and Shanghai plan overlap before paging. Returns items, nextCursor, total, counts and separate visible ancestor context. Context never consumes a match cursor."
+          ? "Matches permission, relationship, project, task search, status and Shanghai plan overlap before paging. Returns items, nextCursor, total, counts and separate visible ancestor context. Context never consumes a match cursor."
           : "Time filters select tasks by their latest plan, not by event time. taskSearch uses the task-list search contract; search retains the legacy event note/title search. A selected taskId bypasses viewing filters for full history.";
       }
       let properties: any;

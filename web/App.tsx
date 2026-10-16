@@ -1,3 +1,9 @@
+import { RelatedFilterControls } from "./RelatedFilter.js";
+import {
+  relatedMatch,
+  relatedScopes,
+  type RelatedScope,
+} from "../shared/relatedFilter.js";
 import { TimeFilterControls } from "./TimeFilter.js";
 import {
   defaultTimeFilter,
@@ -68,6 +74,10 @@ export function App() {
   });
   const [timeBusy, setTimeBusy] = useState(false);
   const [stageFilter, setStageFilter] = useState("");
+  const [relatedActive, setRelatedActive] = useState(false);
+  const [selectedScopes, setSelectedScopes] = useState<RelatedScope[]>([
+    ...relatedScopes,
+  ]);
   const [contextTasks, setContextTasks] = useState<Task[]>([]);
   const [matchCount, setMatchCount] = useState(0);
   const [projectCounts, setProjectCounts] = useState<
@@ -197,7 +207,10 @@ export function App() {
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "—";
   const timeFilter = effectiveTimeFilter(timePreferences, project);
   const filterQuery =
-    "&" + timeQuery(timeFilter) + (stageFilter ? "&stage=" + stageFilter : "");
+    "&" +
+    timeQuery(timeFilter) +
+    (stageFilter ? "&stage=" + stageFilter : "") +
+    (relatedActive ? "&related=" + selectedScopes.join(",") : "");
   const taskQuery =
     "&search=" +
     encodeURIComponent(search) +
@@ -537,7 +550,8 @@ export function App() {
   const visible = [...taskMap.values()];
   const outsideResults =
     detail &&
-    (!timeMatch(detail, timeFilter) ||
+    (!relatedMatch(detail, me.id, relatedActive ? selectedScopes : null) ||
+      !timeMatch(detail, timeFilter) ||
       (project && detail.projectId !== project) ||
       (stageFilter && detail.stage !== stageFilter) ||
       (search &&
@@ -950,6 +964,12 @@ export function App() {
               )}
             </div>
             <div className="filters">
+              <RelatedFilterControls
+                active={relatedActive}
+                scopes={selectedScopes}
+                onActiveChange={setRelatedActive}
+                onScopesChange={setSelectedScopes}
+              />
               <input
                 aria-label={t("search")}
                 placeholder={t("search")}
@@ -1023,7 +1043,10 @@ export function App() {
                           x.viewSource === "context" &&
                           (x.projectId ?? "") === p.id,
                       )
-                    : (!search && timeFilter.mode === "all" && !stageFilter) ||
+                    : (!search &&
+                        timeFilter.mode === "all" &&
+                        !stageFilter &&
+                        !relatedActive) ||
                       visible.some((x) => (x.projectId ?? "") === p.id),
                 )
                 .map((p) => (
