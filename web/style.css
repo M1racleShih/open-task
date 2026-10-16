@@ -975,17 +975,6 @@ dd {
   gap: 10px;
   font-size: 13px;
 }
-.outcome-field + .outcome-field {
-  border-top: 1px solid var(--line);
-  margin-top: 12px;
-  padding-top: 12px;
-}
-.outcome-field h4 {
-  margin: 0;
-  font-size: 12px;
-  color: var(--muted);
-}
-
 .detail-breadcrumb {
   display: flex;
   align-items: center;

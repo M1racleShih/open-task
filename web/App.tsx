@@ -15,6 +15,8 @@ import {
   type TimePreferences,
 } from "../shared/timeFilter.js";
 import { Markdown } from "./Markdown.js";
+import { TaskDescription } from "./TaskDescription.js";
+import "./taskDescription.css";
 import { eventDiff } from "../shared/eventDiff.js";
 import { fitPanels } from "../shared/panelLayout.js";
 import { ProjectMenu, type ProjectMenuTarget } from "./ProjectMenu.js";
@@ -1719,17 +1721,7 @@ export function App() {
                       </article>
                     ))}
                   </section>
-                  <section className="detail-section outcome-card">
-                    <h3>
-                      {t("outcome")} · {t("criteria")}
-                    </h3>
-                    {["outcome", "criteria", "scope"].map((k) => (
-                      <div className="outcome-field" key={k}>
-                        <h4>{t(k)}</h4>
-                        <Markdown text={detail[k as keyof Task] as string} />
-                      </div>
-                    ))}
-                  </section>
+                  <TaskDescription key={detail.id} task={detail} />
                   {detail.latestProgress && (
                     <section className="detail-section">
                       <h3>{t("progress")}</h3>
