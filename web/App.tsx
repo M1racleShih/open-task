@@ -1731,7 +1731,7 @@ export function App() {
                 </nav>
                 <div hidden={detailTab !== "overview"}>
                   <ChecklistCard
-                    key={detail.id}
+                    key={"checklist:" + detail.id}
                     task={detail}
                     color={
                       projects.find((p) => p.id === detail.projectId)?.color ??
@@ -1778,7 +1778,7 @@ export function App() {
                       </>
                     )}
                   />
-                  <TaskDescription key={detail.id} task={detail} />
+                  <TaskDescription key={"description:" + detail.id} task={detail} />
                   {detail.latestProgress && (
                     <section className="detail-section">
                       <h3>{t("progress")}</h3>
