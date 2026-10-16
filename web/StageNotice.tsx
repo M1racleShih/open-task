@@ -1,6 +1,7 @@
 import type { StageFeedback } from "../shared/stageFeedback.js";
 import type { User } from "../shared/model.js";
 import { responseFacts } from "../shared/commitment.js";
+import { TaskStage } from "./TaskStage.js";
 import { dateText, useI18n } from "./i18n.js";
 import "./stageNotice.css";
 
@@ -87,7 +88,8 @@ export function StageNotice({
   const { t, lang } = useI18n();
   const { task, before, event } = feedback;
   const { headline, name, next } = content(feedback, users, t);
-  const from = event ? (event.before as typeof task).stage : before.stage;
+  const fromTask = event ? (event.before as typeof task) : before;
+  const from = fromTask.stage;
   return (
     <section className="stage-notice" aria-label={t("stageFeedback")}>
       <div className="stage-notice-content">
@@ -99,11 +101,11 @@ export function StageNotice({
           <span className="stage-transition">
             {from !== task.stage && (
               <>
-                <span className={"status " + from}>{t(from)}</span>
+                <TaskStage task={fromTask} previous />
                 <span aria-hidden="true"> → </span>
               </>
             )}
-            <span className={"status " + task.stage}>{t(task.stage)}</span>
+            <TaskStage task={task} />
             {feedback.kind === "local" && from === task.stage && (
               <span>
                 {t(

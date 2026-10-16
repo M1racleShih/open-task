@@ -42,21 +42,19 @@
   display: block;
   margin-top: 5px;
 }
-.stage-highlight .task-meta .status,
-.stage-highlight .meta-waiting {
+.stage-highlight .task-meta .task-state-icon {
   animation: stage-emphasis 4s ease-out;
 }
 @keyframes stage-emphasis {
   from {
-    box-shadow: 0 0 0 3px var(--accent);
+    transform: scale(1.15);
   }
   to {
-    box-shadow: 0 0 0 0 transparent;
+    transform: scale(1);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .stage-highlight .task-meta .status,
-  .stage-highlight .meta-waiting {
+  .stage-highlight .task-meta .task-state-icon {
     animation: none;
   }
 }

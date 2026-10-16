@@ -22,6 +22,8 @@ The fixed side navigation can show or hide the task tree, center workspace and d
 
 ### Task stage feedback
 
+State labels keep their text and use a circular task icon background in the same seven lifecycle colors as the graph and Gantt chart. A stage change briefly emphasizes this icon rather than outlining the status or next-handler fields.
+
 After the server confirms an action, a dismissible receipt names its business result (for example, Result submitted or Review passed), task number/title, previous and new stages, and the next response responsibilities. An intermediate approval or an inability to accept can keep the same stage; their receipts explain the result without a false stage transition. Completed and cancelled tasks have no next handler. Confirmed task data appears immediately; a later read failure keeps the result and receipt and offers a read retry.
 
 The existing 15-second refresh also detects stage changes to the selected task in other sessions. A banner above the panels stays visible in focus mode, with panels hidden, and on all phone tabs. Operator and transition time come only from matching task-event snapshots in the currently loaded, unfiltered task history. If the event cannot be verified within that pagination boundary or history cannot be read, the banner says so; it never substitutes the task update time or polling time. First load, task/account switching and unchanged refreshes stay quiet. Closing a banner prevents the same transition from returning. Same-stage reassignment quietly retires advice that has become outdated.

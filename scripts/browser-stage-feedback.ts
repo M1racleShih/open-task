@@ -4,6 +4,7 @@ import { createServer, type ViteDevServer } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { mkdir, writeFile } from "node:fs/promises";
+import { lifecycleState } from "../shared/commitment.js";
 import type { Event, Task, User } from "../shared/model.js";
 import {
   demoTask,
@@ -275,6 +276,32 @@ async function submit(page: Page, action: string) {
     .getByRole("button", { name: "Submit", exact: true })
     .click();
 }
+async function stateIcon(page: Page) {
+  const icon = page.locator(".task-meta .task-state-icon");
+  const phase = lifecycleState(tasks[0]);
+  await expect(icon).toHaveAttribute("data-lifecycle", phase);
+  const colors = await icon.evaluate((element, phase) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(--life-${phase})`;
+    element.append(probe);
+    const expected = getComputedStyle(probe).color;
+    probe.remove();
+    const style = getComputedStyle(element);
+    return {
+      background: style.backgroundColor,
+      expected,
+      radius: style.borderRadius,
+      badgeBackground: getComputedStyle(element.closest(".status")!)
+        .backgroundColor,
+      handlerShadow: getComputedStyle(document.querySelector(".meta-waiting")!)
+        .boxShadow,
+    };
+  }, phase);
+  expect(colors.background).toBe(colors.expected);
+  expect(colors.radius).toBe("50%");
+  expect(colors.badgeBackground).toBe("rgba(0, 0, 0, 0)");
+  expect(colors.handlerShadow).toBe("none");
+}
 async function noOverflow(page: Page) {
   expect(
     await page.evaluate(
@@ -306,6 +333,7 @@ try {
   await poll(page);
   await expect(notice(page)).toHaveCount(0);
   await expect(page.locator(".stage-live")).toHaveText("");
+  await stateIcon(page);
   const liveRegion = await page.locator(".stage-live").elementHandle();
   checks.push("Initial load and unchanged 15-second poll stay quiet");
 
@@ -364,6 +392,7 @@ try {
   await expect(visibleNotice(page)).toContainText("Review passed");
   await expect(visibleNotice(page)).toContainText("Closed; no next handler");
   await expect(page.locator(".meta-waiting dd")).toHaveText("—");
+  await stateIcon(page);
   checks.push("Review completion receipt has no execution handler");
 
   // Reset by navigation gives a fresh baseline, then external transition and draft preservation.
@@ -563,8 +592,10 @@ try {
     tasks[0] = demoTask({ stage: initial });
     events = [];
     await open(page);
+    await stateIcon(page);
     await submit(page, action);
     await expect(visibleNotice(page)).toContainText(headline);
+    await stateIcon(page);
     await expect(page.locator(".task-meta .status")).toHaveClass(
       new RegExp(target),
     );
@@ -659,6 +690,7 @@ try {
         });
         await expect(notice(page)).toBeVisible();
         await noOverflow(page);
+        await stateIcon(page);
         if (width === 1440) {
           await page
             .getByRole("button", {
@@ -725,6 +757,9 @@ try {
   await expect(notice(page)).toHaveCount(0);
   checks.push(
     "1440/820/390px, English/Chinese, light/dark, focus/collapsed/mobile tabs; keyboard history and dismissal, no overflow or focus theft",
+  );
+  checks.push(
+    "State icons reuse the seven established theme colors as circular backgrounds, with text labels and no status/handler box highlight",
   );
   await context.close();
   expect(errors).toEqual([]);

@@ -31,6 +31,7 @@ import { workspaceColumns } from "../shared/workspaceLayout.js";
 import { localPreferences } from "../shared/storage.js";
 import { usePanelLayout } from "./usePanelLayout.js";
 import { ProjectMenu, type ProjectMenuTarget } from "./ProjectMenu.js";
+import { TaskStage } from "./TaskStage.js";
 import { TaskIcon } from "./TaskIcon.js";
 import { Gantt } from "./Gantt.js";
 import {
@@ -1776,9 +1777,7 @@ export function App() {
                   key={currentFeedback?.id ?? "baseline"}
                 >
                   OT-{detail.number} · {t("version")} {detail.version}
-                  <span className={"status " + detail.stage}>
-                    {t(detail.stage)}
-                  </span>
+                  <TaskStage task={detail} />
                 </div>
                 <p className="muted detail-breadcrumb">
                   <Folder size={14} />{" "}
