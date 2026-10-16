@@ -89,6 +89,10 @@ Under Connections & delivery → Relations → Add relation, search by title or 
 
 Title or number search, project, status and time range jointly filter the tree, graph, match count and team activity. Time uses the current plan, without inferring dates from titles. Choose all time, this week, this month or custom dates.
 
+Use **All tasks / Related to me** above the task filters to focus on your responsibilities. Related to me initially includes **Owned by me**, **Created or issued by me**, and **Approved or reviewed by me**. Expand the scope summary to select any combination; a task matching more than one selection appears once. Clearing all selections shows no matches. All tasks exits relationship filtering and retains your selection for reuse during this session.
+
+Approval and review scopes describe responsibilities at every stage, including future approval turns and completed work. The selection also filters the Gantt, graph and team activity, together with project, search, status and time. Visible parent tasks provide context without increasing the match count. Followups remain available, and a selected task keeps its details and complete history even outside the selection.
+
 All projects uses the user's global time range. Projects initially follow it; applying a range inside a project creates a personal project override. Follow global removes the override. Time preferences are saved per account in the database; language and theme are saved per browser.
 
 Include tasks without a deadline and Include earlier unfinished tasks can include drafts without dates and unfinished tasks before the range. Time filters do not hide followups. A selected task outside the current filters still shows its details and complete history; the ancestor context shown for it does not count as a new matching task.

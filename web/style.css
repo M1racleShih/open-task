@@ -1317,3 +1317,14 @@ dd {
 .calendar-actions { display: flex; justify-content: flex-end; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
 .calendar-actions button:first-child { margin-right: auto; }
 .calendar-picker button:disabled { cursor: default; }
+
+.related-switch { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 8px; }
+.related-switch button { flex: 1; min-width: 0; font-size: 12px; }
+.related-switch button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+.related-filter details { padding-top: 8px; font-size: 12px; }
+.related-filter summary { cursor: pointer; overflow-wrap: anywhere; }
+.related-filter fieldset { border: 0; margin: 8px 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+.related-filter legend { color: var(--muted); margin-bottom: 8px; }
+.related-filter label { display: flex; flex-direction: row; align-items: center; gap: 7px; margin: 0; }
+.related-filter input { width: auto; flex-shrink: 0; }
+.related-filter small { display: block; color: var(--muted); line-height: 1.5; }

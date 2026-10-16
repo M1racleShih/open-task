@@ -57,6 +57,12 @@ The response adds `total` (all matches), `counts` (per-project total/done/review
 
 `GET /events` accepts the same time/status filters. `taskSearch` restricts events to the same matching task search as the tree/graph; the existing `search` still searches event notes/titles for API compatibility. A selected `taskId` returns complete readable history independently of viewing filters. Followups remain unfiltered and include `taskTitle`/`taskNumber` so out-of-range notices keep understandable labels.
 
+### Related-to-me filter
+
+`GET /tasks` and `GET /events` accept optional `related`, a comma-separated selection of `owned` (ownerId), `created` (creatorId or issuerId), and `reviewing` (reviewerId or any approvalIds entry). Identity always comes from the authenticated session. Selected scopes combine with OR and results are deduplicated. Responsibilities apply at every stage, including future approval turns and completed tasks. Omit the parameter for all visible tasks; `related=` matches none. Invalid scopes return 422. Maximum length is 40 characters and at most three entries are accepted.
+
+Relationship filtering composes with search, project, stage and time before pagination and counting. Visible ancestors remain separate context, without consuming match counts or cursors. Aggregate events use the same relationship selection; an explicit `taskId` returns complete visible history regardless of relationship filters. Existing private-draft visibility still applies.
+
 ### Time preference endpoint
 
 `GET /time-preferences` returns `{global: TimeFilter, projects: Record<projectId, TimeFilter>}` for the session user. `PUT /time-preferences` accepts `{scope: "global" | projectId, filter: TimeFilter | null}`, with the usual CSRF and idempotency headers. A null project filter removes its override; global cannot be null. There is no actor selector. `TimeFilter` contains `mode`, `start`, `end`, `includeUnscheduled`, `includeEarlier`. Project overrides replace the entire global filter without intersection. Migration `003_time_preferences.sql` is additive and repeatable.

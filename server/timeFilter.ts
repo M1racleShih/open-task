@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { relatedScopes } from "../shared/relatedFilter.js";
 import {
   defaultTimeFilter,
   timeRange,
@@ -25,6 +26,12 @@ const booleanQuery = z
   .default("false")
   .transform((v) => v === "true");
 export const taskQuerySchema = z.object({
+  related: z
+    .string()
+    .max(40)
+    .transform((value) => (value === "" ? [] : value.split(",")))
+    .pipe(z.array(z.enum(relatedScopes)).max(3))
+    .optional(),
   search: z.string().max(200).default(""),
   projectId: z.string().uuid().optional(),
   stage: z
@@ -68,6 +75,7 @@ export function matchedTasks(
       range?.until ?? null,
       q.includeUnscheduled,
       q.includeEarlier,
+      q.related ?? null,
     ],
     sql: `visible AS MATERIALIZED (
       SELECT *, ${instant("deadline")} AS plan_end,
@@ -77,6 +85,10 @@ export function matchedTasks(
       SELECT *, CASE WHEN $5::timestamptz IS NOT NULL AND plan_end<$5 AND plan_end IS NOT NULL THEN 'earlier' ELSE 'match' END AS source
       FROM visible WHERE ($2='' OR data->>'title' ILIKE '%'||$2||'%' OR number::text=$2)
         AND ($3::uuid IS NULL OR project_id=$3) AND ($4::text IS NULL OR stage=$4)
+        AND ($9::text[] IS NULL
+          OR ('owned'=ANY($9) AND data->>'ownerId'=$1::text)
+          OR ('created'=ANY($9) AND (creator_id=$1::uuid OR data->>'issuerId'=$1::text))
+          OR ('reviewing'=ANY($9) AND (data->>'reviewerId'=$1::text OR data->'approvalIds' ? $1::text)))
         AND ($5::timestamptz IS NULL
           OR (plan_end >= $5 AND plan_start < $6::timestamptz)
           OR ($7::boolean AND plan_end IS NULL)
