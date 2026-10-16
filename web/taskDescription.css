@@ -1,0 +1,150 @@
+/* Scoped to task terms and their previews; activity and progress keep their styles. */
+.task-description,
+.task-prose,
+.markdown-editor {
+  min-width: 0;
+}
+.task-prose > h3,
+.task-scope summary h3 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.task-prose .markdown {
+  max-width: 72ch;
+  line-height: 1.8;
+}
+.task-prose .markdown :is(h1, h2, h3, h4, h5, h6) {
+  display: block;
+  line-height: 1.45;
+  margin: 1.4em 0 0.6em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.task-prose .markdown h1 {
+  font-size: 1.4em;
+}
+.task-prose .markdown h2 {
+  font-size: 1.25em;
+}
+.task-prose .markdown :is(h3, h4, h5, h6) {
+  font-size: 1.08em;
+}
+.task-prose .markdown > :first-child {
+  margin-top: 0;
+}
+.task-prose .markdown p {
+  margin: 0 0 1em;
+}
+.task-prose .markdown :is(ul, ol) {
+  margin: 0.7em 0 1em;
+  padding-left: 1.6em;
+}
+.task-prose .markdown li + li {
+  margin-top: 0.4em;
+}
+.task-prose .markdown li > p {
+  margin: 0.4em 0;
+}
+.task-prose .markdown strong {
+  font-weight: 750;
+}
+.task-prose .markdown a {
+  text-underline-offset: 3px;
+}
+.task-prose .markdown blockquote {
+  margin: 1em 0;
+  color: var(--muted);
+}
+.task-prose .markdown :not(pre) > code {
+  background: var(--surface);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.task-prose .markdown pre {
+  max-width: 100%;
+  line-height: 1.6;
+}
+.task-prose .markdown th {
+  background: var(--surface);
+}
+.task-prose .markdown td,
+.task-prose .markdown th {
+  min-width: 6em;
+}
+.task-prose .markdown input[type="checkbox"] {
+  cursor: default;
+}
+.task-scope summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+.task-scope summary h3 {
+  display: inline;
+  color: var(--text);
+}
+.task-scope summary span {
+  display: block;
+  font-size: 12px;
+  margin: 6px 0 0 16px;
+  color: var(--muted);
+}
+.task-scope[open] summary {
+  margin-bottom: 16px;
+}
+.task-scope[open] summary span {
+  display: none;
+}
+.task-scope summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.markdown-editor {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.markdown-editor-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 5px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.markdown-editor-bar [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.markdown-editor-modes {
+  margin-right: auto;
+}
+.markdown-editor-modes [aria-pressed="true"] {
+  background: var(--panel);
+  color: var(--accent);
+  font-weight: 600;
+}
+.markdown-editor textarea {
+  display: block;
+  border: 0;
+  border-radius: 0;
+  padding: 12px;
+  line-height: 1.7;
+}
+.markdown-editor textarea[hidden] {
+  display: none;
+}
+.markdown-editor-preview {
+  min-height: 13em;
+  padding: 12px;
+  background: var(--panel);
+}
+.markdown-editor > small {
+  display: block;
+  padding: 8px 12px;
+  line-height: 1.6;
+}

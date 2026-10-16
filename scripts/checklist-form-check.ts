@@ -62,7 +62,7 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(base + "/?task=" + task.id);
   await page
-    .getByRole("button", { name: "Request checklist change", exact: true })
+    .getByRole("button", { name: "Request checklist edit", exact: true })
     .click();
   const dialog = page.getByRole("dialog");
   const items = dialog.getByLabel("Checklist items (one per line)", {

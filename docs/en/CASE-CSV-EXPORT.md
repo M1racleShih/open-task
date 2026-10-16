@@ -117,7 +117,7 @@ Switch to manager, accept and start A, and leave its final summary and review un
 
 As member, open C and choose Accept and start. The task should become In progress, showing that its owner accepted the agreement and began work.
 
-Choose Request checklist change, entering one item per line:
+Choose Request checklist edit, entering one item per line:
 
 ```text
 Export the currently filtered results
@@ -157,7 +157,7 @@ Next step: Complete descriptions for six verification categories, then submit fo
 Next feedback: D1 14:00 (replace with an actual date)
 ```
 
-Check all three checklist items and choose Confirm submission to save. Completion should show 3/3 and 100%, but **the task should remain In progress**. The checklist records execution progress; the reviewer still decides completion.
+Check all three checklist items and choose Save checked progress to save. Completion should show 3/3 and 100%, but **the task should remain In progress**. The checklist records execution progress; the reviewer still decides completion.
 
 ![Recorded English interface: the checklist is complete, but the task is still in progress](../assets/release-case/checklist.jpg)
 

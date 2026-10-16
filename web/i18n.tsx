@@ -1,3 +1,4 @@
+import { localPreferences } from "../shared/storage.js";
 import {
   createContext,
   useContext,
@@ -69,6 +70,17 @@ const messages = {
   locate: ["Locate selected", "定位选中任务"],
   fit: ["Fit view", "适应视图"],
   workspaceNavigation: ["Workspace navigation", "工作区导航"],
+  toggleWorkspace: ["Toggle center workspace", "开关中间工作区"],
+  hideWorkspace: ["Hide center workspace", "折叠中间工作区"],
+  focusDetails: ["Focus details", "聚焦详情"],
+  restoreLayout: ["Restore layout", "恢复布局"],
+  panelsHidden: [
+    "All panels are hidden. Choose a panel to resume.",
+    "所有面板已隐藏，选择面板即可继续。",
+  ],
+  showTree: ["Show task tree", "显示任务目录"],
+  showWorkspace: ["Show center workspace", "显示中间工作区"],
+  showDetails: ["Show task details", "显示任务详情"],
   toggleTree: ["Toggle task tree", "开关任务目录"],
   toggleDetails: ["Toggle task details", "开关任务详情"],
   openGraph: ["Open task graph", "打开任务图谱"],
@@ -113,10 +125,15 @@ const messages = {
   taskScope: ["Task scope", "任务范围"],
   allTasks: ["All tasks", "全部任务"],
   relatedToMe: ["Related to me", "与我相关"],
+  byMember: ["By member", "按成员"],
+  relatedMember: ["Related member", "相关成员"],
+  relatedMe: ["Me", "我"],
+  relatedToMember: ["Related to {name}", "与{name}相关"],
+  relatedInactive: ["Inactive", "已停用"],
   relatedScopes: ["Include relationships", "包含以下关系"],
-  related_owned: ["Owned by me", "我负责的"],
-  related_created: ["Created or issued by me", "我创建或下发的"],
-  related_reviewing: ["Approved or reviewed by me", "我审批或验收的"],
+  related_owned: ["Owned", "负责的"],
+  related_created: ["Created or issued", "创建或下发的"],
+  related_reviewing: ["Approval or review", "审批或验收的"],
   relatedSelected: ["{count} scopes selected", "已选 {count} 类"],
   relatedNone: ["No scopes selected", "未选择范围"],
   relatedHint: [
@@ -143,6 +160,21 @@ const messages = {
   outcome: ["Expected result", "预期结果"],
   scope: ["Scope", "工作范围"],
   criteria: ["Acceptance criteria", "验收标准"],
+  scopeExpand: ["Expand to read the full scope", "展开阅读完整工作范围"],
+  markdownMode: ["Markdown mode", "Markdown 模式"],
+  markdownEdit: ["Edit", "编辑"],
+  markdownPreview: ["Preview", "预览"],
+  markdownFormat: ["Formatting", "文字格式"],
+  markdownbold: ["Bold", "加粗"],
+  markdownlist: ["List", "列表"],
+  markdownlink: ["Link", "链接"],
+  markdownboldHint: ["Bold selected text (Ctrl/⌘ B)", "加粗选中文字（Ctrl/⌘ B）"],
+  markdownlistHint: ["List selected lines (Ctrl/⌘ Shift 8)", "将选中行转为列表（Ctrl/⌘ Shift 8）"],
+  markdownlinkHint: ["Link selected text (Ctrl/⌘ K); then enter the URL", "为选中文字添加链接（Ctrl/⌘ K），然后输入网址"],
+  markdownHint: [
+    "Markdown · Select text to format. Ctrl/⌘ B: bold · Ctrl/⌘ K: link · Ctrl/⌘ Shift 8: list. Plain line breaks are kept; preview checkboxes are read-only.",
+    "Markdown · 选中文字后设置格式。Ctrl/⌘ B：加粗 · Ctrl/⌘ K：链接 · Ctrl/⌘ Shift 8：列表。保留普通换行；预览中的复选框只读。",
+  ],
   ownerId: ["Owner", "负责人"],
   reviewerId: ["Reviewer", "验收人"],
   projectId: ["Project", "项目"],
@@ -201,15 +233,31 @@ const messages = {
   timezone: ["All dates use Asia/Shanghai", "所有时间采用上海时区"],
   version: ["Version", "版本"],
   waiting: ["Waiting for", "等待处理人"],
-  submitChecklist: ["Confirm submission", "确认提交"],
-  checklistUnsaved: [
-    "Unsaved checklist changes. Progress updates after submission.",
-    "清单修改尚未提交，确认提交后更新进度。",
-  ],
+  submitChecklist: ["Save checked progress", "保存勾选进度"],
+  checklistUnsaved: ["Unsaved items: {count}", "有 {count} 项未保存"],
   discardChecklist: [
-    "Discard unsaved checklist changes?",
-    "清单修改尚未提交，是否放弃修改？",
+    "Discard unsaved checklist progress?",
+    "勾选进度尚未保存，是否放弃本机修改？",
   ],
+  checklistSavedProgress: ["Saved progress", "已保存进度"],
+  checklistSaved: ["All checks saved", "勾选进度已保存"],
+  checklistSaveSuccess: ["Checked progress saved", "勾选进度保存成功"],
+  checklistSaving: ["Saving checked progress…", "正在保存勾选进度…"],
+  checklistUndo: ["Undo unsaved checks", "撤销未保存勾选"],
+  checklistItemUnsaved: ["Unsaved", "未保存"],
+  checklistSaveFailure: [
+    "Progress was not saved. Your local checks are preserved.",
+    "进度未保存，本机勾选已保留。",
+  ],
+  checklistSaveConflict: [
+    "The agreement or checklist changed. Your local checks are preserved. Refresh and compare the latest saved progress; undo local checks to start again.",
+    "约定或清单已变化，本机勾选已保留。请刷新并核对最新已保存进度，可撤销本机勾选后重新操作。",
+  ],
+  checklistPending: ["Checklist edits awaiting approval", "待审批清单申请"],
+  checklistHistory: ["Checklist change records", "清单变更记录"],
+  checklistPendingStatus: ["Awaiting approval", "待审批"],
+  checklistRejected: ["Returned", "已退回"],
+  checklistNoReason: ["No reason provided", "未填写原因"],
   checklist: ["Execution checklist", "执行清单"],
   noChecklist: ["No checklist progress", "暂无清单进度"],
   checklistCount: ["Completed items / total items", "已完成项数／总项数"],
@@ -273,7 +321,7 @@ const messages = {
   adjust: ["Adjust agreement", "调整约定"],
   confirm: ["Confirm this version", "确认当前版本"],
   toggle: ["Checklist item updated", "清单勾选更新"],
-  requestChecklist: ["Request checklist change", "申请清单变更"],
+  requestChecklist: ["Request checklist edit", "申请修改清单"],
   approveChecklist: ["Approve checklist", "确认清单变更"],
   rejectChecklist: ["Reject checklist", "退回清单变更"],
   approved: ["Approved", "已批准"],
@@ -548,13 +596,13 @@ const Context = createContext<{
 }>({ lang: "en", setLang: () => {}, t: (k) => k });
 export function I18n({ children }: { children: ReactNode }) {
   const [lang, set] = useState<Lang>(() =>
-    localStorage.getItem("open-task.language") === "zh" ? "zh" : "en",
+    localPreferences.getItem("open-task.language") === "zh" ? "zh" : "en",
   );
   useEffect(() => {
     document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
   }, [lang]);
   const setLang = (l: Lang) => {
-    localStorage.setItem("open-task.language", l);
+    localPreferences.setItem("open-task.language", l);
     document.documentElement.lang = l === "en" ? "en" : "zh-CN";
     set(l);
   };

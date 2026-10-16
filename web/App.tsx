@@ -1,9 +1,10 @@
-import { RelatedFilterControls } from "./RelatedFilter.js";
 import {
-  relatedMatch,
-  relatedScopes,
-  type RelatedScope,
-} from "../shared/relatedFilter.js";
+  defaultRelatedPreferences,
+  readRelatedPreferences,
+  writeRelatedPreferences,
+} from "./relatedPreferences.js";
+import { RelatedFilterControls } from "./RelatedFilter.js";
+import { relatedMatch } from "../shared/relatedFilter.js";
 import { TimeFilterControls } from "./TimeFilter.js";
 import {
   defaultTimeFilter,
@@ -14,8 +15,13 @@ import {
   type TimePreferences,
 } from "../shared/timeFilter.js";
 import { Markdown } from "./Markdown.js";
+import { TaskDescription } from "./TaskDescription.js";
+import "./taskDescription.css";
+import { ChecklistCard, type ChecklistFeedback } from "./ChecklistCard.js";
 import { eventDiff } from "../shared/eventDiff.js";
-import { fitPanels } from "../shared/panelLayout.js";
+import { workspaceColumns } from "../shared/workspaceLayout.js";
+import { localPreferences } from "../shared/storage.js";
+import { usePanelLayout } from "./usePanelLayout.js";
 import { ProjectMenu, type ProjectMenuTarget } from "./ProjectMenu.js";
 import { TaskIcon } from "./TaskIcon.js";
 import { Gantt } from "./Gantt.js";
@@ -36,6 +42,10 @@ import {
   Plus,
   RefreshCw,
   PanelBottom,
+  PanelLeftClose,
+  PanelsTopLeft,
+  Maximize2,
+  Minimize2,
   Sun,
   Moon,
   ChartNoAxesGantt,
@@ -74,10 +84,29 @@ export function App() {
   });
   const [timeBusy, setTimeBusy] = useState(false);
   const [stageFilter, setStageFilter] = useState("");
-  const [relatedActive, setRelatedActive] = useState(false);
-  const [selectedScopes, setSelectedScopes] = useState<RelatedScope[]>([
-    ...relatedScopes,
-  ]);
+  const [relatedPreferences, setRelatedPreferences] = useState(
+    defaultRelatedPreferences,
+  );
+  const {
+    active: relatedActive,
+    memberId: relatedMemberId,
+    scopes: selectedScopes,
+  } = relatedPreferences;
+  function restoreRelatedPreferences(userId: string) {
+    try {
+      setRelatedPreferences(readRelatedPreferences(localStorage, userId));
+    } catch {
+      setRelatedPreferences(defaultRelatedPreferences);
+    }
+  }
+  useEffect(() => {
+    if (!me) return;
+    try {
+      writeRelatedPreferences(localStorage, me.id, relatedPreferences);
+    } catch {
+      // Access to localStorage itself can be disabled by the browser.
+    }
+  }, [me?.id, relatedPreferences]);
   const [contextTasks, setContextTasks] = useState<Task[]>([]);
   const [matchCount, setMatchCount] = useState(0);
   const [projectCounts, setProjectCounts] = useState<
@@ -104,7 +133,6 @@ export function App() {
     [project, setProject] = useState(""),
     [actor, setActor] = useState(""),
     [tab, setTab] = useState("gantt"),
-    [bottom, setBottom] = useState(false),
     [bottomTab, setBottomTab] = useState("inbox"),
     [mobile, setMobile] = useState(
       new URLSearchParams(location.search).get("view") === "commitments"
@@ -116,7 +144,7 @@ export function App() {
     [collapsed, setCollapsed] = useState(false),
     [form, setForm] = useState<FormSpec | null>(null),
     [theme, setTheme] = useState(
-      () => localStorage.getItem("open-task.theme") ?? "light",
+      () => localPreferences.getItem("open-task.theme") ?? "light",
     );
   const [checklistDraft, setChecklistDraft] = useState<{
     taskId: string;
@@ -124,6 +152,9 @@ export function App() {
     checklistVersion: number;
     changes: Record<string, { expectedDone: boolean; done: boolean }>;
   } | null>(null);
+  const checklistSaving = useRef(false);
+  const [checklistFeedback, setChecklistFeedback] =
+    useState<ChecklistFeedback | null>(null);
   const checklistDirty =
     !!checklistDraft && Object.keys(checklistDraft.changes).length > 0;
   useEffect(() => {
@@ -139,17 +170,31 @@ export function App() {
     if (busy && checklistDirty) return false;
     if (checklistDirty && !window.confirm(t("discardChecklist"))) return false;
     setChecklistDraft(null);
+    setChecklistFeedback(null);
     return true;
   }
   const [viewport, setViewport] = useState(() => ({
     width: innerWidth,
     height: innerHeight,
   }));
-  const [treeSize, setLeftWidth] = useState<number | null>(null),
-    [detailSize, setRightWidth] = useState<number | null>(null),
-    [inboxSize, setBottomHeight] = useState<number | null>(null);
-  const [showTree, setShowTree] = useState(true),
-    [showDetails, setShowDetails] = useState(Boolean(selected));
+  const {
+    showTree,
+    showWorkspace,
+    showDetails,
+    bottom,
+    treeSize,
+    detailSize,
+    inboxSize,
+    focused,
+    setShowTree,
+    setShowWorkspace,
+    setShowDetails,
+    setBottom,
+    setLeftWidth,
+    setRightWidth,
+    setBottomHeight,
+    toggleFocus,
+  } = usePanelLayout(me?.id ?? null, Boolean(selected));
   const layoutRef = useRef<HTMLDivElement>(null);
   const [layoutSize, setLayoutSize] = useState({
     width: innerWidth - 60,
@@ -173,21 +218,25 @@ export function App() {
       observer.disconnect();
     };
   }, [me, ready]);
-  const panelBudget = Math.max(
+  const {
+    left: leftWidth,
+    right: rightWidth,
+    budget: panelBudget,
+    treeDivider,
+    detailDivider,
+    columns,
+  } = workspaceColumns(
+    layoutSize.width,
+    { tree: showTree, workspace: showWorkspace, details: showDetails },
+    treeSize ?? Math.round(Math.min(430, Math.max(240, viewport.width * 0.2))),
+    detailSize ??
+      Math.round(Math.min(650, Math.max(410, viewport.width * 0.28))),
+  );
+  const treeResizeMax = Math.max(
     0,
-    layoutSize.width - (showTree ? 7 : 0) - (showDetails ? 7 : 0),
+    panelBudget - (showWorkspace && showDetails ? 120 : 0),
   );
-  const { left: leftWidth, right: rightWidth } = fitPanels(
-    showTree
-      ? (treeSize ??
-          Math.round(Math.min(430, Math.max(240, viewport.width * 0.2))))
-      : 0,
-    showDetails
-      ? (detailSize ??
-          Math.round(Math.min(650, Math.max(410, viewport.width * 0.28))))
-      : 0,
-    panelBudget,
-  );
+  const detailResizeMax = Math.max(0, panelBudget - (showTree ? 120 : 0));
   const bottomBudget = Math.max(0, layoutSize.height - 7);
   const bottomHeight = Math.min(
     bottomBudget,
@@ -205,12 +254,18 @@ export function App() {
   const loadSequence = useRef(0);
   const leader = me?.roles.includes("leader");
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "—";
+  const relatedUserId = relatedMemberId || me?.id || "";
   const timeFilter = effectiveTimeFilter(timePreferences, project);
   const filterQuery =
     "&" +
     timeQuery(timeFilter) +
     (stageFilter ? "&stage=" + stageFilter : "") +
-    (relatedActive ? "&related=" + selectedScopes.join(",") : "");
+    (relatedActive
+      ? "&related=" +
+        selectedScopes.join(",") +
+        "&relatedUserId=" +
+        encodeURIComponent(relatedUserId)
+      : "");
   const taskQuery =
     "&search=" +
     encodeURIComponent(search) +
@@ -242,12 +297,13 @@ export function App() {
   }
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem("open-task.theme", theme);
+    localPreferences.setItem("open-task.theme", theme);
   }, [theme]);
   useEffect(() => {
     api("/me")
       .then(async (x) => {
         setTimePreferences(await api("/time-preferences"));
+        restoreRelatedPreferences(x.user.id);
         setMe(x.user);
       })
       .catch(() => {})
@@ -338,6 +394,7 @@ export function App() {
     setMobile("details");
   }
   function chooseTab(next: string) {
+    setShowWorkspace(true);
     if (next === "graph") setGraphOpened(true);
     setTab(next);
     const params = new URLSearchParams(location.search);
@@ -375,6 +432,7 @@ export function App() {
     try {
       const r = await api("/sessions", "POST", { username, password });
       setTimePreferences(await api("/time-preferences"));
+      restoreRelatedPreferences(r.user.id);
       setMe(r.user);
       setPassword("");
       setError("");
@@ -443,7 +501,9 @@ export function App() {
     });
   }
   function toggle(item: Task["checklist"][number]) {
-    if (!detail || busy) return;
+    if (!detail || detail.id !== selected || busy || checklistSaving.current)
+      return;
+    setChecklistFeedback(null);
     setChecklistDraft((old) => {
       const draft =
         old?.taskId === detail.id
@@ -464,11 +524,19 @@ export function App() {
     });
   }
   async function submitChecklist() {
-    if (!checklistDraft || !checklistDirty || busy) return;
+    if (
+      !checklistDraft ||
+      !checklistDirty ||
+      busy ||
+      checklistSaving.current ||
+      checklistDraft.taskId !== selected
+    ) return;
     const draft = checklistDraft;
+    checklistSaving.current = true;
+    setChecklistFeedback({ taskId: draft.taskId, status: "saving" });
     setBusy(true);
     try {
-      await api(
+      const saved: Task = await api(
         `/tasks/${draft.taskId}/actions/toggle`,
         "POST",
         {
@@ -481,11 +549,24 @@ export function App() {
         },
         crypto.randomUUID(),
       );
-      setChecklistDraft(null);
+      // An older auto-refresh must not replace this acknowledged server state.
+      ++loadSequence.current;
+      setDetail((current) => current?.id === draft.taskId ? saved : current);
+      setTasks((current) =>
+        current.map((task) => task.id === draft.taskId ? saved : task),
+      );
+      // Only clear the exact draft sent by this request, never another task's draft.
+      setChecklistDraft((current) => current === draft ? null : current);
+      setChecklistFeedback({ taskId: draft.taskId, status: "saved" });
       await refresh();
     } catch (e) {
-      setError((e as ApiError).code);
+      setChecklistFeedback({
+        taskId: draft.taskId,
+        status: "error",
+        code: (e as ApiError).code,
+      });
     } finally {
+      checklistSaving.current = false;
       setBusy(false);
     }
   }
@@ -550,7 +631,7 @@ export function App() {
   const visible = [...taskMap.values()];
   const outsideResults =
     detail &&
-    (!relatedMatch(detail, me.id, relatedActive ? selectedScopes : null) ||
+    (!relatedMatch(detail, relatedUserId, relatedActive ? selectedScopes : null) ||
       !timeMatch(detail, timeFilter) ||
       (project && detail.projectId !== project) ||
       (stageFilter && detail.stage !== stageFilter) ||
@@ -783,6 +864,7 @@ export function App() {
               event.currentTarget
                 .closest<HTMLElement>("[popover]")
                 ?.hidePopover();
+              setShowWorkspace(true);
               setBottom(true);
               setBottomTab("inbox");
               setMobile("workspace");
@@ -852,6 +934,8 @@ export function App() {
       <div className="body-row">
         <nav className="activity-rail" aria-label={t("workspaceNavigation")}>
           <button
+            title={t("toggleTree")}
+            aria-controls="task-tree-panel"
             aria-label={t("toggleTree")}
             aria-pressed={showTree}
             onClick={() => setShowTree((x) => !x)}
@@ -859,22 +943,35 @@ export function App() {
             <ListTree size={20} />
           </button>
           <button
+            id="workspace-toggle"
+            title={t("toggleWorkspace")}
+            aria-label={t("toggleWorkspace")}
+            aria-controls="workspace-panel"
+            aria-pressed={showWorkspace}
+            onClick={() => setShowWorkspace((x) => !x)}
+          >
+            <PanelsTopLeft size={20} />
+          </button>
+          <button
+            title={t("openGantt")}
             aria-label={t("openGantt")}
-            aria-pressed={tab === "gantt"}
+            aria-pressed={showWorkspace && tab === "gantt"}
             onClick={() => chooseTab("gantt")}
           >
             <ChartNoAxesGantt size={20} />
           </button>
           <button
+            title={t("openGraph")}
             aria-label={t("openGraph")}
-            aria-pressed={tab === "graph"}
+            aria-pressed={showWorkspace && tab === "graph"}
             onClick={() => chooseTab("graph")}
           >
             <GitGraph size={20} />
           </button>
           <button
+            title={t("openUpdates")}
             aria-label={t("openUpdates")}
-            aria-pressed={tab === "updates"}
+            aria-pressed={showWorkspace && tab === "updates"}
             onClick={() => chooseTab("updates")}
           >
             <Activity size={20} />
@@ -882,6 +979,7 @@ export function App() {
           <button
             aria-label={t("openInbox")}
             onClick={() => {
+              setShowWorkspace(true);
               setBottom(true);
               setBottomTab("inbox");
             }}
@@ -890,6 +988,8 @@ export function App() {
           </button>
           <div className="spacer" />
           <button
+            title={t("toggleDetails")}
+            aria-controls="task-detail-panel"
             aria-label={t("toggleDetails")}
             aria-pressed={showDetails}
             onClick={() => setShowDetails((x) => !x)}
@@ -901,13 +1001,17 @@ export function App() {
           ref={layoutRef}
           className="layout"
           style={{
-            gridTemplateColumns: `${leftWidth}px ${showTree ? 7 : 0}px minmax(0,1fr) ${showDetails ? 7 : 0}px ${rightWidth}px`,
+            gridTemplateColumns: columns,
           }}
           data-mobile={mobile}
           data-tree-hidden={!showTree}
           data-details-hidden={!showDetails}
+          data-workspace-hidden={!showWorkspace}
+          data-tree-divider={treeDivider}
+          data-detail-divider={detailDivider}
+          data-focused={focused}
         >
-          <aside className="tree panel">
+          <aside id="task-tree-panel" className="tree panel">
             <header>
               <ListTree size={16} />
               <b>{t("tree")}</b>
@@ -966,9 +1070,19 @@ export function App() {
             <div className="filters">
               <RelatedFilterControls
                 active={relatedActive}
+                me={me}
+                users={users}
+                memberId={relatedUserId}
+                onMemberChange={(memberId) =>
+                  setRelatedPreferences((old) => ({ ...old, memberId }))
+                }
                 scopes={selectedScopes}
-                onActiveChange={setRelatedActive}
-                onScopesChange={setSelectedScopes}
+                onActiveChange={(active) =>
+                  setRelatedPreferences((old) => ({ ...old, active }))
+                }
+                onScopesChange={(scopes) =>
+                  setRelatedPreferences((old) => ({ ...old, scopes }))
+                }
               />
               <input
                 aria-label={t("search")}
@@ -1255,13 +1369,13 @@ export function App() {
             value={leftWidth}
             onChange={(n) => {
               setLeftWidth(n);
-              if (showDetails)
+              if (showWorkspace && showDetails)
                 setRightWidth(Math.min(rightWidth, panelBudget - n));
             }}
-            min={0}
-            max={panelBudget}
+            min={Math.min(120, treeResizeMax)}
+            max={treeResizeMax}
           />
-          <main className="center">
+          <main id="workspace-panel" className="center">
             <section className="panel workspace">
               <header>
                 <button
@@ -1294,6 +1408,19 @@ export function App() {
                   onClick={() => setBottom((x) => !x)}
                 >
                   <PanelBottom size={17} />
+                </button>
+                <button
+                  className="desktop-panel-control"
+                  aria-label={t("hideWorkspace")}
+                  title={t("hideWorkspace")}
+                  aria-controls="workspace-panel"
+                  aria-expanded={showWorkspace}
+                  onClick={() => {
+                    setShowWorkspace(false);
+                    document.getElementById("workspace-toggle")?.focus();
+                  }}
+                >
+                  <PanelLeftClose size={17} />
                 </button>
               </header>
               <div className="gantt-host" hidden={tab !== "gantt"}>
@@ -1410,7 +1537,7 @@ export function App() {
                   name={t("inbox")}
                   value={bottomHeight}
                   onChange={setBottomHeight}
-                  min={0}
+                  min={Math.min(120, bottomBudget)}
                   max={bottomBudget}
                   reverse
                 />
@@ -1484,14 +1611,25 @@ export function App() {
               setRightWidth(n);
               if (showTree) setLeftWidth(Math.min(leftWidth, panelBudget - n));
             }}
-            min={0}
-            max={panelBudget}
+            min={Math.min(120, detailResizeMax)}
+            max={detailResizeMax}
             reverse
           />
-          <aside className="panel details">
+          <aside id="task-detail-panel" className="panel details">
             <header>
               <TaskIcon size={16} />
               <b>{selectedProject !== null ? t("project") : t("details")}</b>
+              <div className="spacer" />
+              <button
+                className="desktop-panel-control focus-details"
+                aria-label={t(focused ? "restoreLayout" : "focusDetails")}
+                title={t(focused ? "restoreLayout" : "focusDetails")}
+                aria-pressed={focused}
+                onClick={toggleFocus}
+              >
+                {focused ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                <span>{t(focused ? "restoreLayout" : "focusDetails")}</span>
+              </button>
             </header>
             {detail ? (
               <div className="detail-scroll">
@@ -1592,106 +1730,55 @@ export function App() {
                   </button>
                 </nav>
                 <div hidden={detailTab !== "overview"}>
-                  <section
-                    className="detail-section checklist-card"
-                    style={
-                      {
-                        "--check-color":
-                          projects.find((p) => p.id === detail.projectId)
-                            ?.color ?? "#7292c7",
-                      } as CSSProperties
+                  <ChecklistCard
+                    key={"checklist:" + detail.id}
+                    task={detail}
+                    color={
+                      projects.find((p) => p.id === detail.projectId)?.color ??
+                      "#7292c7"
                     }
-                  >
-                    <h3>
-                      <ClipboardList size={16} /> {t("checklist")}{" "}
-                      <small>
-                        {detail.checklist.length
-                          ? `${detail.checklist.filter((x) => x.done).length} / ${detail.checklist.length} · ${Math.round((detail.checklist.filter((x) => x.done).length / detail.checklist.length) * 100)}%`
-                          : t("noChecklist")}
-                      </small>
-                    </h3>
-                    {detail.checklist.length > 0 && (
-                      <progress
-                        aria-label={t("checklist")}
-                        max={detail.checklist.length}
-                        value={detail.checklist.filter((i) => i.done).length}
-                      />
-                    )}
-                    {detail.checklist.map((i) => (
-                      <label className="check" key={i.id}>
-                        <input
-                          type="checkbox"
-                          checked={
-                            checklistDraft?.taskId === detail.id
-                              ? (checklistDraft.changes[i.id]?.done ?? i.done)
-                              : i.done
-                          }
-                          disabled={!mine || !actionable || busy}
-                          onChange={() => toggle(i)}
-                        />
-                        {i.text}
-                      </label>
-                    ))}
-                    {mine && actionable && detail.checklist.length > 0 && (
-                      <div>
-                        <button
-                          className="primary"
-                          disabled={!checklistDirty || busy}
-                          onClick={() => void submitChecklist()}
-                        >
-                          {t("submitChecklist")}
-                        </button>
-                        {checklistDirty && (
-                          <p className="muted" role="status">
-                            {t("checklistUnsaved")}
-                          </p>
+                    editable={mine && !!actionable && detail.id === selected}
+                    leader={!!leader && detail.id === selected}
+                    busy={busy}
+                    changes={
+                      checklistDraft?.taskId === detail.id
+                        ? checklistDraft.changes
+                        : {}
+                    }
+                    feedback={
+                      checklistFeedback?.taskId === detail.id
+                        ? checklistFeedback
+                        : null
+                    }
+                    onToggle={toggle}
+                    onSave={() => void submitChecklist()}
+                    onUndo={() => {
+                      if (busy || checklistSaving.current) return;
+                      setChecklistDraft((draft) =>
+                        draft?.taskId === detail.id ? null : draft,
+                      );
+                      setChecklistFeedback(null);
+                    }}
+                    onRequest={() =>
+                      openAction("requestChecklist", ["items", "scopeChanged", "reason"], {
+                        items: detail.checklist.map((item) => item.text).join("\n"),
+                        scopeChanged: false,
+                      })
+                    }
+                    requestActions={(request) => (
+                      <>
+                        {actionButton(
+                          "approveChecklist",
+                          request.scopeChanged ? ["confirmBy"] : [],
+                          { requestId: request.id },
                         )}
-                      </div>
+                        {actionButton("rejectChecklist", ["reason"], {
+                          requestId: request.id,
+                        })}
+                      </>
                     )}
-                    {mine &&
-                      actionable &&
-                      actionButton(
-                        "requestChecklist",
-                        ["items", "scopeChanged", "reason"],
-                        {
-                          items: detail.checklist.map((x) => x.text).join("\n"),
-                          scopeChanged: false,
-                        },
-                      )}
-                    <p className="muted">{t("checklistReviewHint")}</p>
-                    {detail.checklistRequests.map((r) => (
-                      <article key={r.id}>
-                        <b>
-                          {t("proposed")} · {t(r.status)}
-                        </b>
-                        <p>{r.items.map((x) => x.text).join(" · ")}</p>
-                        <p>{r.reason}</p>
-                        {leader && r.status === "pending" && (
-                          <div className="actions">
-                            {actionButton(
-                              "approveChecklist",
-                              r.scopeChanged ? ["confirmBy"] : [],
-                              { requestId: r.id },
-                            )}
-                            {actionButton("rejectChecklist", ["reason"], {
-                              requestId: r.id,
-                            })}
-                          </div>
-                        )}
-                      </article>
-                    ))}
-                  </section>
-                  <section className="detail-section outcome-card">
-                    <h3>
-                      {t("outcome")} · {t("criteria")}
-                    </h3>
-                    {["outcome", "criteria", "scope"].map((k) => (
-                      <div className="outcome-field" key={k}>
-                        <h4>{t(k)}</h4>
-                        <Markdown text={detail[k as keyof Task] as string} />
-                      </div>
-                    ))}
-                  </section>
+                  />
+                  <TaskDescription key={"description:" + detail.id} task={detail} />
                   {detail.latestProgress && (
                     <section className="detail-section">
                       <h3>{t("progress")}</h3>
@@ -2054,6 +2141,22 @@ export function App() {
               <p className="empty">{t("selectTask")}</p>
             )}
           </aside>
+          {!showTree && !showWorkspace && !showDetails && (
+            <div className="panels-empty" role="status">
+              <p>{t("panelsHidden")}</p>
+              <div>
+                <button onClick={() => setShowTree(true)}>
+                  {t("showTree")}
+                </button>
+                <button onClick={() => setShowWorkspace(true)}>
+                  {t("showWorkspace")}
+                </button>
+                <button onClick={() => setShowDetails(true)}>
+                  {t("showDetails")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <footer className="statusbar">

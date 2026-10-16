@@ -26,6 +26,7 @@ const booleanQuery = z
   .default("false")
   .transform((v) => v === "true");
 export const taskQuerySchema = z.object({
+  relatedUserId: z.string().uuid().toLowerCase().optional(),
   related: z
     .string()
     .max(40)
@@ -76,6 +77,7 @@ export function matchedTasks(
       q.includeUnscheduled,
       q.includeEarlier,
       q.related ?? null,
+      q.relatedUserId ?? actorId,
     ],
     sql: `visible AS MATERIALIZED (
       SELECT *, ${instant("deadline")} AS plan_end,
@@ -86,9 +88,9 @@ export function matchedTasks(
       FROM visible WHERE ($2='' OR data->>'title' ILIKE '%'||$2||'%' OR number::text=$2)
         AND ($3::uuid IS NULL OR project_id=$3) AND ($4::text IS NULL OR stage=$4)
         AND ($9::text[] IS NULL
-          OR ('owned'=ANY($9) AND data->>'ownerId'=$1::text)
-          OR ('created'=ANY($9) AND (creator_id=$1::uuid OR data->>'issuerId'=$1::text))
-          OR ('reviewing'=ANY($9) AND (data->>'reviewerId'=$1::text OR data->'approvalIds' ? $1::text)))
+          OR ('owned'=ANY($9) AND data->>'ownerId'=$10::text)
+          OR ('created'=ANY($9) AND (creator_id=$10::uuid OR data->>'issuerId'=$10::text))
+          OR ('reviewing'=ANY($9) AND (data->>'reviewerId'=$10::text OR data->'approvalIds' ? $10::text)))
         AND ($5::timestamptz IS NULL
           OR (plan_end >= $5 AND plan_start < $6::timestamptz)
           OR ($7::boolean AND plan_end IS NULL)

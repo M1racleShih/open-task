@@ -14,6 +14,12 @@ Drafts are visible only to their creators. After submission, tasks are visible t
 
 The left task tree groups tasks by project and parent/child structure. The center opens with a Gantt chart; switch to the retained task graph or team updates using the workspace buttons. The Gantt chart and task graph share project, search, state and time filters and the selected task, while preserving their own view state. The task graph retains zoom, drag and focus controls; dragging changes only layout, not business relations. Selecting a task opens its agreement, checklist, progress, connections, results and activity in the right panel. Open followups from the side navigation or bottom-panel button; team updates show operation history.
 
+### Panel layout
+
+On desktop, **Hide center workspace** in the center header hides the whole center, including Gantt, graph, updates and the bottom panel. Task details take the released space. **Focus details** in the detail header temporarily hides the tree and center; **Restore layout** restores the previous panels and widths. Focus is temporary: refreshing restores the saved layout.
+
+The fixed side navigation can show or hide the task tree, center workspace and details, even when all panels are hidden. Opening Gantt, graph, updates or the inbox also restores the center. Hiding panels preserves the selected task, filters and the current Gantt/graph view. Use Tab and Enter/Space for buttons; focused dividers resize with arrow keys. Desktop panel visibility, widths and bottom-panel height are saved in this browser for each signed-in account. If browser storage is unavailable, controls still work for the current session. Phones keep their existing three tabs, independently of desktop panel visibility.
+
 ### Gantt chart
 
 Choose Overview, Day, Week or Month to change the time scale, and use Today or Locate selected to navigate. Project groups can collapse. Dates use Shanghai calendar days. A bar shows the planned start through the delivery deadline, rather than a completion percentage. Tasks with both dates show a bar; a deadline without a planned start shows a due flag; an absent deadline shows Not scheduled. Creation dates never fill in missing durations.
@@ -25,6 +31,8 @@ Selecting a task adds `?task=<UUID>` to the URL. Share this with other team acco
 ## Creation and acceptance
 
 New task first saves a private draft. Fill in the title, expected result, acceptance criteria, owner, reviewer and project. Planned start is optional; deadline, acceptance deadline and next feedback time are required before submission or issue. The interface uses Shanghai time and the format `YYYY-MM-DD HH:mm`.
+
+Expected result, acceptance criteria and scope support Markdown. Select text and use Bold, List or Link (also Ctrl/⌘ B, Ctrl/⌘ Shift 8 and Ctrl/⌘ K); after adding a link, type its URL in the selected destination. Edit / Preview keeps the original Markdown and ordinary line breaks, including when you save. Mark emphasis yourself; existing text is never rewritten automatically. Task details show the result and criteria in full, with a separate expandable section for long scope. Headings, lists, quotes, tables and code remain readable in narrow panels; wide tables and code scroll within the text. Markdown checkboxes are read-only and do not update the execution checklist. Raw HTML and unsafe links do not execute, and embedded external images are shown as text without loading them.
 
 You can type or paste `YYYY-MM-DD HH:mm`, or use the calendar button to select a date and 24-hour time. Both methods use Shanghai time. Confirm applies your selection; Cancel or Escape leaves the value unchanged. Clear removes the value, subject to the existing task rules. Custom time-range filters offer the same calendar for date-only values (`YYYY-MM-DD`).
 
@@ -46,9 +54,9 @@ This example shows a task created by an ordinary project member; the creator and
 
 ## Execution checklist and formal progress
 
-Use Request checklist change to submit the execution checklist (one item per line) and whether the change affects scope or acceptance criteria. A reason is optional when scope and acceptance criteria are unchanged; otherwise it is required. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
+Use Request checklist edit beside the checklist title to submit the execution checklist (one item per line) and whether the change affects scope or acceptance criteria. A reason is optional when scope and acceptance criteria are unchanged; otherwise it is required. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
 
-Checking checklist items saves nothing until you click Confirm submission; unsaved checks do not count as server-side progress. A checklist at 100% still does not end the task: the owner must submit a result and the reviewer must accept it.
+Checking checklist items creates a local draft. The bottom bar shows the number of unsaved items; choose Save checked progress to save them together, or Undo unsaved checks to discard only local checks without a server action. The progress bar and counts always use saved server data. Save success and failure appear in the card; failures and version conflicts preserve local checks, and leaving with unsaved checks prompts you. Pending content edits appear separately; approved and rejected requests retain their full content, reason and status in the collapsed Checklist change records. Saving checked progress does not change checklist content or approve a request. A checklist at 100% still does not end the task: the owner must submit a result and the reviewer must accept it.
 
 Record progress requires the current result, next step and next feedback time. Comments are for discussion; neither comments nor checklist checks count as formal feedback or postpone its deadline.
 
@@ -89,7 +97,7 @@ Under Connections & delivery → Relations → Add relation, search by title or 
 
 Title or number search, project, status and time range jointly filter the tree, graph, match count and team activity. Time uses the current plan, without inferring dates from titles. Choose all time, this week, this month or custom dates.
 
-Use **All tasks / Related to me** above the task filters to focus on your responsibilities. Related to me initially includes **Owned by me**, **Created or issued by me**, and **Approved or reviewed by me**. Expand the scope summary to select any combination; a task matching more than one selection appears once. Clearing all selections shows no matches. All tasks exits relationship filtering and retains your selection for reuse during this session.
+Use **All tasks / By member** above the task filters to focus on one member's responsibilities. The member selector defaults to you and also includes other accounts, including inactive accounts for historical work. The summary identifies the selected member. **Owned**, **Created or issued**, and **Approval or review** are all selected initially. Expand the scope summary to select any combination; a task matching more than one selection appears once. Clearing all selections shows no matches. All tasks exits relationship filtering and retains the member and scopes for reuse. The active mode, member and scopes are saved per signed-in account in this browser and restored after refresh or signing in again. If browser storage is unavailable, filtering still works but cannot be remembered. Selecting another member still uses your viewing permissions; their private drafts remain hidden.
 
 Approval and review scopes describe responsibilities at every stage, including future approval turns and completed work. The selection also filters the Gantt, graph and team activity, together with project, search, status and time. Visible parent tasks provide context without increasing the match count. Followups remain available, and a selected task keeps its details and complete history even outside the selection.
 

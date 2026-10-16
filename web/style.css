@@ -975,17 +975,6 @@ dd {
   gap: 10px;
   font-size: 13px;
 }
-.outcome-field + .outcome-field {
-  border-top: 1px solid var(--line);
-  margin-top: 12px;
-  padding-top: 12px;
-}
-.outcome-field h4 {
-  margin: 0;
-  font-size: 12px;
-  color: var(--muted);
-}
-
 .detail-breadcrumb {
   display: flex;
   align-items: center;
@@ -1328,3 +1317,5 @@ dd {
 .related-filter label { display: flex; flex-direction: row; align-items: center; gap: 7px; margin: 0; }
 .related-filter input { width: auto; flex-shrink: 0; }
 .related-filter small { display: block; color: var(--muted); line-height: 1.5; }
+
+.related-filter .related-member { flex-direction: column; align-items: stretch; margin-top: 8px; font-size: 12px; }

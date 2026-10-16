@@ -113,19 +113,25 @@ try {
   await page.getByLabel("Project", { exact: true }).selectOption(project.id);
   const count = page.locator(".filters > small");
   await expect(count).toHaveText("5 · Matching tasks");
-  await page
-    .getByRole("button", { name: "Related to me", exact: true })
-    .click();
+  await page.getByRole("button", { name: "By member", exact: true }).click();
   await expect(count).toHaveText("3 · Matching tasks");
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "By member", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    member.user.id,
+  );
+  await page.getByLabel("Project", { exact: true }).selectOption(project.id);
+  await expect(count).toHaveText("3 · Matching tasks");
+
   await page.locator(".related-filter summary").click();
   await expect(page.locator(".related-filter input:checked")).toHaveCount(3);
-  await page.getByLabel("Created or issued by me", { exact: true }).uncheck();
-  await page
-    .getByLabel("Approved or reviewed by me", { exact: true })
-    .uncheck();
+  await page.getByLabel("Created or issued", { exact: true }).uncheck();
+  await page.getByLabel("Approval or review", { exact: true }).uncheck();
   await expect(count).toHaveText("2 · Matching tasks");
   await expect(page.locator(".related-filter summary")).toHaveText(
-    "Owned by me",
+    "Me · Owned",
   );
   await expect(page.locator(".task-row.context-task")).toContainText(
     parent.title,
@@ -135,7 +141,7 @@ try {
     "default scopes, OR union, deduplication, owned selection, ancestor context and Gantt synchronization",
   );
   await page.locator(".task-row").filter({ hasText: owned.title }).click();
-  await page.getByLabel("Owned by me", { exact: true }).uncheck();
+  await page.getByLabel("Owned", { exact: true }).uncheck();
   await expect(count).toHaveText("0 · Matching tasks");
   await expect(page.locator(".task-row")).toHaveCount(0);
   await expect(page.locator(".gantt [data-task-row]")).toHaveCount(0);
@@ -147,15 +153,13 @@ try {
   ).toBeVisible();
   await page.getByRole("button", { name: "All tasks", exact: true }).click();
   await expect(count).toHaveText("5 · Matching tasks");
-  await page
-    .getByRole("button", { name: "Related to me", exact: true })
-    .click();
+  await page.getByRole("button", { name: "By member", exact: true }).click();
   await expect(count).toHaveText("0 · Matching tasks");
   checks.push(
     "empty selection, explicit All tasks exit, retained selection and out-of-filter details",
   );
   await page.locator(".related-filter summary").click();
-  await page.getByLabel("Created or issued by me", { exact: true }).check();
+  await page.getByLabel("Created or issued", { exact: true }).check();
   await expect(count).toHaveText("2 · Matching tasks");
   await page
     .getByRole("button", { name: "Open task graph", exact: true })
@@ -176,7 +180,7 @@ try {
   await page
     .getByRole("button", { name: "Open Gantt chart", exact: true })
     .click();
-  await page.getByLabel("Owned by me", { exact: true }).check();
+  await page.getByLabel("Owned", { exact: true }).check();
   await expect(count).toHaveText("3 · Matching tasks");
   await page
     .getByLabel("Search title or task number", { exact: true })
@@ -197,8 +201,8 @@ try {
     "",
   );
   await page.keyboard.press("Space");
-  await expect(page.getByLabel("Owned by me", { exact: true })).toBeVisible();
-  await page.getByLabel("Owned by me", { exact: true }).focus();
+  await expect(page.getByLabel("Owned", { exact: true })).toBeVisible();
+  await page.getByLabel("Owned", { exact: true }).focus();
   await page.keyboard.press("Space");
   await expect(count).toHaveText("2 · Matching tasks");
   await page.keyboard.press("Space");
@@ -206,23 +210,62 @@ try {
   checks.push("keyboard disclosure and checkbox interaction");
   expect(
     await page
-      .locator(".related-filter label")
+      .locator(".related-filter fieldset label")
       .first()
       .evaluate((el) => getComputedStyle(el).flexDirection),
   ).toBe("row");
+  // Switching members keeps scopes and all existing filters, across every linked view.
+  await page
+    .getByLabel("Related member", { exact: true })
+    .selectOption(other.id);
+  await expect(count).toHaveText("3 · Matching tasks");
+  await expect(page.locator(".related-filter summary")).toContainText(
+    other.name,
+  );
+  await expect(page.locator(".gantt [data-task-row]")).toHaveCount(3);
+  await expect(
+    page.locator(".task-row").filter({ hasText: owned.title }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Open task graph", exact: true })
+    .click();
+  await expect(page.locator(".graph-host .node")).toHaveCount(3);
+  await page
+    .getByRole("button", { name: "Open team updates", exact: true })
+    .click();
+  await expect(page.locator(".workspace .scroll")).toContainText(
+    "Review operational handover",
+  );
+  await expect(page.locator(".workspace .scroll")).not.toContainText(
+    owned.title,
+  );
+  await page.getByRole("button", { name: "All tasks", exact: true }).click();
+  await expect(count).toHaveText("5 · Matching tasks");
+  await page.getByRole("button", { name: "By member", exact: true }).click();
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    other.id,
+  );
+  await expect(count).toHaveText("3 · Matching tasks");
+  await page
+    .getByRole("button", { name: "Open Gantt chart", exact: true })
+    .click();
+  await page.locator(".related-filter summary").click();
+  checks.push(
+    "other-member selection, retained member/scopes and synchronized Gantt/graph/activity",
+  );
   await page.screenshot({ path: output + "/related-en.png", fullPage: true });
   await page.getByLabel("Language", { exact: true }).selectOption("zh");
   await expect(
-    page.getByRole("button", { name: "与我相关", exact: true }),
+    page.getByRole("button", { name: "按成员", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByLabel("我负责的", { exact: true })).toBeChecked();
+  await expect(page.getByLabel("负责的", { exact: true })).toBeChecked();
   await page.screenshot({ path: output + "/related-zh.png", fullPage: true });
   await page.getByRole("button", { name: "切换主题", exact: true }).click();
   await page.screenshot({ path: output + "/related-dark.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "任务树", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "与我相关", exact: true }),
+    page.getByRole("button", { name: "按成员", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -235,6 +278,82 @@ try {
   });
   checks.push(
     "English/Chinese, light/dark and 390px mobile without page overflow",
+  );
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByLabel("语言", { exact: true }).selectOption("en");
+  const firstTasks = page.waitForRequest(
+    (request) => new URL(request.url()).pathname === "/api/v1/tasks",
+  );
+  await page.reload();
+  const restoredQuery = new URL((await firstTasks).url()).searchParams;
+  expect(restoredQuery.get("relatedUserId")).toBe(other.id);
+  expect(restoredQuery.get("related")).toBe("owned,created");
+  await expect(
+    page.getByRole("button", { name: "By member", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    other.id,
+  );
+  await page.getByLabel("Project", { exact: true }).selectOption(project.id);
+  await expect(count).toHaveText("3 · Matching tasks");
+  await page.locator(".related-filter summary").click();
+  await expect(page.getByLabel("Owned", { exact: true })).toBeChecked();
+  await expect(
+    page.getByLabel("Created or issued", { exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByLabel("Approval or review", { exact: true }),
+  ).not.toBeChecked();
+  await page.getByLabel("Owned", { exact: true }).uncheck();
+  await page.getByLabel("Created or issued", { exact: true }).uncheck();
+  await expect(count).toHaveText("0 · Matching tasks");
+  await page.reload();
+  await expect(page.locator(".related-filter summary")).toContainText(
+    "No scopes selected",
+  );
+  await expect(page.locator(".filters > small")).toHaveText(
+    "0 · Matching tasks",
+  );
+  await page.getByRole("button", { name: "All tasks", exact: true }).click();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "All tasks", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "By member", exact: true }).click();
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    other.id,
+  );
+  await expect(page.locator(".related-filter summary")).toContainText(
+    "No scopes selected",
+  );
+  // One browser, two logins: each account restores its own choices.
+  const switchLogin = async (username: string) => {
+    const response = await member.ctx.request.post(base + "/api/v1/sessions", {
+      data: { username, password: "OpenTask-Test-2026!" },
+    });
+    expect(response.status()).toBe(200);
+    await page.reload();
+  };
+  await switchLogin("leader");
+  await expect(
+    page.getByRole("button", { name: "All tasks", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "By member", exact: true }).click();
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    leader.user.id,
+  );
+  await switchLogin("member");
+  await expect(
+    page.getByRole("button", { name: "By member", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    other.id,
+  );
+  await expect(page.locator(".related-filter summary")).toContainText(
+    "No scopes selected",
+  );
+  checks.push(
+    "refresh restores active mode/member/scopes before the first task query, including empty scopes and All tasks; account switching is isolated",
   );
   expect(errors).toEqual([]);
   await writeFile(
