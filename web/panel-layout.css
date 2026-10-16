@@ -1,0 +1,73 @@
+/* Desktop visibility only: mobile keeps its independent tree/workspace/detail tabs. */
+@media (min-width: 761px) {
+  .layout {
+    position: relative;
+  }
+  .layout > .tree {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .layout > .resize:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .layout > .center {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .layout > .resize:nth-child(4) {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .layout > .details {
+    grid-column: 5;
+    grid-row: 1;
+  }
+  .layout[data-workspace-hidden="true"] > .center,
+  .layout[data-tree-divider="false"] > .resize:nth-child(2),
+  .layout[data-detail-divider="false"] > .resize:nth-child(4) {
+    display: none;
+  }
+  .workspace > header {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .workspace > header > button {
+    padding: 6px;
+  }
+  .details > header {
+    flex-wrap: wrap;
+  }
+  .focus-details {
+    font-size: 12px;
+  }
+  .panels-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: var(--panel);
+    border-radius: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .panels-empty > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .panels-empty button {
+    background: var(--surface);
+    color: var(--text);
+  }
+}
+@media (max-width: 760px) {
+  .desktop-panel-control,
+  .panels-empty {
+    display: none;
+  }
+}
