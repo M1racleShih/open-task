@@ -40,7 +40,7 @@ If you lead a small team, coordinate work across several people, or want to turn
 
 **4. Deliver a result that someone can review.** Submit an outcome and evidence links for the reviewer to accept or return. Rework continues in the same task, with earlier submissions and return reasons preserved.
 
-Use the task tree to understand the breakdown, the graph to explore parent/child, prerequisite and related work, and task details to read agreements and history. Filter by project, status, keyword or time, and share a task URL with teammates.
+The workspace opens with a Gantt chart for planned periods and delivery deadlines. Use the task tree to understand the breakdown, the retained task graph to explore parent/child, prerequisite and related work, and task details to read agreements and history. Filter by project, status, keyword or time, and share a task URL with teammates.
 
 **A detail worth trying: finishing the checklist still leaves the result to be reviewed.** If a prerequisite's result hasn't been accepted, the dependent task's result can't be accepted either. Execution and delivery each have an explicit record.
 

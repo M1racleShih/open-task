@@ -12,8 +12,11 @@ import { eventDiff } from "../shared/eventDiff.js";
 import { fitPanels } from "../shared/panelLayout.js";
 import { ProjectMenu, type ProjectMenuTarget } from "./ProjectMenu.js";
 import { TaskIcon } from "./TaskIcon.js";
-import { Graph } from "./Graph.js";
+import { Gantt } from "./Gantt.js";
 import {
+  Activity as ViewActivity,
+  lazy,
+  Suspense,
   useEffect,
   useState,
   useRef,
@@ -29,6 +32,7 @@ import {
   PanelBottom,
   Sun,
   Moon,
+  ChartNoAxesGantt,
   GitGraph,
   ListTree,
   Activity,
@@ -42,6 +46,9 @@ import { terminal, terms } from "../shared/model.js";
 import { api, ApiError, allPages, pagesUntil } from "./api.js";
 import { useI18n, dateText } from "./i18n.js";
 import { TaskForm, termFields, emptyTerms, type FormSpec } from "./Forms.js";
+const Graph = lazy(() =>
+  import("./Graph.js").then(({ Graph }) => ({ default: Graph })),
+);
 export function App() {
   const { t, lang, setLang } = useI18n();
   const [me, setMe] = useState<User | null>(null),
@@ -76,6 +83,7 @@ export function App() {
   );
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [contextTab, setContextTab] = useState("relations");
+  const [graphOpened, setGraphOpened] = useState(false);
   const [detailTab, setDetailTab] = useState("overview");
   const [taskEvents, setTaskEvents] = useState<Event[]>([]);
   const [selected, setSelected] = useState(
@@ -85,8 +93,8 @@ export function App() {
     [search, setSearch] = useState(""),
     [project, setProject] = useState(""),
     [actor, setActor] = useState(""),
-    [tab, setTab] = useState("graph"),
-    [bottom, setBottom] = useState(true),
+    [tab, setTab] = useState("gantt"),
+    [bottom, setBottom] = useState(false),
     [bottomTab, setBottomTab] = useState("inbox"),
     [mobile, setMobile] = useState(
       new URLSearchParams(location.search).get("view") === "commitments"
@@ -131,7 +139,7 @@ export function App() {
     [detailSize, setRightWidth] = useState<number | null>(null),
     [inboxSize, setBottomHeight] = useState<number | null>(null);
   const [showTree, setShowTree] = useState(true),
-    [showDetails, setShowDetails] = useState(true);
+    [showDetails, setShowDetails] = useState(Boolean(selected));
   const layoutRef = useRef<HTMLDivElement>(null);
   const [layoutSize, setLayoutSize] = useState({
     width: innerWidth - 60,
@@ -308,6 +316,7 @@ export function App() {
   }, [me, selected, search, project, actor, filterQuery]);
   function select(id: string) {
     if (id !== selected && !discardChecklist()) return;
+    setShowDetails(true);
     setSelectedProject(null);
     setSelected(id);
     const params = new URLSearchParams(location.search);
@@ -316,6 +325,7 @@ export function App() {
     setMobile("details");
   }
   function chooseTab(next: string) {
+    if (next === "graph") setGraphOpened(true);
     setTab(next);
     const params = new URLSearchParams(location.search);
     params.delete("view");
@@ -815,7 +825,7 @@ export function App() {
             key={x}
             onClick={() => setMobile(x)}
           >
-            {t(x === "workspace" ? "graph" : x)}
+            {t(x)}
           </button>
         ))}
       </nav>
@@ -835,13 +845,22 @@ export function App() {
             <ListTree size={20} />
           </button>
           <button
+            aria-label={t("openGantt")}
+            aria-pressed={tab === "gantt"}
+            onClick={() => chooseTab("gantt")}
+          >
+            <ChartNoAxesGantt size={20} />
+          </button>
+          <button
             aria-label={t("openGraph")}
+            aria-pressed={tab === "graph"}
             onClick={() => chooseTab("graph")}
           >
             <GitGraph size={20} />
           </button>
           <button
             aria-label={t("openUpdates")}
+            aria-pressed={tab === "updates"}
             onClick={() => chooseTab("updates")}
           >
             <Activity size={20} />
@@ -1073,6 +1092,7 @@ export function App() {
                           });
                         if (!discardChecklist()) return;
                         setSelectedProject(p.id);
+                        setShowDetails(true);
                         setSelected("");
                         setDetail(null);
                         setRelations([]);
@@ -1222,7 +1242,16 @@ export function App() {
             <section className="panel workspace">
               <header>
                 <button
+                  className={tab === "gantt" ? "selected" : ""}
+                  aria-pressed={tab === "gantt"}
+                  onClick={() => chooseTab("gantt")}
+                >
+                  <ChartNoAxesGantt size={16} />
+                  {t("gantt")}
+                </button>
+                <button
                   className={tab === "graph" ? "selected" : ""}
+                  aria-pressed={tab === "graph"}
                   onClick={() => chooseTab("graph")}
                 >
                   <GitGraph size={16} />
@@ -1230,6 +1259,7 @@ export function App() {
                 </button>
                 <button
                   className={tab === "updates" ? "selected" : ""}
+                  aria-pressed={tab === "updates"}
                   onClick={() => chooseTab("updates")}
                 >
                   <Activity size={16} />
@@ -1243,20 +1273,34 @@ export function App() {
                   <PanelBottom size={17} />
                 </button>
               </header>
-              <div className="graph-host" hidden={tab !== "graph"}>
-                <Graph
+              <div className="gantt-host" hidden={tab !== "gantt"}>
+                <Gantt
                   key={project + "|" + search}
                   tasks={visible}
                   projects={projects}
                   relations={allRelations}
+                  users={users}
                   selected={selected}
-                  onSelect={(id) => {
-                    setShowDetails(true);
-                    select(id);
-                  }}
+                  onSelect={select}
                 />
               </div>
-              {tab === "graph" ? null : tab === "accounts" ? (
+              <ViewActivity mode={tab === "graph" ? "visible" : "hidden"}>
+                {graphOpened && (
+                  <div className="graph-host">
+                    <Suspense fallback={<p className="empty">{t("loading")}</p>}>
+                      <Graph
+                        key={project + "|" + search}
+                        tasks={visible}
+                        projects={projects}
+                        relations={allRelations}
+                        selected={selected}
+                        onSelect={select}
+                      />
+                    </Suspense>
+                  </div>
+                )}
+              </ViewActivity>
+              {tab === "gantt" || tab === "graph" ? null : tab === "accounts" ? (
                 <div className="scroll">
                   <button
                     onClick={() =>

@@ -12,7 +12,13 @@ Drafts are visible only to their creators. After submission, tasks are visible t
 
 ## Workspace
 
-The left task tree groups tasks by project and parent/child structure. The center graph shows tasks and relations, with zoom, drag and focus controls. Dragging changes only layout, not business relations. The right panel shows the same task's agreement, checklist, progress, connections, results and activity. Followups at the bottom show who needs to act now; team updates show operation history.
+The left task tree groups tasks by project and parent/child structure. The center opens with a Gantt chart; switch to the retained task graph or team updates using the workspace buttons. The Gantt chart and task graph share project, search, state and time filters and the selected task, while preserving their own view state. The task graph retains zoom, drag and focus controls; dragging changes only layout, not business relations. Selecting a task opens its agreement, checklist, progress, connections, results and activity in the right panel. Open followups from the side navigation or bottom-panel button; team updates show operation history.
+
+### Gantt chart
+
+Choose Overview, Day, Week or Month to change the time scale, and use Today or Locate selected to navigate. Project groups can collapse. Dates use Shanghai calendar days. A bar shows the planned start through the delivery deadline, rather than a completion percentage. Tasks with both dates show a bar; a deadline without a planned start shows a due flag; an absent deadline shows Not scheduled. Creation dates never fill in missing durations.
+
+Colors follow the task lifecycle, with separate unresolved-blocker and delivery-overdue indicators. Unconfirmed agreement changes retain the previously accepted deadline for overdue checks. Enable Prerequisite to show result-acceptance dependencies: dependent tasks may start earlier, and the chart does not automatically reschedule work or change agreements.
 
 Selecting a task adds `?task=<UUID>` to the URL. Share this with other team accounts; access still follows task visibility permissions.
 
