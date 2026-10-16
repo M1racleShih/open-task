@@ -48,9 +48,9 @@ This example shows a task created by an ordinary project member; the creator and
 
 ## Execution checklist and formal progress
 
-Use Request checklist change to submit the execution checklist (one item per line) and whether the change affects scope or acceptance criteria. A reason is optional when scope and acceptance criteria are unchanged; otherwise it is required. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
+Use Request checklist edit beside the checklist title to submit the execution checklist (one item per line) and whether the change affects scope or acceptance criteria. A reason is optional when scope and acceptance criteria are unchanged; otherwise it is required. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
 
-Checking checklist items saves nothing until you click Confirm submission; unsaved checks do not count as server-side progress. A checklist at 100% still does not end the task: the owner must submit a result and the reviewer must accept it.
+Checking checklist items creates a local draft. The bottom bar shows the number of unsaved items; choose Save checked progress to save them together, or Undo unsaved checks to discard only local checks without a server action. The progress bar and counts always use saved server data. Save success and failure appear in the card; failures and version conflicts preserve local checks, and leaving with unsaved checks prompts you. Pending content edits appear separately; approved and rejected requests retain their full content, reason and status in the collapsed Checklist change records. Saving checked progress does not change checklist content or approve a request. A checklist at 100% still does not end the task: the owner must submit a result and the reviewer must accept it.
 
 Record progress requires the current result, next step and next feedback time. Comments are for discussion; neither comments nor checklist checks count as formal feedback or postpone its deadline.
 

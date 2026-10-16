@@ -17,6 +17,7 @@ import {
 import { Markdown } from "./Markdown.js";
 import { TaskDescription } from "./TaskDescription.js";
 import "./taskDescription.css";
+import { ChecklistCard, type ChecklistFeedback } from "./ChecklistCard.js";
 import { eventDiff } from "../shared/eventDiff.js";
 import { fitPanels } from "../shared/panelLayout.js";
 import { ProjectMenu, type ProjectMenuTarget } from "./ProjectMenu.js";
@@ -146,6 +147,9 @@ export function App() {
     checklistVersion: number;
     changes: Record<string, { expectedDone: boolean; done: boolean }>;
   } | null>(null);
+  const checklistSaving = useRef(false);
+  const [checklistFeedback, setChecklistFeedback] =
+    useState<ChecklistFeedback | null>(null);
   const checklistDirty =
     !!checklistDraft && Object.keys(checklistDraft.changes).length > 0;
   useEffect(() => {
@@ -161,6 +165,7 @@ export function App() {
     if (busy && checklistDirty) return false;
     if (checklistDirty && !window.confirm(t("discardChecklist"))) return false;
     setChecklistDraft(null);
+    setChecklistFeedback(null);
     return true;
   }
   const [viewport, setViewport] = useState(() => ({
@@ -473,7 +478,9 @@ export function App() {
     });
   }
   function toggle(item: Task["checklist"][number]) {
-    if (!detail || busy) return;
+    if (!detail || detail.id !== selected || busy || checklistSaving.current)
+      return;
+    setChecklistFeedback(null);
     setChecklistDraft((old) => {
       const draft =
         old?.taskId === detail.id
@@ -494,11 +501,19 @@ export function App() {
     });
   }
   async function submitChecklist() {
-    if (!checklistDraft || !checklistDirty || busy) return;
+    if (
+      !checklistDraft ||
+      !checklistDirty ||
+      busy ||
+      checklistSaving.current ||
+      checklistDraft.taskId !== selected
+    ) return;
     const draft = checklistDraft;
+    checklistSaving.current = true;
+    setChecklistFeedback({ taskId: draft.taskId, status: "saving" });
     setBusy(true);
     try {
-      await api(
+      const saved: Task = await api(
         `/tasks/${draft.taskId}/actions/toggle`,
         "POST",
         {
@@ -511,11 +526,24 @@ export function App() {
         },
         crypto.randomUUID(),
       );
-      setChecklistDraft(null);
+      // An older auto-refresh must not replace this acknowledged server state.
+      ++loadSequence.current;
+      setDetail((current) => current?.id === draft.taskId ? saved : current);
+      setTasks((current) =>
+        current.map((task) => task.id === draft.taskId ? saved : task),
+      );
+      // Only clear the exact draft sent by this request, never another task's draft.
+      setChecklistDraft((current) => current === draft ? null : current);
+      setChecklistFeedback({ taskId: draft.taskId, status: "saved" });
       await refresh();
     } catch (e) {
-      setError((e as ApiError).code);
+      setChecklistFeedback({
+        taskId: draft.taskId,
+        status: "error",
+        code: (e as ApiError).code,
+      });
     } finally {
+      checklistSaving.current = false;
       setBusy(false);
     }
   }
@@ -1632,95 +1660,54 @@ export function App() {
                   </button>
                 </nav>
                 <div hidden={detailTab !== "overview"}>
-                  <section
-                    className="detail-section checklist-card"
-                    style={
-                      {
-                        "--check-color":
-                          projects.find((p) => p.id === detail.projectId)
-                            ?.color ?? "#7292c7",
-                      } as CSSProperties
+                  <ChecklistCard
+                    key={detail.id}
+                    task={detail}
+                    color={
+                      projects.find((p) => p.id === detail.projectId)?.color ??
+                      "#7292c7"
                     }
-                  >
-                    <h3>
-                      <ClipboardList size={16} /> {t("checklist")}{" "}
-                      <small>
-                        {detail.checklist.length
-                          ? `${detail.checklist.filter((x) => x.done).length} / ${detail.checklist.length} · ${Math.round((detail.checklist.filter((x) => x.done).length / detail.checklist.length) * 100)}%`
-                          : t("noChecklist")}
-                      </small>
-                    </h3>
-                    {detail.checklist.length > 0 && (
-                      <progress
-                        aria-label={t("checklist")}
-                        max={detail.checklist.length}
-                        value={detail.checklist.filter((i) => i.done).length}
-                      />
-                    )}
-                    {detail.checklist.map((i) => (
-                      <label className="check" key={i.id}>
-                        <input
-                          type="checkbox"
-                          checked={
-                            checklistDraft?.taskId === detail.id
-                              ? (checklistDraft.changes[i.id]?.done ?? i.done)
-                              : i.done
-                          }
-                          disabled={!mine || !actionable || busy}
-                          onChange={() => toggle(i)}
-                        />
-                        {i.text}
-                      </label>
-                    ))}
-                    {mine && actionable && detail.checklist.length > 0 && (
-                      <div>
-                        <button
-                          className="primary"
-                          disabled={!checklistDirty || busy}
-                          onClick={() => void submitChecklist()}
-                        >
-                          {t("submitChecklist")}
-                        </button>
-                        {checklistDirty && (
-                          <p className="muted" role="status">
-                            {t("checklistUnsaved")}
-                          </p>
+                    editable={mine && !!actionable && detail.id === selected}
+                    leader={!!leader && detail.id === selected}
+                    busy={busy}
+                    changes={
+                      checklistDraft?.taskId === detail.id
+                        ? checklistDraft.changes
+                        : {}
+                    }
+                    feedback={
+                      checklistFeedback?.taskId === detail.id
+                        ? checklistFeedback
+                        : null
+                    }
+                    onToggle={toggle}
+                    onSave={() => void submitChecklist()}
+                    onUndo={() => {
+                      if (busy || checklistSaving.current) return;
+                      setChecklistDraft((draft) =>
+                        draft?.taskId === detail.id ? null : draft,
+                      );
+                      setChecklistFeedback(null);
+                    }}
+                    onRequest={() =>
+                      openAction("requestChecklist", ["items", "scopeChanged", "reason"], {
+                        items: detail.checklist.map((item) => item.text).join("\n"),
+                        scopeChanged: false,
+                      })
+                    }
+                    requestActions={(request) => (
+                      <>
+                        {actionButton(
+                          "approveChecklist",
+                          request.scopeChanged ? ["confirmBy"] : [],
+                          { requestId: request.id },
                         )}
-                      </div>
+                        {actionButton("rejectChecklist", ["reason"], {
+                          requestId: request.id,
+                        })}
+                      </>
                     )}
-                    {mine &&
-                      actionable &&
-                      actionButton(
-                        "requestChecklist",
-                        ["items", "scopeChanged", "reason"],
-                        {
-                          items: detail.checklist.map((x) => x.text).join("\n"),
-                          scopeChanged: false,
-                        },
-                      )}
-                    <p className="muted">{t("checklistReviewHint")}</p>
-                    {detail.checklistRequests.map((r) => (
-                      <article key={r.id}>
-                        <b>
-                          {t("proposed")} · {t(r.status)}
-                        </b>
-                        <p>{r.items.map((x) => x.text).join(" · ")}</p>
-                        <p>{r.reason}</p>
-                        {leader && r.status === "pending" && (
-                          <div className="actions">
-                            {actionButton(
-                              "approveChecklist",
-                              r.scopeChanged ? ["confirmBy"] : [],
-                              { requestId: r.id },
-                            )}
-                            {actionButton("rejectChecklist", ["reason"], {
-                              requestId: r.id,
-                            })}
-                          </div>
-                        )}
-                      </article>
-                    ))}
-                  </section>
+                  />
                   <TaskDescription key={detail.id} task={detail} />
                   {detail.latestProgress && (
                     <section className="detail-section">
