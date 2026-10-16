@@ -1,5 +1,7 @@
 import { defaultReviewer } from "../shared/assignments.js";
 import { DateInput } from "./DateInput.js";
+import { MarkdownEditor } from "./MarkdownEditor.js";
+import "./taskDescription.css";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { Task, User, Project } from "../shared/model.js";
 import { useI18n } from "./i18n.js";
@@ -12,18 +14,18 @@ export type FormSpec = {
   fields: string[];
   transform?: (values: Record<string, any>) => unknown;
 };
-// Calendar buttons and inputs need separate labels; retain wrapping labels for
-// ordinary fields so clicking their captions still focuses the control.
+// Calendar and Markdown controls contain buttons; retain wrapping labels only
+// for ordinary fields so captions focus a single control.
 function FormField({
   label,
-  date,
+  separate,
   children,
 }: {
   label: string;
-  date: boolean;
+  separate: boolean;
   children: ReactNode;
 }) {
-  const Field = date ? "div" : "label";
+  const Field = separate ? "div" : "label";
   return (
     <Field className="form-field">
       <span>{label}</span>
@@ -125,7 +127,10 @@ export function TaskForm({
             <FormField
               key={k}
               label={fieldLabel(k)}
-              date={[
+              separate={[
+                "outcome",
+                "criteria",
+                "scope",
                 "plannedStart",
                 "deadline",
                 "acceptBy",
@@ -260,6 +265,12 @@ export function TaskForm({
                   value={values[k] ?? ""}
                   onChange={(e) => set(k, e.target.value)}
                   autoComplete={k === "password" ? "new-password" : "off"}
+                />
+              ) : ["outcome", "criteria", "scope"].includes(k) ? (
+                <MarkdownEditor
+                  label={fieldLabel(k)}
+                  value={values[k] ?? ""}
+                  onChange={(value) => set(k, value)}
                 />
               ) : (
                 <textarea
