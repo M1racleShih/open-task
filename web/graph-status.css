@@ -1,4 +1,4 @@
-.state-graph {
+:root {
   --life-preparing: #78849b;
   --life-pending: #ac7b32;
   --life-active: #447bd0;
@@ -7,7 +7,7 @@
   --life-done: #42885a;
   --life-cancelled: #9d7477;
 }
-[data-theme="dark"] .state-graph {
+[data-theme="dark"] {
   --life-preparing: #a5adce;
   --life-pending: #e5c890;
   --life-active: #8caaee;
@@ -16,25 +16,32 @@
   --life-done: #a6d189;
   --life-cancelled: #e78284;
 }
-.state-graph [data-lifecycle="preparing"] {
+.state-graph [data-lifecycle="preparing"],
+.task-state-icon[data-lifecycle="preparing"] {
   --phase-color: var(--life-preparing);
 }
-.state-graph [data-lifecycle="pending"] {
+.state-graph [data-lifecycle="pending"],
+.task-state-icon[data-lifecycle="pending"] {
   --phase-color: var(--life-pending);
 }
-.state-graph [data-lifecycle="active"] {
+.state-graph [data-lifecycle="active"],
+.task-state-icon[data-lifecycle="active"] {
   --phase-color: var(--life-active);
 }
-.state-graph [data-lifecycle="changed"] {
+.state-graph [data-lifecycle="changed"],
+.task-state-icon[data-lifecycle="changed"] {
   --phase-color: var(--life-changed);
 }
-.state-graph [data-lifecycle="review"] {
+.state-graph [data-lifecycle="review"],
+.task-state-icon[data-lifecycle="review"] {
   --phase-color: var(--life-review);
 }
-.state-graph [data-lifecycle="done"] {
+.state-graph [data-lifecycle="done"],
+.task-state-icon[data-lifecycle="done"] {
   --phase-color: var(--life-done);
 }
-.state-graph [data-lifecycle="cancelled"] {
+.state-graph [data-lifecycle="cancelled"],
+.task-state-icon[data-lifecycle="cancelled"] {
   --phase-color: var(--life-cancelled);
 }
 .graph-state-legend {

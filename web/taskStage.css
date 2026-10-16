@@ -1,0 +1,29 @@
+.status.task-stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+}
+.task-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--phase-color);
+  color: var(--panel);
+}
+.task-state-icon svg {
+  display: block;
+}
+.task-stage-previous .task-state-icon {
+  width: 22px;
+  height: 22px;
+}
+.task-stage-previous {
+  font-size: 11px;
+}

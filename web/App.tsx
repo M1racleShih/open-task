@@ -14,6 +14,14 @@ import {
   type TimeFilter,
   type TimePreferences,
 } from "../shared/timeFilter.js";
+import {
+  StageBaseline,
+  stageEvent,
+  feedbackObsolete,
+  type StageFeedback,
+} from "../shared/stageFeedback.js";
+import { responseFacts } from "../shared/commitment.js";
+import { StageNotice, StageAnnouncement } from "./StageNotice.js";
 import { Markdown } from "./Markdown.js";
 import { TaskDescription } from "./TaskDescription.js";
 import "./taskDescription.css";
@@ -23,6 +31,7 @@ import { workspaceColumns } from "../shared/workspaceLayout.js";
 import { localPreferences } from "../shared/storage.js";
 import { usePanelLayout } from "./usePanelLayout.js";
 import { ProjectMenu, type ProjectMenuTarget } from "./ProjectMenu.js";
+import { TaskStage } from "./TaskStage.js";
 import { TaskIcon } from "./TaskIcon.js";
 import { Gantt } from "./Gantt.js";
 import {
@@ -146,6 +155,61 @@ export function App() {
     [theme, setTheme] = useState(
       () => localPreferences.getItem("open-task.theme") ?? "light",
     );
+  // The context epoch changes during render, before effects or old responses can run.
+  const scope = useRef({
+    account: me?.id,
+    task: selected,
+    epoch: 0,
+    baseline: new StageBaseline(),
+  });
+  if (scope.current.account !== me?.id || scope.current.task !== selected) {
+    scope.current = {
+      account: me?.id,
+      task: selected,
+      epoch: scope.current.epoch + 1,
+      baseline: new StageBaseline(),
+    };
+  }
+  const viewEpoch = scope.current.epoch;
+  const [stageFeedback, setStageFeedback] = useState<
+    (StageFeedback & {
+      epoch: number;
+      removedReasons: string[];
+      filterKey: string;
+    }) | null
+  >(null);
+  const currentFeedback =
+    stageFeedback?.epoch === viewEpoch ? stageFeedback : null;
+  const pendingActionEpoch = useRef<number | null>(null);
+  function applyTask(task: Task, action?: string) {
+    const observed = scope.current.baseline.observe(task, action);
+    if (!observed.applied) return null;
+    setDetail(task);
+    setTasks((items) =>
+      items.map((item) => (item.id === task.id ? task : item)),
+    );
+    if (observed.feedback) {
+      const filters = filterContext.current;
+      const feedback = {
+        ...observed.feedback,
+        epoch: viewEpoch,
+        filterKey: filters.key,
+        removedReasons: !filters.reasons(observed.feedback.before).length
+          ? filters.reasons(task)
+          : [],
+      };
+      setStageFeedback(feedback);
+      return feedback;
+    }
+    // A retained receipt describes this stage's next response. Quietly retire it
+    // when a later same-stage reassignment/confirmation makes that advice stale.
+    setStageFeedback((existing) =>
+      existing?.epoch === viewEpoch && feedbackObsolete(existing, task)
+        ? null
+        : existing,
+    );
+    return null;
+  }
   const [checklistDraft, setChecklistDraft] = useState<{
     taskId: string;
     version: number;
@@ -271,6 +335,8 @@ export function App() {
     encodeURIComponent(search) +
     (project ? "&projectId=" + project : "") +
     filterQuery;
+  const filterContext = useRef({ key: taskQuery, reasons: filterReasons });
+  filterContext.current = { key: taskQuery, reasons: filterReasons };
   async function saveTimeFilter(value: TimeFilter | null) {
     if (timeBusy) return;
     setTimeBusy(true);
@@ -314,13 +380,19 @@ export function App() {
     const r = await api(
       "/events?taskId=" + selected + "&limit=200&cursor=" + taskEventCursor,
     );
-    if (sequence !== loadSequence.current) return;
+    if (
+      sequence !== loadSequence.current ||
+      viewEpoch !== scope.current.epoch
+    ) return;
     setTaskEvents((x) => [...x, ...r.items]);
     setTaskEventCursor(r.nextCursor);
   }
   async function refresh() {
-    if (!me) return;
+    if (!me || pendingActionEpoch.current === viewEpoch) return;
     const sequence = ++loadSequence.current;
+    const epoch = scope.current.epoch;
+    const current = () =>
+      sequence === loadSequence.current && epoch === scope.current.epoch;
     try {
       const [us, ps, ts, ns, es, rs] = await Promise.all([
         api("/users"),
@@ -339,7 +411,7 @@ export function App() {
         ),
         allPages("/relations?limit=1000"),
       ]);
-      if (sequence !== loadSequence.current) return;
+      if (!current()) return;
       setAllRelations(rs.items);
       setTaskCursor(ts.nextCursor);
       setEventCursor(es.nextCursor);
@@ -353,26 +425,37 @@ export function App() {
       setEvents(es.items);
       if (selected) {
         const d = await api("/tasks/" + selected);
-        if (sequence === loadSequence.current) {
-          setDetail(d.task);
-          setRelations(d.relations);
-          setLinkedTasks(d.targets);
-          const history = await pagesUntil(
-            "/events?taskId=" + selected + "&limit=200",
-            taskEvents[0]?.taskId === selected
-              ? Math.max(200, taskEvents.length)
-              : 200,
-          );
-          if (sequence !== loadSequence.current) return;
-          setTaskEvents(history.items);
-          setTaskEventCursor(history.nextCursor);
+        if (!current()) return;
+        const feedback = applyTask(d.task);
+        setRelations(d.relations);
+        setLinkedTasks(d.targets);
+        // Keep the existing unfiltered selected-task pagination boundary.
+        // If the stage event is beyond it, omit attribution rather than fan out.
+        const history = await pagesUntil(
+          "/events?taskId=" + selected + "&limit=200",
+          taskEvents[0]?.taskId === selected
+            ? Math.max(200, taskEvents.length)
+            : 200,
+        );
+        if (epoch === scope.current.epoch && feedback) {
+          const event = stageEvent(feedback, history.items);
+          if (event)
+            setStageFeedback((existing) =>
+              existing?.epoch === epoch && existing.id === feedback.id
+                ? { ...existing, event }
+                : existing,
+            );
         }
+        if (!current()) return;
+        setTaskEvents(history.items);
+        setTaskEventCursor(history.nextCursor);
       }
-      setError("");
+      if (current()) setError("");
     } catch (e) {
-      setError((e as ApiError).code);
+      if (current()) setError("refreshFailed");
     }
   }
+
   useEffect(() => {
     void refresh();
   }, [me, selected, search, project, actor, filterQuery]);
@@ -384,14 +467,20 @@ export function App() {
     return () => clearInterval(timer);
   }, [me, selected, search, project, actor, filterQuery]);
   function select(id: string) {
-    if (id !== selected && !discardChecklist()) return;
+    if (id !== selected && !discardChecklist()) return false;
     setShowDetails(true);
     setSelectedProject(null);
+    if (id !== selected) {
+      setDetail(null);
+      setTaskEvents([]);
+      setTaskEventCursor(null);
+    }
     setSelected(id);
     const params = new URLSearchParams(location.search);
     params.set("task", id);
     history.replaceState(null, "", "?" + params.toString());
     setMobile("details");
+    return true;
   }
   function chooseTab(next: string) {
     setShowWorkspace(true);
@@ -419,7 +508,10 @@ export function App() {
     if (!taskCursor) return;
     const sequence = loadSequence.current;
     const r = await api("/tasks?limit=200&cursor=" + taskCursor + taskQuery);
-    if (sequence !== loadSequence.current) return;
+    if (
+      sequence !== loadSequence.current ||
+      viewEpoch !== scope.current.epoch
+    ) return;
     setTasks((items) => [...items, ...r.items]);
     setContextTasks((items) => [...items, ...r.context]);
     setMatchCount(r.total);
@@ -467,6 +559,7 @@ export function App() {
       path: `/tasks/${task.id}/actions/${action}`,
       values,
       fields,
+      taskBefore: task,
       transform: (v) => {
         if (action === "edit" || action === "adjust")
           return {
@@ -532,6 +625,7 @@ export function App() {
       checklistDraft.taskId !== selected
     ) return;
     const draft = checklistDraft;
+    const epoch = viewEpoch;
     checklistSaving.current = true;
     setChecklistFeedback({ taskId: draft.taskId, status: "saving" });
     setBusy(true);
@@ -549,17 +643,16 @@ export function App() {
         },
         crypto.randomUUID(),
       );
+      if (epoch !== scope.current.epoch) return;
       // An older auto-refresh must not replace this acknowledged server state.
       ++loadSequence.current;
-      setDetail((current) => current?.id === draft.taskId ? saved : current);
-      setTasks((current) =>
-        current.map((task) => task.id === draft.taskId ? saved : task),
-      );
+      applyTask(saved);
       // Only clear the exact draft sent by this request, never another task's draft.
-      setChecklistDraft((current) => current === draft ? null : current);
+      setChecklistDraft((current) => (current === draft ? null : current));
       setChecklistFeedback({ taskId: draft.taskId, status: "saved" });
       await refresh();
     } catch (e) {
+      if (epoch !== scope.current.epoch) return;
       setChecklistFeedback({
         taskId: draft.taskId,
         status: "error",
@@ -629,15 +722,35 @@ export function App() {
   const taskMap = new Map(contextTasks.map((task) => [task.id, task]));
   for (const task of tasks) taskMap.set(task.id, task);
   const visible = [...taskMap.values()];
-  const outsideResults =
-    detail &&
-    (!relatedMatch(detail, relatedUserId, relatedActive ? selectedScopes : null) ||
-      !timeMatch(detail, timeFilter) ||
-      (project && detail.projectId !== project) ||
-      (stageFilter && detail.stage !== stageFilter) ||
-      (search &&
-        !detail.title.toLowerCase().includes(search.toLowerCase()) &&
-        String(detail.number) !== search));
+  function filterReasons(task: Task) {
+    return [
+      ...(!relatedMatch(
+        task,
+        relatedUserId,
+        relatedActive ? selectedScopes : null,
+      )
+        ? ["relatedFilter"]
+        : []),
+      ...(!timeMatch(task, timeFilter) ? ["timeRange"] : []),
+      ...(project && task.projectId !== project ? ["projectId"] : []),
+      ...(stageFilter && task.stage !== stageFilter ? ["stage"] : []),
+      ...(search &&
+      !task.title.toLowerCase().includes(search.toLowerCase()) &&
+      String(task.number) !== search
+        ? ["search"]
+        : []),
+    ];
+  }
+  const outsideReasons = detail ? filterReasons(detail) : [];
+  const outsideResults = outsideReasons.length > 0;
+  const removedReasons =
+    currentFeedback?.filterKey === taskQuery ? currentFeedback.removedReasons : [];
+  const nextResponses = detail
+    ? responseFacts(
+        detail,
+        users.find((user) => user.active && user.roles.includes("leader"))?.id ?? "",
+      )
+    : [];
   function treeOrder(id: string) {
     const path = [];
     const seen = new Set<string>();
@@ -901,6 +1014,10 @@ export function App() {
               onClick={async () => {
                 try {
                   if (!discardChecklist()) return;
+                  ++scope.current.epoch;
+                  ++loadSequence.current;
+                  setStageFeedback(null);
+                  setForm(null);
                   await api("/sessions", "DELETE");
                   location.replace(location.pathname);
                 } catch (e) {
@@ -930,6 +1047,21 @@ export function App() {
           {t(error)}{" "}
           <button onClick={() => void refresh()}>{t("readLatest")}</button>
         </div>
+      )}
+      <StageAnnouncement feedback={currentFeedback} users={users} />
+      {currentFeedback && (
+        <StageNotice
+          key={viewEpoch + ":" + currentFeedback.id}
+          feedback={currentFeedback}
+          users={users}
+          removedReasons={removedReasons}
+          onClose={() => setStageFeedback(null)}
+          onHistory={() => {
+            setDetailTab("activity");
+            if (!showDetails) setShowDetails(true);
+            setMobile("details");
+          }}
+        />
       )}
       <div className="body-row">
         <nav className="activity-rail" aria-label={t("workspaceNavigation")}>
@@ -1519,7 +1651,10 @@ export function App() {
                             encodeURIComponent(search) +
                             filterQuery,
                         );
-                        if (sequence !== loadSequence.current) return;
+                        if (
+                          sequence !== loadSequence.current ||
+                          viewEpoch !== scope.current.epoch
+                        ) return;
                         setEvents((x) => [...x, ...r.items]);
                         setEventCursor(r.nextCursor);
                       }}
@@ -1632,12 +1767,17 @@ export function App() {
               </button>
             </header>
             {detail ? (
-              <div className="detail-scroll">
-                <div className="task-meta">
+              <div
+                className={
+                  "detail-scroll" + (currentFeedback ? " stage-highlight" : "")
+                }
+              >
+                <div
+                  className="task-meta"
+                  key={currentFeedback?.id ?? "baseline"}
+                >
                   OT-{detail.number} · {t("version")} {detail.version}
-                  <span className={"status " + detail.stage}>
-                    {t(detail.stage)}
-                  </span>
+                  <TaskStage task={detail} />
                 </div>
                 <p className="muted detail-breadcrumb">
                   <Folder size={14} />{" "}
@@ -1658,7 +1798,8 @@ export function App() {
                 )}
                 {outsideResults && (
                   <p className="warning" role="status">
-                    {t("outsideTimeResults")}
+                    {t("outsideCurrentResults")}:{" "}
+                    {outsideReasons.map(t).join(" · ")}
                   </p>
                 )}
                 <dl className="task-people">
@@ -1670,25 +1811,15 @@ export function App() {
                     <dt>{t("reviewerId")}</dt>
                     <dd>{name(detail.reviewerId)}</dd>
                   </div>
-                  <div className="meta-waiting">
+                  <div
+                    className="meta-waiting"
+                    key={currentFeedback?.id ?? "baseline"}
+                  >
                     <dt>{t("waiting")}</dt>
                     <dd>
-                      {[
-                        ...new Set(
-                          notices
-                            .filter((n) => n.taskId === detail.id)
-                            .map((n) => n.handlerId),
-                        ),
-                      ]
+                      {[...new Set(nextResponses.map((fact) => fact.handlerId))]
                         .map(name)
-                        .join(" · ") ||
-                        (detail.stage === "approval"
-                          ? name(detail.approvalIds[detail.approvalIndex])
-                          : detail.stage === "reviewing"
-                            ? name(detail.reviewerId)
-                            : !terminal(detail) && detail.stage !== "draft"
-                              ? name(detail.ownerId)
-                              : "—")}
+                        .join(" · ") || "—"}
                     </dd>
                   </div>
                 </dl>
@@ -1760,10 +1891,16 @@ export function App() {
                       setChecklistFeedback(null);
                     }}
                     onRequest={() =>
-                      openAction("requestChecklist", ["items", "scopeChanged", "reason"], {
-                        items: detail.checklist.map((item) => item.text).join("\n"),
-                        scopeChanged: false,
-                      })
+                      openAction(
+                        "requestChecklist",
+                        ["items", "scopeChanged", "reason"],
+                        {
+                          items: detail.checklist
+                            .map((item) => item.text)
+                            .join("\n"),
+                          scopeChanged: false,
+                        },
+                      )
                     }
                     requestActions={(request) => (
                       <>
@@ -2190,21 +2327,37 @@ export function App() {
           spec={form}
           users={users}
           projects={projects}
-          onClose={() => {
-            if (form?.method === "DELETE") {
+          onPendingChange={(pending) => {
+            if (pending) {
+              pendingActionEpoch.current = viewEpoch;
+              ++loadSequence.current;
+            } else if (pendingActionEpoch.current === viewEpoch)
+              pendingActionEpoch.current = null;
+          }}
+          onClose={() =>
+            setForm((current) => (current === form ? null : current))
+          }
+          onSaved={async (result) => {
+            if (viewEpoch !== scope.current.epoch) return;
+            // The server response confirms the action. Apply it before any reads,
+            // and invalidate reads begun before this acknowledgement.
+            ++loadSequence.current;
+            if (form.method === "DELETE") {
               setSelected("");
               setDetail(null);
               setError("");
               history.replaceState(null, "", location.pathname);
-            }
-            setForm(null);
-          }}
-          onSaved={async (result) => {
-            if (form.title === "newTask" && result.id) {
-              setDetail(result);
+            } else if (form.title === "newTask" && result.id) {
               setShowDetails(true);
-              select(result.id);
-            } else await refresh();
+              if (select(result.id)) setDetail(result);
+            } else if (form.taskBefore && result.id === form.taskBefore.id) {
+              if (!scope.current.baseline.current)
+                scope.current.baseline.current = form.taskBefore;
+              applyTask(result, form.title);
+            }
+            setForm((current) => (current === form ? null : current));
+            // refresh handles its own read errors; they must never be action errors.
+            void refresh();
           }}
         />
       )}

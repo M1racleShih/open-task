@@ -37,6 +37,15 @@ npx tsx scripts/browser-workflow.ts
 
 两个脚本都访问 `http://127.0.0.1:4310` 上运行的应用，并在该应用实际连接的数据库中创建带标记的测试记录。它们不会自动选择独立数据库，只应对用于验收检查的工作区运行。截图和运行记录保存在 `artifacts/` 下。
 
+### 模拟 API 的任务阶段提示检查
+
+```sh
+npx tsx --test tests/stageFeedback.test.ts
+npx tsx scripts/browser-stage-feedback.ts
+```
+
+浏览器脚本在 `127.0.0.1:4351` 启动仅用于模拟数据的 Vite 预览，拦截所有 API 请求，结束时关闭预览，不连接数据库。也可用 `STAGE_TEST_URL` 指向已运行的本机预览。检查覆盖服务端确认回执、读取／操作失败、轮询去重、任务／账号切换、慢响应、有界事件归因、筛选移除、清单草稿、稳定的读屏播报区，以及中英文／明暗主题在 1440、820、390 像素下的布局。需要 `/usr/bin/google-chrome`。合成数据截图与结果保存在 `artifacts/stage-feedback/`。
+
 ### 独立数据库中的时间筛选检查
 
 执行 `bash scripts/test-db.sh` 和 `npm run build` 后，启动测试 API：
