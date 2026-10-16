@@ -162,6 +162,8 @@ const messages = {
   reviewBy: ["Review by", "验收期限"],
   confirmBy: ["Confirm adjustment by", "调整确认期限"],
   reason: ["Reason", "原因"],
+  optionalReason: ["Reason (optional)", "原因（选填）"],
+  requiredReason: ["Reason (required)", "原因（必填）"],
   text: ["Current result / message", "当前结果／说明"],
   next: ["Next step", "下一步"],
   links: ["Evidence links (one per line)", "证据链接（每行一个）"],

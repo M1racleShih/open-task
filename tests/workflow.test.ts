@@ -305,6 +305,70 @@ test("AC-49/11: returned approval and stale version rejection", async () => {
   t = await act("manager", t, "approve");
   assert.equal(t.stage, "approval");
 });
+test("checklist reason is optional only when scope and acceptance criteria are unchanged", async () => {
+  let t = await create("leader");
+  t = await act("leader", t, "issue");
+  t = await act("member", t, "acceptStart");
+  const items = [{ id: randomUUID(), text: "Execution detail" }];
+  const path = `/tasks/${t.id}/actions/requestChecklist`;
+  for (const reason of [undefined, "", " \n\t "]) {
+    const r = await api("member", "POST", path, {
+      version: t.version,
+      items,
+      scopeChanged: true,
+      reason,
+    });
+    assert.equal(r.status, 422);
+    assert.equal(r.data.error.code, "reasonRequired");
+    t = await act("member", t, "requestChecklist", {
+      items,
+      scopeChanged: false,
+      reason,
+    });
+    assert.equal(t.checklistRequests.at(-1).reason, "");
+  }
+  // Optional does not permit non-text or oversized payloads.
+  for (const reason of [null, 42, {}, "x".repeat(20001)]) {
+    assert.equal(
+      (
+        await api("member", "POST", path, {
+          version: t.version,
+          items,
+          scopeChanged: false,
+          reason,
+        })
+      ).status,
+      422,
+    );
+  }
+  assert.equal(
+    (
+      await api("other", "POST", path, {
+        version: t.version,
+        items,
+        scopeChanged: false,
+      })
+    ).status,
+    403,
+  );
+  t = await act("leader", t, "approveChecklist", {
+    requestId: t.checklistRequests.at(-1).id,
+  });
+  assert.equal(t.checklist[0].text, "Execution detail");
+  assert.equal(t.version, 1);
+  t = await act("member", t, "requestChecklist", {
+    items,
+    scopeChanged: true,
+    reason: "  New scope  ",
+  });
+  assert.equal(t.checklistRequests.at(-1).reason, "New scope");
+  t = await act("leader", t, "approveChecklist", {
+    requestId: t.checklistRequests.at(-1).id,
+    confirmBy: future,
+  });
+  assert.equal(t.version, 2);
+  assert.notEqual(t.confirmedVersion, t.version);
+});
 test("AC-10/11/36/37/38/39: checklist approval preserves toggles, adjustment invalidates submission", async () => {
   let t = await create("leader");
   t = await act("leader", t, "issue");

@@ -46,7 +46,7 @@ This example shows a task created by an ordinary project member; the creator and
 
 ## Execution checklist and formal progress
 
-Use Request checklist change to submit the execution checklist (one item per line), a reason, and whether the change affects scope or acceptance criteria. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
+Use Request checklist change to submit the execution checklist (one item per line) and whether the change affects scope or acceptance criteria. A reason is optional when scope and acceptance criteria are unchanged; otherwise it is required. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
 
 Checking checklist items saves nothing until you click Confirm submission; unsaved checks do not count as server-side progress. A checklist at 100% still does not end the task: the owner must submit a result and the reviewer must accept it.
 
