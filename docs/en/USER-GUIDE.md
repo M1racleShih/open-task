@@ -20,6 +20,8 @@ Selecting a task adds `?task=<UUID>` to the URL. Share this with other team acco
 
 New task first saves a private draft. Fill in the title, expected result, acceptance criteria, owner, reviewer and project. Planned start is optional; deadline, acceptance deadline and next feedback time are required before submission or issue. The interface uses Shanghai time and the format `YYYY-MM-DD HH:mm`.
 
+You can type or paste `YYYY-MM-DD HH:mm`, or use the calendar button to select a date and 24-hour time. Both methods use Shanghai time. Confirm applies your selection; Cancel or Escape leaves the value unchanged. Clear removes the value, subject to the existing task rules. Custom time-range filters offer the same calendar for date-only values (`YYYY-MM-DD`).
+
 Tasks created by members within a project normally go through the project manager and then the team leader for creation approval. A project manager creating a task in their own project waits directly for the team leader. A team leader can issue a task directly. Follow the current handler shown in task details.
 
 After approval, the task is Awaiting acceptance. The owner may choose Accept task followed by Start work, or Accept and start. If unable to accept, explain why so the issuer can handle it. Assigning an owner's name alone does not mean that person has accepted the work.
