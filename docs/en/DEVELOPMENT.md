@@ -37,6 +37,15 @@ npx tsx scripts/browser-workflow.ts
 
 Both target the running app at `http://127.0.0.1:4310` and create labeled test records in whichever database that app uses. They do not select an isolated database automatically. Run them only against a workspace intended for acceptance checks. Screenshots and run outputs go under `artifacts/`.
 
+### Task stage feedback check with mock API
+
+```sh
+npx tsx --test tests/stageFeedback.test.ts
+npx tsx scripts/browser-stage-feedback.ts
+```
+
+The browser script starts a mock-only Vite preview on `127.0.0.1:4351`, intercepts every API request and closes the preview when finished; it never connects to a database. `STAGE_TEST_URL` can instead point to an already running local preview. It verifies server-confirmed action receipts, failed reads/actions, polling deduplication, task/account switching, slow responses, bounded event attribution, filter removal, checklist drafts, stable live announcements and the English/Chinese light/dark layout matrix at 1440, 820 and 390 pixels. Chrome is required at `/usr/bin/google-chrome`. Synthetic screenshots and results are saved to `artifacts/stage-feedback/`.
+
 ### Time-filter check in an isolated database
 
 After `bash scripts/test-db.sh` and `npm run build`, start the test API:

@@ -8,6 +8,7 @@ import { useI18n } from "./i18n.js";
 import { api, ApiError } from "./api.js";
 export type FormSpec = {
   title: string;
+  taskBefore?: Task;
   path: string;
   method?: string;
   values: Record<string, any>;
@@ -40,12 +41,14 @@ export function TaskForm({
   projects,
   onClose,
   onSaved,
+  onPendingChange,
 }: {
   spec: FormSpec;
   users: User[];
   projects: Project[];
   onClose: () => void;
   onSaved: (result: any) => Promise<void>;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const { t, lang, setLang } = useI18n();
   const [values, setValues] = useState(spec.values);
@@ -82,20 +85,25 @@ export function TaskForm({
     }
     setBusy(true);
     setError(null);
+    let result: any;
+    onPendingChange?.(true);
     try {
-      const result = await api(
+      result = await api(
         spec.path,
         spec.method ?? "POST",
         spec.transform ? spec.transform(values) : values,
         key,
       );
-      await onSaved(result);
-      onClose();
     } catch (e) {
       setError(e as ApiError);
-    } finally {
       setBusy(false);
+      onPendingChange?.(false);
+      return;
     }
+    setBusy(false);
+    onPendingChange?.(false);
+    await onSaved(result);
+    onClose();
   }
   return (
     <div className="modal-shade">
