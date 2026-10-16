@@ -1,6 +1,6 @@
 import { defaultReviewer } from "../shared/assignments.js";
 import { DateInput } from "./DateInput.js";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { Task, User, Project } from "../shared/model.js";
 import { useI18n } from "./i18n.js";
 import { api, ApiError } from "./api.js";
@@ -12,6 +12,26 @@ export type FormSpec = {
   fields: string[];
   transform?: (values: Record<string, any>) => unknown;
 };
+// Calendar buttons and inputs need separate labels; retain wrapping labels for
+// ordinary fields so clicking their captions still focuses the control.
+function FormField({
+  label,
+  date,
+  children,
+}: {
+  label: string;
+  date: boolean;
+  children: ReactNode;
+}) {
+  const Field = date ? "div" : "label";
+  return (
+    <Field className="form-field">
+      <span>{label}</span>
+      {children}
+    </Field>
+  );
+}
+
 export function TaskForm({
   spec,
   users,
@@ -92,8 +112,18 @@ export function TaskForm({
           <p className="muted">{t("timezone")}</p>
           {spec.title === "newTask" && <p>{t("privateDraft")}</p>}
           {spec.fields.map((k) => (
-            <label key={k}>
-              {t(k)}
+            <FormField
+              key={k}
+              label={t(k)}
+              date={[
+                "plannedStart",
+                "deadline",
+                "acceptBy",
+                "feedbackBy",
+                "reviewBy",
+                "confirmBy",
+              ].includes(k)}
+            >
               {[
                 "ownerId",
                 "reviewerId",
@@ -226,7 +256,7 @@ export function TaskForm({
                   onChange={(e) => set(k, e.target.value)}
                 />
               )}
-            </label>
+            </FormField>
           ))}
           {error && (
             <p role="alert" className="error">

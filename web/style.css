@@ -75,7 +75,8 @@ select {
 input[type="checkbox"] {
   accent-color: var(--accent);
 }
-label {
+label,
+.form-field {
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -554,6 +555,7 @@ dd {
   z-index: 50;
   display: grid;
   place-items: center;
+  grid-template-columns: minmax(0, 1fr);
   padding: 20px;
 }
 .modal {
@@ -1269,3 +1271,29 @@ dd {
 .node[data-view-source="context"] { opacity: .65; }
 
 .tree > .filters { max-height: 60%; overflow-y: auto; flex-shrink: 0; }
+
+/* Calendar entry keeps the existing numeric text format and theme. */
+.date-input { display: grid; gap: 7px; min-width: 0; }
+.date-input-row { display: flex; gap: 6px; min-width: 0; }
+.date-input-row input { flex: 1; width: 0; }
+.date-input-row > button { flex: 0 0 38px; border: 1px solid var(--line); background: var(--surface); }
+.date-error, .time-filter .date-error { color: var(--danger); }
+.calendar-picker { width: 336px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; margin: auto; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); box-shadow: 0 20px 80px #0003; }
+.calendar-picker::backdrop { background: #18223566; }
+.calendar-picker h3 { margin: 0 0 4px; font-size: 16px; }
+.calendar-picker p { margin: 0 0 14px; }
+.calendar-month { display: grid; grid-template-columns: 32px minmax(0, 1fr) 76px 32px; gap: 4px; align-items: center; }
+.calendar-month > button { padding: 6px; font-size: 22px; }
+.calendar-month input, .calendar-month select { padding: 6px 4px; }
+.calendar-weekdays, .calendar-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; text-align: center; }
+.calendar-weekdays { color: var(--muted); font-size: 12px; margin: 14px 0 6px; }
+.calendar-days button { min-height: 36px; padding: 6px 0; font-variant-numeric: tabular-nums; }
+.calendar-days button[aria-current="date"] { box-shadow: inset 0 0 0 1px var(--accent); }
+.calendar-days button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+.calendar-time { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin: 12px 0; }
+.calendar-clock { display: flex; align-items: center; gap: 4px; }
+.calendar-clock select { width: 60px; padding: 6px 4px; font-variant-numeric: tabular-nums; }
+.calendar-picker .calendar-preview { margin: 14px 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.calendar-actions { display: flex; justify-content: flex-end; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.calendar-actions button:first-child { margin-right: auto; }
+.calendar-picker button:disabled { cursor: default; }

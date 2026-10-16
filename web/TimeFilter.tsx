@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { TimeFilter } from "../shared/timeFilter.js";
 import { timeRange } from "../shared/timeFilter.js";
+import { DateInput } from "./DateInput.js";
 import { useI18n } from "./i18n.js";
 
 export function TimeFilterControls({
@@ -69,36 +70,28 @@ export function TimeFilterControls({
         </label>
         {draft.mode === "custom" && (
           <div className="range-dates">
-            <label>
-              {t("rangeStart")}
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="YYYY-MM-DD"
-                pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+            <div className="form-field">
+              <span>{t("rangeStart")}</span>
+              <DateInput
+                key={project}
+                label={t("rangeStart")}
+                dateOnly
                 required
-                aria-label={t("rangeStart")}
                 value={draft.start}
-                onChange={(e) =>
-                  setDraft((x) => ({ ...x, start: e.target.value }))
-                }
+                onChange={(start) => setDraft((x) => ({ ...x, start }))}
               />
-            </label>
-            <label>
-              {t("rangeEnd")}
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="YYYY-MM-DD"
-                pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+            </div>
+            <div className="form-field">
+              <span>{t("rangeEnd")}</span>
+              <DateInput
+                key={project}
+                label={t("rangeEnd")}
+                dateOnly
                 required
-                aria-label={t("rangeEnd")}
                 value={draft.end}
-                onChange={(e) =>
-                  setDraft((x) => ({ ...x, end: e.target.value }))
-                }
+                onChange={(end) => setDraft((x) => ({ ...x, end }))}
               />
-            </label>
+            </div>
           </div>
         )}
         <label className="check-option">
