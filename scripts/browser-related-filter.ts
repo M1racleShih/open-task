@@ -115,6 +115,16 @@ try {
   await expect(count).toHaveText("5 · Matching tasks");
   await page.getByRole("button", { name: "By member", exact: true }).click();
   await expect(count).toHaveText("3 · Matching tasks");
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "By member", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    member.user.id,
+  );
+  await page.getByLabel("Project", { exact: true }).selectOption(project.id);
+  await expect(count).toHaveText("3 · Matching tasks");
+
   await page.locator(".related-filter summary").click();
   await expect(page.locator(".related-filter input:checked")).toHaveCount(3);
   await page.getByLabel("Created or issued", { exact: true }).uncheck();
@@ -268,6 +278,82 @@ try {
   });
   checks.push(
     "English/Chinese, light/dark and 390px mobile without page overflow",
+  );
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByLabel("语言", { exact: true }).selectOption("en");
+  const firstTasks = page.waitForRequest(
+    (request) => new URL(request.url()).pathname === "/api/v1/tasks",
+  );
+  await page.reload();
+  const restoredQuery = new URL((await firstTasks).url()).searchParams;
+  expect(restoredQuery.get("relatedUserId")).toBe(other.id);
+  expect(restoredQuery.get("related")).toBe("owned,created");
+  await expect(
+    page.getByRole("button", { name: "By member", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    other.id,
+  );
+  await page.getByLabel("Project", { exact: true }).selectOption(project.id);
+  await expect(count).toHaveText("3 · Matching tasks");
+  await page.locator(".related-filter summary").click();
+  await expect(page.getByLabel("Owned", { exact: true })).toBeChecked();
+  await expect(
+    page.getByLabel("Created or issued", { exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByLabel("Approval or review", { exact: true }),
+  ).not.toBeChecked();
+  await page.getByLabel("Owned", { exact: true }).uncheck();
+  await page.getByLabel("Created or issued", { exact: true }).uncheck();
+  await expect(count).toHaveText("0 · Matching tasks");
+  await page.reload();
+  await expect(page.locator(".related-filter summary")).toContainText(
+    "No scopes selected",
+  );
+  await expect(page.locator(".filters > small")).toHaveText(
+    "0 · Matching tasks",
+  );
+  await page.getByRole("button", { name: "All tasks", exact: true }).click();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "All tasks", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "By member", exact: true }).click();
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    other.id,
+  );
+  await expect(page.locator(".related-filter summary")).toContainText(
+    "No scopes selected",
+  );
+  // One browser, two logins: each account restores its own choices.
+  const switchLogin = async (username: string) => {
+    const response = await member.ctx.request.post(base + "/api/v1/sessions", {
+      data: { username, password: "OpenTask-Test-2026!" },
+    });
+    expect(response.status()).toBe(200);
+    await page.reload();
+  };
+  await switchLogin("leader");
+  await expect(
+    page.getByRole("button", { name: "All tasks", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "By member", exact: true }).click();
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    leader.user.id,
+  );
+  await switchLogin("member");
+  await expect(
+    page.getByRole("button", { name: "By member", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Related member", { exact: true })).toHaveValue(
+    other.id,
+  );
+  await expect(page.locator(".related-filter summary")).toContainText(
+    "No scopes selected",
+  );
+  checks.push(
+    "refresh restores active mode/member/scopes before the first task query, including empty scopes and All tasks; account switching is isolated",
   );
   expect(errors).toEqual([]);
   await writeFile(

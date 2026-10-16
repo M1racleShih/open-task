@@ -1,9 +1,10 @@
-import { RelatedFilterControls } from "./RelatedFilter.js";
 import {
-  relatedMatch,
-  relatedScopes,
-  type RelatedScope,
-} from "../shared/relatedFilter.js";
+  defaultRelatedPreferences,
+  readRelatedPreferences,
+  writeRelatedPreferences,
+} from "./relatedPreferences.js";
+import { RelatedFilterControls } from "./RelatedFilter.js";
+import { relatedMatch } from "../shared/relatedFilter.js";
 import { TimeFilterControls } from "./TimeFilter.js";
 import {
   defaultTimeFilter,
@@ -74,11 +75,29 @@ export function App() {
   });
   const [timeBusy, setTimeBusy] = useState(false);
   const [stageFilter, setStageFilter] = useState("");
-  const [relatedActive, setRelatedActive] = useState(false);
-  const [relatedMemberId, setRelatedMemberId] = useState("");
-  const [selectedScopes, setSelectedScopes] = useState<RelatedScope[]>([
-    ...relatedScopes,
-  ]);
+  const [relatedPreferences, setRelatedPreferences] = useState(
+    defaultRelatedPreferences,
+  );
+  const {
+    active: relatedActive,
+    memberId: relatedMemberId,
+    scopes: selectedScopes,
+  } = relatedPreferences;
+  function restoreRelatedPreferences(userId: string) {
+    try {
+      setRelatedPreferences(readRelatedPreferences(localStorage, userId));
+    } catch {
+      setRelatedPreferences(defaultRelatedPreferences);
+    }
+  }
+  useEffect(() => {
+    if (!me) return;
+    try {
+      writeRelatedPreferences(localStorage, me.id, relatedPreferences);
+    } catch {
+      // Access to localStorage itself can be disabled by the browser.
+    }
+  }, [me?.id, relatedPreferences]);
   const [contextTasks, setContextTasks] = useState<Task[]>([]);
   const [matchCount, setMatchCount] = useState(0);
   const [projectCounts, setProjectCounts] = useState<
@@ -255,6 +274,7 @@ export function App() {
     api("/me")
       .then(async (x) => {
         setTimePreferences(await api("/time-preferences"));
+        restoreRelatedPreferences(x.user.id);
         setMe(x.user);
       })
       .catch(() => {})
@@ -382,6 +402,7 @@ export function App() {
     try {
       const r = await api("/sessions", "POST", { username, password });
       setTimePreferences(await api("/time-preferences"));
+      restoreRelatedPreferences(r.user.id);
       setMe(r.user);
       setPassword("");
       setError("");
@@ -976,10 +997,16 @@ export function App() {
                 me={me}
                 users={users}
                 memberId={relatedUserId}
-                onMemberChange={setRelatedMemberId}
+                onMemberChange={(memberId) =>
+                  setRelatedPreferences((old) => ({ ...old, memberId }))
+                }
                 scopes={selectedScopes}
-                onActiveChange={setRelatedActive}
-                onScopesChange={setSelectedScopes}
+                onActiveChange={(active) =>
+                  setRelatedPreferences((old) => ({ ...old, active }))
+                }
+                onScopesChange={(scopes) =>
+                  setRelatedPreferences((old) => ({ ...old, scopes }))
+                }
               />
               <input
                 aria-label={t("search")}
