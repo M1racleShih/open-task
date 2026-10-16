@@ -1,0 +1,40 @@
+{
+  "capturedOn": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "sourceCommit": "143e9e769f4bf34da332c03b1a95d2cc999cfcec",
+  "sourceState": "Integration working tree based on this commit, with the existing LAN UUID fallback, configurable listen host, API-description visibility and documentation updates; application appearance follows the merged task-stage feedback UI",
+  "browser": "Codex in-app browser (Chromium)",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "database": "open_task_docs_20261016_a4c4pt",
+  "environment": "Isolated local database; API 127.0.0.1:4326 and separate worker",
+  "interfaceLanguage": "en",
+  "taskContentLanguage": "en",
+  "imageProcessing": "Unchanged JPEG browser captures; no DOM changes or mocked responses",
+  "screenshots": [
+    {
+      "file": "workspace-current-en.jpg",
+      "locale": "en",
+      "shows": "Five synthetic CSV-export tasks, task tree, selected implementation and Gantt prerequisite arrows; taken before the additional workflow rehearsal"
+    },
+    {
+      "file": "task-stage-feedback-en.jpg",
+      "locale": "en",
+      "shows": "OT-6 synthetic workflow result accepted, review-to-completed receipt and no next handler"
+    }
+  ],
+  "checks": [
+    "Created an additional synthetic task as member through browser forms",
+    "Observed project-manager and team-leader creation approvals and next-handler receipts",
+    "Accepted and started as owner, recorded Markdown progress and submitted a synthetic result",
+    "Returned the result as reviewer, resubmitted as owner and accepted as reviewer",
+    "Refreshed and observed the completed task and two retained submissions"
+  ],
+  "limits": [
+    "The screenshot rehearsal is not a production-data exercise",
+    "Earlier captures and their manifest remain unchanged",
+    "Full test, API case and deployment checks are recorded separately"
+  ]
+}

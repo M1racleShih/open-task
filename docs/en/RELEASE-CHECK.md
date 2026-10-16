@@ -20,7 +20,7 @@ npm run docs:build
 
 `test-db.sh` uses the fixed `open_task_test` database and deliberately injects one transaction write failure there to check rollback. `Injected integration write failure` in its logs is part of that rollback check, and the final result should have 0 failures. Never point integration tests at a normal or production database. The case command (`npm run case:check`) uses `open_task_release_case` separately and does not clean up existing case projects.
 
-Passing type checks and builds does not prove usability. In the [case tutorial](CASE-CSV-EXPORT.md), follow at least the three-role UI loop for task C (Implement CSV export): creation approval, checklist approval, agreement confirmation, formal progress, return, resubmission, completion and retained history after refresh. If standalone Chrome is available, you can also run the existing browser scripts. Some are fixed to `4310` and save test tasks; first confirm their target workspace.
+After type checks and builds pass, check operations in the interface. In the [case tutorial](CASE-CSV-EXPORT.md), complete at least task C (Implement CSV export) using member, project manager and leader accounts. Check creation approval, checklist approval, agreement confirmation, formal progress, return, resubmission, completion and retained history after refresh. If standalone Chrome is available, you can also run the existing browser scripts. Some are fixed to `4310` and save test tasks; first confirm their target workspace.
 
 ## Acceptance conditions
 
@@ -30,8 +30,8 @@ Passing type checks and builds does not prove usability. In the [case tutorial](
 | Build                           | typecheck and production build exit 0                                                                                |
 | Business rules and transactions | All existing tests pass without skips; permission and database failures leave no partial writes                      |
 | Delivery                        | All four API case tasks complete and all 13 assertion groups pass                                                    |
-| Interface                       | Three-role UI loop passes; results and language selection survive refresh                                            |
-| Data continuity                 | Consistent data after API/worker restart; queued work resumes after downtime                                         |
+| Interface                       | The three-role interface workflow passes; results and language selection survive refresh                                            |
+| Data and queued work after restart                 | Consistent data after API/worker restart; queued work resumes after downtime                                         |
 | Case restore                    | Backup restores into a new database and all 12 tables match in row count and content                                  |
 | Dependency security             | No unresolved production audit findings; a network failure is recorded as unverified, not passed                     |
 | Documentation                   | Markdown links, screenshots and HTML render correctly; roles, button labels and commands match the current version   |

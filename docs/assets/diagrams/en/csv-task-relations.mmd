@@ -5,9 +5,9 @@ flowchart TB
   B["B · Confirm export rules<br/>manager / leader"]
   C["C · Implement CSV export<br/>member / manager"]
   D["D · Verify and prepare delivery notes<br/>other / manager"]
-  A -.->|Primary parent · breakdown| B
-  A -.->|Primary parent · breakdown| C
-  A -.->|Primary parent · breakdown| D
+  A -.->|Child task| B
+  A -.->|Child task| C
+  A -.->|Child task| D
   B ==>|B must complete before C passes review| C
   C ==>|C must complete before D passes review| D
   classDef task fill:#EDF3F8,stroke:#365FAC,color:#28344B,stroke-width:1.5px;

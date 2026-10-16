@@ -1,0 +1,248 @@
+{
+  "checkedOn": "2026-10-13",
+  "timezone": "Asia/Shanghai",
+  "database": "open_task_docs_20261013",
+  "method": "Read-only SQL assertions after actual browser operations; no API or SQL task seeding",
+  "checks": {
+    "coreTasksCompleted": true,
+    "returnedAndAccepted": true,
+    "checklistSaved": true,
+    "blockerResolved": true,
+    "followupCancelled": true,
+    "submissionSuperseded": true,
+    "privateDraftRetained": true
+  },
+  "tasks": [
+    {
+      "number": 1,
+      "title": "Implement CSV export",
+      "stage": "done",
+      "version": "3",
+      "submissions": [
+        {
+          "status": "returned",
+          "version": 3
+        },
+        {
+          "status": "accepted",
+          "version": 3
+        }
+      ],
+      "checklistDone": 3,
+      "checklistTotal": 3,
+      "resolvedBlockers": 1
+    },
+    {
+      "number": 2,
+      "title": "Deliver CSV export v0.1",
+      "stage": "done",
+      "version": "1",
+      "submissions": [
+        {
+          "status": "accepted",
+          "version": 1
+        }
+      ],
+      "checklistDone": 0,
+      "checklistTotal": 0,
+      "resolvedBlockers": 0
+    },
+    {
+      "number": 3,
+      "title": "Confirm export rules",
+      "stage": "done",
+      "version": "1",
+      "submissions": [
+        {
+          "status": "accepted",
+          "version": 1
+        }
+      ],
+      "checklistDone": 0,
+      "checklistTotal": 0,
+      "resolvedBlockers": 0
+    },
+    {
+      "number": 4,
+      "title": "Verify and prepare delivery notes",
+      "stage": "done",
+      "version": "1",
+      "submissions": [
+        {
+          "status": "accepted",
+          "version": 1
+        }
+      ],
+      "checklistDone": 0,
+      "checklistTotal": 0,
+      "resolvedBlockers": 0
+    },
+    {
+      "number": 5,
+      "title": "Assess CSV import for a later release",
+      "stage": "cancelled",
+      "version": "4",
+      "submissions": [
+        {
+          "status": "superseded",
+          "version": 3
+        }
+      ],
+      "checklistDone": 0,
+      "checklistTotal": 2,
+      "resolvedBlockers": 0
+    },
+    {
+      "number": 6,
+      "title": "Collect feedback for the next iteration",
+      "stage": "draft",
+      "version": "1",
+      "submissions": [],
+      "checklistDone": 0,
+      "checklistTotal": 0,
+      "resolvedBlockers": 0
+    },
+    {
+      "number": 7,
+      "title": "Explore CSV import follow-up",
+      "stage": "cancelled",
+      "version": "1",
+      "submissions": [],
+      "checklistDone": 0,
+      "checklistTotal": 0,
+      "resolvedBlockers": 0
+    }
+  ],
+  "events": [
+    {
+      "type": "accept",
+      "count": 1
+    },
+    {
+      "type": "acceptStart",
+      "count": 4
+    },
+    {
+      "type": "addRelation",
+      "count": 6
+    },
+    {
+      "type": "adjust",
+      "count": 3
+    },
+    {
+      "type": "approve",
+      "count": 2
+    },
+    {
+      "type": "approveChecklist",
+      "count": 2
+    },
+    {
+      "type": "block",
+      "count": 1
+    },
+    {
+      "type": "cancel",
+      "count": 2
+    },
+    {
+      "type": "comment",
+      "count": 1
+    },
+    {
+      "type": "confirm",
+      "count": 2
+    },
+    {
+      "type": "created",
+      "count": 7
+    },
+    {
+      "type": "edit",
+      "count": 1
+    },
+    {
+      "type": "issue",
+      "count": 5
+    },
+    {
+      "type": "pass",
+      "count": 4
+    },
+    {
+      "type": "progress",
+      "count": 1
+    },
+    {
+      "type": "refuse",
+      "count": 2
+    },
+    {
+      "type": "rejectChecklist",
+      "count": 1
+    },
+    {
+      "type": "replyBlock",
+      "count": 1
+    },
+    {
+      "type": "requestAdjustment",
+      "count": 2
+    },
+    {
+      "type": "requestChecklist",
+      "count": 3
+    },
+    {
+      "type": "resolveAdjustment",
+      "count": 1
+    },
+    {
+      "type": "resolveBlock",
+      "count": 1
+    },
+    {
+      "type": "returnApproval",
+      "count": 1
+    },
+    {
+      "type": "returnResult",
+      "count": 1
+    },
+    {
+      "type": "start",
+      "count": 1
+    },
+    {
+      "type": "submitApproval",
+      "count": 2
+    },
+    {
+      "type": "submitResult",
+      "count": 6
+    },
+    {
+      "type": "title",
+      "count": 1
+    },
+    {
+      "type": "toggle",
+      "count": 1
+    }
+  ],
+  "relations": [
+    {
+      "kind": "parent",
+      "count": 3
+    },
+    {
+      "kind": "related",
+      "count": 1
+    },
+    {
+      "kind": "dependency",
+      "count": 2
+    }
+  ]
+}

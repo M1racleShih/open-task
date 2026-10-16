@@ -1,0 +1,49 @@
+{
+  "capturedOn": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "sourceRef": "origin/mvp",
+  "sourceCommit": "369d9abfb865690ea3f7920c01045789513825c4",
+  "sourceState": "Clean git archive of the merged commit; no local application changes",
+  "latestTag": "v0.1.2-alpha",
+  "releaseScope": "Includes merged application improvements after v0.1.2-alpha",
+  "browser": "Codex in-app browser (Chromium); standalone Chrome could not access localhost",
+  "viewport": { "width": 1280, "height": 720 },
+  "database": "open_task_docs_20261016_a4c4pt",
+  "environment": "Isolated local PostgreSQL database; API on 127.0.0.1:4324 with a separate worker",
+  "interfaceLanguage": "en",
+  "taskContentLanguage": "en",
+  "data": "Five synthetic CSV-export tasks and five seeded local demo accounts; all task data and relations created through browser forms and actions",
+  "imageProcessing": "Unchanged JPEG captures; no DOM edits, mocked responses or image annotations",
+  "screenshots": [
+    {
+      "file": "workspace-gantt-en.jpg",
+      "locale": "en",
+      "shows": "Task tree, planned periods, selected task and result-acceptance prerequisite arrows; details and bottom panels hidden using their controls"
+    },
+    {
+      "file": "member-filter-en.jpg",
+      "locale": "en",
+      "shows": "By member with Test Other Member selected, all three relationship scopes expanded, one matching task and its ancestor context"
+    },
+    {
+      "file": "checklist-progress-en.jpg",
+      "locale": "en",
+      "shows": "Focused task details scrolled to the checklist; two of four items saved, success feedback, review reminder and change-record control"
+    }
+  ],
+  "checks": [
+    "Created the project, five task agreements, four parent links and two prerequisite links through browser forms",
+    "Issued tasks, accepted work, submitted a synthetic rules result and accepted it as its reviewer",
+    "Requested and approved a four-item execution checklist, observed unsaved checks and saved two items with success feedback",
+    "Posted Markdown current-result and next-step text and observed formatted rendering",
+    "Opened the Gantt chart with prerequisite arrows and selected tasks through the tree",
+    "Selected another member, observed one matching task with ancestor context and verified the selected member after browser refresh",
+    "Used Focus details and Restore layout, and toggled the details panel"
+  ],
+  "limits": [
+    "A focused screenshot rehearsal rather than a full release or permissions audit",
+    "No backup/restore, load or scheduled-worker-recovery checks repeated",
+    "No claim that the example CSV feature was implemented or that later versions are production-ready",
+    "The 2026-10-13 walkthrough images and verification records were not replaced"
+  ]
+}

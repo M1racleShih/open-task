@@ -18,13 +18,50 @@ bash scripts/test-db.sh
 
 Keep this database for testing; do not put real work in it or point integration tests at production data. Test accounts use `OpenTask-Test-2026!`; seeding does not reset existing passwords.
 
-## Release case
+## Prepare an isolated database for the tutorial
+
+With the Compose database running, create this database **once**. An “already exists” message means it is already available; keep it and continue with migration. These commands do not clear the normal workspace.
+
+```sh
+docker compose exec -T db createdb -U open_task open_task_walkthrough
+export DATABASE_URL='postgres://open_task:open-task-local-only@127.0.0.1:55432/open_task_walkthrough'
+npm run db:migrate
+SEED_PASSWORD='OpenTask-Test-2026!' npm run db:seed
+npm run build
+PORT=4322 npm start
+```
+
+In a second terminal:
+
+```sh
+DATABASE_URL='postgres://open_task:open-task-local-only@127.0.0.1:55432/open_task_walkthrough' npm run worker
+```
+
+Open <http://127.0.0.1:4322/> and follow the case. Both processes must use this same database. Task numbers are assigned locally; use titles and URLs rather than expecting the screenshot's OT numbers. On a repeat run, use a new project name or continue your existing example. Replace the tutorial's screenshot dates with future dates. If port 4322 is occupied, use another free port and its matching URL.
+
+## Run the automated case and view its results
+
+To keep examples out of your normal workspace, first make sure PostgreSQL is running and port `4318` is free, then run:
 
 ```sh
 npm run case:check
 ```
 
-The Compose database must be running and port `4318` must be free. This command uses `open_task_release_case`, starts a temporary API and worker, and verifies 13 API assertion groups followed by backup and isolated restore. Each run adds a labeled synthetic project; previous case data remains. Only the final exit code of 0 means the whole command passed. Interface acceptance is a separate check. See [local setup](QUICKSTART.md) for viewing saved cases and the [verification report](RELEASE-CASE-RESULT.md) for recorded evidence.
+This command uses the fixed `open_task_release_case` database and automatically migrates it, initializes data, builds the app and runs the API case. It temporarily starts the API and worker on `4318` and closes these processes when finished, so an existing `4310` workspace is unaffected. On failure, inspect the terminal output or `artifacts/release-case/<run>/failure.json`.
+
+Each run adds a synthetic project with a random identifier and deletes no previous data. When the API case passes it prints `Release case passed: 13 checks`, after which the command verifies the case database backup and isolated restore. Only a final exit code of 0 means the complete check passed. The raw API report is at `artifacts/release-case/<run>/result.json`; the latest successful API report is at `artifacts/release-case/latest.json`. `latest.json` only proves the API case passed, not the restore step that follows; use the terminal restore output. Follow the [case tutorial](CASE-CSV-EXPORT.md) separately for the interface.
+
+To view a saved case, run these commands in two terminals:
+
+```sh
+DATABASE_URL='postgres://open_task:open-task-local-only@127.0.0.1:55432/open_task_release_case' PORT=4319 npm start
+```
+
+```sh
+DATABASE_URL='postgres://open_task:open-task-local-only@127.0.0.1:55432/open_task_release_case' npm run worker
+```
+
+Open <http://127.0.0.1:4319/> and log in with the same test accounts. Replace port `4318` with `4319` in report task links. Task numbers in the normal and case databases are independent.
 
 ## Browser checks
 
@@ -80,9 +117,10 @@ By default it runs for five minutes; `PERF_SECONDS` changes the duration. It exe
 
 ```sh
 npm run docs:build
+npx tsx --test tests/docs.test.ts
 ```
 
-This builds offline HTML in `artifacts/docs/` and validates page pairs, local links and diagram sources. Maintain both language editions together. See the [documentation entry](../README.md) for synchronization rules and the [English documentation home](README.md) for preview and diagram-rendering commands.
+This builds offline HTML in `artifacts/docs/` and validates page pairs, local links and diagram sources. Maintain both language editions together. See [documentation maintenance](MAINTAINING.md) for synchronization rules, preview and diagram rendering.
 
 ## Backup and repository layout
 
@@ -91,3 +129,7 @@ For backup, isolated restore and upgrades, follow [release checks](RELEASE-CHECK
 Application code lives in `server/`, `shared/` and `web/`; tests and operational scripts live in `tests/` and `scripts/`. The `docs/` directory contains usage, development and release documentation, and `ui-previews/` contains the earlier UI demos.
 
 The Compose project is `open-task-mvp`; ports `4173` and `4174` belong to separate UI demos. On hosts with a read-only default npm cache, `.npmrc` selects `/tmp/open-task-npm`.
+
+## Maintain the illustrated walkthrough
+
+The [capture record](SCREENSHOTS.md) separates real browser operations from form-only and code-backed coverage. Keep raw screenshots, crop/callout coordinates and language registration in `docs/assets/`. Regenerate annotations with `npx tsx scripts/annotate-doc-screenshots.ts`, then rebuild and inspect both editions at desktop and phone widths. This command does not replay the app. See [documentation maintenance](MAINTAINING.md) for the full workflow.

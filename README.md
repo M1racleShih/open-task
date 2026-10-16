@@ -12,13 +12,15 @@ OpenTask is an open-source team task workspace that brings **work agreements, pr
 
 We want team leads to spend less time chasing and relaying updates, and contributors to spend less time guessing expectations. Next, we want AI agents to help carry that day-to-day coordination work alongside people.
 
-**[Try it locally](#try-it-locally)** · [Walk through a delivery](docs/en/CASE-CSV-EXPORT.md) · [What's next](#next-agents-that-connect-tasks-and-conversations) · [Documentation](docs/en/README.md)
+**[Try it locally](#try-it-locally)** · [Release notes](docs/en/RELEASE-NOTES.md) · [Advanced collaboration case](docs/en/CASE-CSV-EXPORT.md) · [What's next](#next-agents-that-connect-tasks-and-conversations) · [Documentation](docs/en/README.md)
 
-**0.1.0-alpha candidate** · Runs locally · Single team · English & 简体中文 · Apache-2.0
+**Latest tagged prerelease: 0.1.2-alpha** · Runs locally · Single team · English & 简体中文 · Apache-2.0
 
-![OpenTask English interface with a task tree, task graph and task details](docs/assets/release-alpha/ui-completed-en.jpg)
+![OpenTask English workspace with a task tree, Gantt schedule and result-acceptance prerequisites](docs/assets/updates/2026-10-16/workspace-current-en.jpg)
 
-*Actual app screenshot with English controls, using a synthetic CSV export example. Task titles and descriptions retain their original Chinese input.*
+*English interface captured on 2026-10-16 from the integrated source based on `mvp` at `143e9e7`, using synthetic tasks. Includes improvements after 0.1.2-alpha; see [release notes](docs/en/RELEASE-NOTES.md).*
+
+**Recent improvements:** Gantt planning, calendar date selection and relationship filters, followed by member selection, Markdown editing, clearer checklist saving, remembered panel layouts and task-stage feedback. [See what changed and how to try it](docs/en/RELEASE-NOTES.md).
 
 ## Why OpenTask?
 
@@ -40,7 +42,7 @@ If you lead a small team, coordinate work across several people, or want to turn
 
 **4. Deliver a result that someone can review.** Submit an outcome and evidence links for the reviewer to accept or return. Rework continues in the same task, with earlier submissions and return reasons preserved.
 
-The workspace opens with a Gantt chart for planned periods and delivery deadlines. Use the task tree to understand the breakdown, the retained task graph to explore parent/child, prerequisite and related work, and task details to read agreements and history. Filter by project, status, keyword or time, and share a task URL with teammates.
+The workspace opens with a Gantt chart for planned periods and delivery deadlines. Use the task tree to understand the breakdown, the graph to explore parent/child, prerequisite and related work, and task details to read agreements and history. Filter by member relationship, project, status, keyword or time, and share a task URL with teammates.
 
 **A detail worth trying: finishing the checklist still leaves the result to be reviewed.** If a prerequisite's result hasn't been accepted, the dependent task's result can't be accepted either. Execution and delivery each have an explicit record.
 
@@ -69,7 +71,7 @@ npm run worker
 
 Open **<http://127.0.0.1:4310/>** and sign in as `leader` with initial password **`OpenTask-Test-2026!`**. Keep both the API and worker running; the worker handles background jobs, including overdue reminders. The interface starts in English; use **Language** at the top to switch to Simplified Chinese.
 
-### On your first visit, try this workflow
+### On your first visit, complete one task
 
 1. As `leader`, create a project, assign `manager` as its project manager and add `member` to the project.
 2. Create a task called “Collect trial feedback” in that project, with `member` as owner and `manager` as reviewer. Define the expected result, acceptance criteria and required deadlines, then issue the task.
@@ -78,7 +80,7 @@ Open **<http://127.0.0.1:4310/>** and sign in as `leader` with initial password 
 
 Use the account menu to switch users, and copy the task URL to continue as another role. In a new database, `leader`, `manager`, `member`, `other` and `admin` share the initial password above; repeated seeding does not reset existing passwords. `admin` manages accounts and does not automatically gain task approval authority.
 
-Want to explore scope changes, checklist approval, blocker collaboration and prerequisites? Follow the **[CSV export case](docs/en/CASE-CSV-EXPORT.md)** through a simulated delivery with four connected tasks.
+See [your first task](docs/en/FIRST-TASK.md) for detailed steps. Want to explore scope changes, checklist approval, blocker collaboration and prerequisites? Follow the **[CSV export case](docs/en/CASE-CSV-EXPORT.md)** through a simulated delivery with four connected tasks.
 
 To stop, press Ctrl+C in both terminals and run `docker compose stop db`; your data stays in place. See [local setup](docs/en/QUICKSTART.md) for restarts and troubleshooting. Before updating an existing workspace, back it up using [release checks](docs/en/RELEASE-CHECK.md).
 
@@ -96,7 +98,7 @@ We plan to build an **MCP or CLI interface for OpenTask**, giving agents access 
 
 For example, you could eventually tell an agent in Feishu: “Turn this discussion into tasks and send them to the relevant teammates for confirmation.” The agent would help gather updates, surface blockers and prepare results for review, keeping everyone working from the same task agreement.
 
-**This is the product direction, not functionality included in 0.1.0-alpha. Interface details and timing are still to be determined.** If this is how you'd like your team to work, [tell us about your use case](https://github.com/M1racleShih/open-task/issues).
+**This is the product direction; these integrations are still planned. Interface details and timing are to be determined.** If this is how you'd like your team to work, [tell us about your use case](https://github.com/M1racleShih/open-task/issues).
 
 ## What to expect from this alpha
 
@@ -110,6 +112,7 @@ The most useful feedback is a concrete collaboration experience: where the agree
 
 | What you want to do | Start here |
 | --- | --- |
+| Look up permissions, progress, delivery and dates | [Everyday collaboration Q&A](docs/en/FAQ.md) |
 | Understand roles and the full workflow | [User guide](docs/en/USER-GUIDE.md) |
 | Change code and run checks | [Development guide](docs/en/DEVELOPMENT.md) |
 | Explore the existing HTTP API | [API v1](docs/en/API.md) |

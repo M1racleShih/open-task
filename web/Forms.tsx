@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { Task, User, Project } from "../shared/model.js";
 import { useI18n } from "./i18n.js";
 import { api, ApiError } from "./api.js";
+import { randomUUID } from "./uuid.js";
 export type FormSpec = {
   title: string;
   taskBefore?: Task;
@@ -54,7 +55,7 @@ export function TaskForm({
   const [values, setValues] = useState(spec.values);
   const [error, setError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
-  const [key] = useState(() => crypto.randomUUID());
+  const [key] = useState(() => randomUUID());
   const checklistRequest = spec.title === "requestChecklist";
   const reasonRequired = checklistRequest && values.scopeChanged === true;
   const fieldLabel = (field: string) =>

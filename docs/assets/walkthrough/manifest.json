@@ -1,0 +1,748 @@
+{
+  "capturedOn": "2026-10-13",
+  "timezone": "Asia/Shanghai",
+  "interfaceLanguage": "en",
+  "browser": "Codex in-app browser (Chromium)",
+  "sourceCommit": "b1ef2a2e0593cade0fc85f006d1b36e3963b8f67",
+  "sourceState": "Working tree, including pre-existing application edits",
+  "database": "open_task_docs_20261013",
+  "data": "Synthetic IssueLite delivery rehearsal; actual OpenTask UI operations",
+  "screenshots": [
+    {
+      "file": "01-sign-in",
+      "locale": "en",
+      "crop": [
+        265,
+        310,
+        415,
+        510
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Use a demo account",
+          "height": 38,
+          "width": 344,
+          "x": 300.5,
+          "y": 602.515625
+        },
+        {
+          "number": 2,
+          "label": "Sign in",
+          "height": 40,
+          "width": 344,
+          "x": 300.5,
+          "y": 741.515625
+        }
+      ]
+    },
+    {
+      "file": "02-new-project",
+      "locale": "en",
+      "crop": [
+        425,
+        220,
+        590,
+        560
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Choose who coordinates the project",
+          "height": 40,
+          "width": 516,
+          "x": 462,
+          "y": 439.09375
+        },
+        {
+          "number": 2,
+          "label": "Choose the delivery team",
+          "height": 102,
+          "width": 516,
+          "x": 462,
+          "y": 518.09375
+        }
+      ]
+    },
+    {
+      "file": "03-task-agreement",
+      "locale": "en",
+      "crop": [
+        425,
+        50,
+        590,
+        900
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Name the executor",
+          "height": 40,
+          "width": 501,
+          "x": 462,
+          "y": 372.578125
+        },
+        {
+          "number": 2,
+          "label": "Name who accepts the result",
+          "height": 40,
+          "width": 501,
+          "x": 462,
+          "y": 451.578125
+        },
+        {
+          "number": 3,
+          "label": "Describe an observable outcome",
+          "height": 78,
+          "width": 501,
+          "x": 462,
+          "y": 530.578125
+        }
+      ]
+    },
+    {
+      "file": "04-task-schedule",
+      "locale": "en",
+      "crop": [
+        440,
+        445,
+        560,
+        500
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "When delivery is due",
+          "height": 38,
+          "width": 501,
+          "x": 462,
+          "y": 608.578125
+        },
+        {
+          "number": 2,
+          "label": "When the next update is due",
+          "height": 38,
+          "width": 501,
+          "x": 462,
+          "y": 808.578125
+        },
+        {
+          "number": 3,
+          "label": "Save a private draft",
+          "height": 40,
+          "width": 81.59375,
+          "x": 881.40625,
+          "y": 889.578125
+        }
+      ]
+    },
+    {
+      "file": "06-approval-handoff",
+      "locale": "en",
+      "crop": [
+        1030,
+        93,
+        375,
+        220
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Approval is still in progress",
+          "height": 25,
+          "width": 113.859375,
+          "x": 1288.140625,
+          "y": 106
+        },
+        {
+          "number": 2,
+          "label": "The team leader acts next",
+          "height": 16,
+          "width": 359,
+          "x": 1043,
+          "y": 273.234375
+        }
+      ]
+    },
+    {
+      "file": "07-add-prerequisite",
+      "locale": "en",
+      "crop": [
+        425,
+        245,
+        590,
+        520
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Select the result this task needs",
+          "height": 40,
+          "width": 516,
+          "x": 462,
+          "y": 425.09375
+        },
+        {
+          "number": 2,
+          "label": "Prerequisite controls acceptance",
+          "height": 40,
+          "width": 516,
+          "x": 462,
+          "y": 504.09375
+        }
+      ]
+    },
+    {
+      "file": "08-workspace",
+      "locale": "en",
+      "crop": null,
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Find tasks in the project tree",
+          "height": 929,
+          "width": 288,
+          "x": 45,
+          "y": 46
+        },
+        {
+          "number": 2,
+          "label": "See parent and prerequisite relations",
+          "height": 572,
+          "width": 678,
+          "x": 340,
+          "y": 99
+        },
+        {
+          "number": 3,
+          "label": "Read the selected task",
+          "height": 31.046875,
+          "width": 359,
+          "x": 1043,
+          "y": 178.1875
+        },
+        {
+          "number": 4,
+          "label": "Find who needs to act",
+          "height": 36,
+          "width": 34,
+          "x": 5.5,
+          "y": 179
+        }
+      ]
+    },
+    {
+      "file": "09-checklist-request",
+      "locale": "en",
+      "crop": [
+        425,
+        210,
+        590,
+        585
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "One observable step per line",
+          "height": 158,
+          "width": 516,
+          "x": 462,
+          "y": 357.59375
+        },
+        {
+          "number": 2,
+          "label": "Leave unchecked for a scope-neutral breakdown",
+          "height": 13,
+          "width": 509,
+          "x": 466,
+          "y": 557.59375
+        }
+      ]
+    },
+    {
+      "file": "10-report-blocker",
+      "locale": "en",
+      "crop": [
+        425,
+        245,
+        590,
+        520
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Explain what prevents progress",
+          "height": 78,
+          "width": 516,
+          "x": 462,
+          "y": 387.09375
+        },
+        {
+          "number": 2,
+          "label": "Ask a named person for help",
+          "height": 40,
+          "width": 516,
+          "x": 462,
+          "y": 621.09375
+        }
+      ]
+    },
+    {
+      "file": "11-blocker-reply",
+      "locale": "en",
+      "crop": [
+        1035,
+        411,
+        375,
+        345
+      ],
+      "callouts": []
+    },
+    {
+      "file": "12-adjust-agreement",
+      "locale": "en",
+      "crop": [
+        440,
+        650,
+        560,
+        295
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Set a deadline for the owner to respond",
+          "height": 38,
+          "width": 501,
+          "x": 462,
+          "y": 692.1875
+        },
+        {
+          "number": 2,
+          "label": "Preserve why the agreement changed",
+          "height": 78,
+          "width": 501,
+          "x": 462,
+          "y": 792.1875
+        }
+      ]
+    },
+    {
+      "file": "14-confirmation-required",
+      "locale": "en",
+      "crop": [
+        425,
+        180,
+        590,
+        650
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Confirm the current version before submitting",
+          "height": 67.578125,
+          "width": 516,
+          "x": 462,
+          "y": 644.796875
+        }
+      ]
+    },
+    {
+      "file": "15-formal-progress",
+      "locale": "en",
+      "crop": [
+        425,
+        235,
+        590,
+        530
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Say what exists now",
+          "height": 78,
+          "width": 516,
+          "x": 462,
+          "y": 376.59375
+        },
+        {
+          "number": 2,
+          "label": "Say what happens next",
+          "height": 78,
+          "width": 516,
+          "x": 462,
+          "y": 493.59375
+        },
+        {
+          "number": 3,
+          "label": "Make the next update explicit",
+          "height": 38,
+          "width": 516,
+          "x": 462,
+          "y": 610.59375
+        }
+      ]
+    },
+    {
+      "file": "16-checklist-complete",
+      "locale": "en",
+      "crop": [
+        1025,
+        45,
+        415,
+        920
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Still in progress",
+          "height": 25,
+          "width": 75.9375,
+          "x": 1326.0625,
+          "y": 106
+        },
+        {
+          "number": 2,
+          "label": "Checklist is 3 / 3, 100%",
+          "height": 19,
+          "width": 325,
+          "x": 1060,
+          "y": 706.609375
+        }
+      ]
+    },
+    {
+      "file": "17-submit-result",
+      "locale": "en",
+      "crop": [
+        425,
+        235,
+        590,
+        530
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Describe the delivered result",
+          "height": 78,
+          "width": 516,
+          "x": 462,
+          "y": 376.59375
+        },
+        {
+          "number": 2,
+          "label": "Link to evidence when available",
+          "height": 78,
+          "width": 516,
+          "x": 462,
+          "y": 493.59375
+        },
+        {
+          "number": 3,
+          "label": "Give the reviewer a deadline",
+          "height": 38,
+          "width": 516,
+          "x": 462,
+          "y": 610.59375
+        }
+      ]
+    },
+    {
+      "file": "18-prerequisite-blocked",
+      "locale": "en",
+      "crop": [
+        425,
+        290,
+        590,
+        425
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "The rules task must be accepted first",
+          "height": 67.578125,
+          "width": 516,
+          "x": 462,
+          "y": 536.296875
+        }
+      ]
+    },
+    {
+      "file": "19-return-result",
+      "locale": "en",
+      "crop": [
+        425,
+        295,
+        590,
+        415
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Make the missing evidence specific",
+          "height": 78,
+          "width": 516,
+          "x": 462,
+          "y": 435.09375
+        },
+        {
+          "number": 2,
+          "label": "Set the next feedback time",
+          "height": 38,
+          "width": 516,
+          "x": 462,
+          "y": 552.09375
+        }
+      ]
+    },
+    {
+      "file": "21-accepted-history",
+      "locale": "en",
+      "crop": [
+        1035,
+        532,
+        375,
+        387
+      ],
+      "callouts": []
+    },
+    {
+      "file": "22-completed-project",
+      "locale": "en",
+      "crop": null,
+      "callouts": [
+        {
+          "number": 1,
+          "label": "The parent completes after its own review",
+          "height": 25,
+          "width": 75.84375,
+          "x": 1326.15625,
+          "y": 106
+        },
+        {
+          "number": 2,
+          "label": "All four delivery tasks are completed",
+          "height": 929,
+          "width": 288,
+          "x": 45,
+          "y": 46
+        }
+      ]
+    },
+    {
+      "file": "23-unable-to-accept",
+      "locale": "en",
+      "crop": [
+        1030,
+        93,
+        375,
+        300
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "The task still awaits acceptance",
+          "height": 25,
+          "width": 128.484375,
+          "x": 1273.515625,
+          "y": 106
+        },
+        {
+          "number": 2,
+          "label": "The issuer must respond",
+          "height": 16,
+          "width": 359,
+          "x": 1043,
+          "y": 344.421875
+        }
+      ],
+      "note": "Replayed refusal as OT-7 to show the issuer account; replay task cancelled afterward."
+    },
+    {
+      "file": "25-superseded-result",
+      "locale": "en",
+      "crop": [
+        1035,
+        138,
+        375,
+        595
+      ],
+      "callouts": []
+    },
+    {
+      "file": "26-cancel-task",
+      "locale": "en",
+      "crop": [
+        425,
+        335,
+        590,
+        335
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Record why the work is stopping",
+          "height": 78,
+          "width": 516,
+          "x": 462,
+          "y": 485.09375
+        }
+      ]
+    },
+    {
+      "file": "28-time-filter",
+      "locale": "en",
+      "crop": [
+        45,
+        136,
+        285,
+        540
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Select a project",
+          "height": 40,
+          "width": 255,
+          "x": 54,
+          "y": 190
+        },
+        {
+          "number": 2,
+          "label": "Filter by status",
+          "height": 40,
+          "width": 255,
+          "x": 54,
+          "y": 238
+        },
+        {
+          "number": 3,
+          "label": "Save your own project time range",
+          "height": 386,
+          "width": 255,
+          "x": 54,
+          "y": 286
+        }
+      ]
+    },
+    {
+      "file": "29-search-context",
+      "locale": "en",
+      "crop": null,
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Search by title or the numeric part of a task number",
+          "height": 38,
+          "width": 270,
+          "x": 54,
+          "y": 144
+        },
+        {
+          "number": 2,
+          "label": "The parent remains as context",
+          "height": 929,
+          "width": 288,
+          "x": 45,
+          "y": 46
+        }
+      ]
+    },
+    {
+      "file": "31-team-updates",
+      "locale": "en",
+      "crop": null,
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Filter the operation history by author",
+          "height": 40,
+          "width": 639,
+          "x": 352,
+          "y": 111
+        }
+      ]
+    },
+    {
+      "file": "32-task-activity",
+      "locale": "en",
+      "crop": null,
+      "callouts": []
+    },
+    {
+      "file": "33-project-settings",
+      "locale": "en",
+      "crop": [
+        425,
+        265,
+        590,
+        480
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "The leader can change the project manager",
+          "height": 40,
+          "width": 516,
+          "x": 462,
+          "y": 400.59375
+        },
+        {
+          "number": 2,
+          "label": "The project manager maintains membership",
+          "height": 102,
+          "width": 516,
+          "x": 462,
+          "y": 479.59375
+        },
+        {
+          "number": 3,
+          "label": "Use a recognizable project color",
+          "height": 27,
+          "width": 516,
+          "x": 462,
+          "y": 620.59375
+        }
+      ]
+    },
+    {
+      "file": "35-new-account",
+      "locale": "en",
+      "crop": [
+        425,
+        220,
+        590,
+        565
+      ],
+      "callouts": [
+        {
+          "number": 1,
+          "label": "Choose a unique login name",
+          "height": 38,
+          "width": 516,
+          "x": 462,
+          "y": 357.59375
+        },
+        {
+          "number": 2,
+          "label": "Account roles are separate from task roles",
+          "height": 102,
+          "width": 516,
+          "x": 462,
+          "y": 588.59375
+        }
+      ]
+    },
+    {
+      "file": "36-dark-theme",
+      "locale": "en",
+      "crop": null,
+      "callouts": []
+    },
+    {
+      "file": "37-mobile-detail",
+      "locale": "en",
+      "crop": null,
+      "callouts": []
+    }
+  ]
+}

@@ -8,7 +8,7 @@ This report preserves the historical results of run `629cde03` and its accompany
 
 ## Conclusion
 
-The recorded candidate passed local single-team MVP functionality, persistence and dependency checks and can serve as a candidate for local demos and source delivery. The four-task synthetic development project completed approval, execution, collaboration, change confirmation, prerequisites and result review. The three-role UI walkthrough also completed return, resubmission and final acceptance.
+The recorded candidate passed local single-team MVP functionality, persistence and dependency checks and can serve as a candidate for local demos and source delivery. The four-task synthetic development project completed approval, execution, blocker collaboration, change confirmation and result review, and checked prerequisite restrictions. The three-role UI walkthrough also completed return, resubmission and final acceptance.
 
 This conclusion applies only to the recorded local environment and synthetic data. Public deployment, production use, real development efficiency and sustained capacity are outside its scope. The case verifies task collaboration, not the implementation of a real CSV feature.
 
@@ -22,7 +22,7 @@ This conclusion applies only to the recorded local environment and synthetic dat
 | Unit and database regression | `scripts/test-db.sh`: 48 passed, 0 failed, 0 skipped                                                                                                                                                                  |
 | HTTP case                    | `npm run case:check`: 13 assertion groups passed, run `629cde03`; all four tasks were done                                                                                                                            |
 | Case backup and restore      | The same case command restored into a new database and nine tables matched in row count and content hashes; temporary backup and restore database were removed                                                        |
-| Browser                      | A three-role UI loop completed on a newly started instance after the dependency upgrades                                                      |
+| Browser                      | A task creation and result review using three roles completed on a newly started instance after the dependency upgrades                                                      |
 | Dependency audit             | After the dependency upgrades, `npm audit --omit=dev`: 0 known vulnerabilities                                                                                                                                                            |
 | New script formatting        | Two TypeScript scripts passed Prettier; two Bash scripts passed `bash -n`                                                                                                                                             |
 | Documentation rendering      | The recorded `docs:build` generated eight pages and checked 24 local references; three tutorial screenshots loaded, desktop and 390px layouts had no page-wide horizontal overflow, and browser error logs were empty |
@@ -87,7 +87,7 @@ The initial production audit reported one high and three moderate findings; this
 | fast-uri        | 3.1.7 / 4.1.4    | 3.1.8 / 4.1.5 | Separate patches for both branches; URI normalization and mailto parsing advisories |
 | ip-address      | 10.7.0           | 10.7.1        | Transitive patch; address-family detection and excessively long input advisories    |
 
-Transitive dependencies use `package.json` overrides, with the two fast-uri version families pinned separately. The lockfile was updated and checked with `npm ci`. Continue auditing future updates; pinned versions are not a permanent security guarantee. After the upgrades, all 48 tests, the complete API case, backup/restore and the three-role browser loop were rerun and passed.
+Transitive dependencies use `package.json` overrides, with the two fast-uri version families pinned separately. The lockfile was updated and checked with `npm ci`. Continue auditing future updates; pinned versions are not a permanent security guarantee. After the upgrades, all 48 tests, the complete API case, backup/restore and the browser workflow using three roles were rerun and passed.
 
 ## Verification scope and release boundaries
 

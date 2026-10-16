@@ -1,211 +1,255 @@
-# Case: delivering a CSV export feature
+# Advanced case: coordinate a CSV export project
 
 [简体中文](../zh-CN/CASE-CSV-EXPORT.md)
 
-This case simulates a development iteration for IssueLite, a small issue tracker: users want to export the currently filtered issue list as CSV. Four tasks organize the delivery and check whether OpenTask supports the full process from creation approval and task acceptance to result review.
+A customer support team uses IssueLite to track issues. They need to export the current filtered list for their weekly review. The developer can write the export, but someone must settle the rules, review the result and check the release notes. This is the delivery we will coordinate in OpenTask.
 
-When following along, mark all results as "synthetic" and use no real business records. This case verifies only the OpenTask task workflow; it does not develop a real CSV feature. Written implementation and test-case descriptions are not software test evidence.
+Complete [your first task](FIRST-TASK.md) first. This case then practices four-person collaboration, approval, blockers, changes and returned results. Allow about 45–60 minutes for the full walkthrough; stop after any numbered step and continue from the task URL.
 
-## Goal, scope and acceptance criteria
+This is a task-collaboration exercise with synthetic people and IssueLite deliverables. Screenshots show the English interface captured on 2026-10-13; numbered markers identify the controls discussed below. [Screenshots and check records](SCREENSHOTS.md) preserve the scope and results of that run.
 
-The synthetic requirement exports three columns—number, title and status—while preserving the current filter. Chinese text must display correctly; commas, double quotes and line breaks must be escaped; an empty result must retain headers. CSV import, attachments, permission changes and complex reports are out of scope.
+## 1. Create the example project
 
-After following the case, check that OpenTask meets these requirements:
+Complete [local setup](QUICKSTART.md), using an [isolated walkthrough database](DEVELOPMENT.md#prepare-an-isolated-database-for-the-tutorial) if you already have a workspace. Sign in as `leader`; the demo password is `OpenTask-Test-2026!`. Use **Account → Switch user** whenever a step names another account. Copy each task URL before switching: it contains the task UUID, so another team account can open the same task.
 
-- Each role can perform its assigned operations and cannot exceed its permissions.
-- Formal progress, execution checklists, agreement versions and result submissions are saved separately.
-- Returned results retain their original submission and return reason, and can be resubmitted.
-- A dependent task cannot pass review until its prerequisite has completed review.
-- All four tasks end as Completed, and records remain after a page refresh or service restart.
+| Account | Responsibility in this delivery |
+| --- | --- |
+| `leader` / Test Leader | Approve the commitment and accept the overall delivery |
+| `manager` / Test Project Manager | Settle export rules and review implementation and verification |
+| `member` / Test Member | Produce implementation and self-test notes |
+| `other` / Test Other Member | Prepare verification and delivery notes |
 
-## Task breakdown
+Click **New project** and name it `IssueLite · CSV export`. Select **① Test Project Manager** and **② Test Member + Test Other Member** (use Ctrl/Cmd to select multiple members). Submit the form.
 
-Use A, B, C and D to identify the four tasks throughout the case.
+![Create the project: 1 selects its manager; 2 selects its members](../assets/walkthrough/en/02-new-project.svg)
 
-| Label | Title                             | Owner   | Reviewer | Result                                             |
-| ----- | --------------------------------- | ------- | -------- | -------------------------------------------------- |
-| A     | Deliver CSV export v0.1           | manager | leader   | Delivery summary referencing the three child tasks |
-| B     | Confirm export rules              | manager | leader   | Fields, encoding, escaping and empty-result rules  |
-| C     | Implement CSV export              | member  | manager  | Implementation and self-test descriptions          |
-| D     | Verify and prepare delivery notes | other   | manager  | Six test-case descriptions and delivery conclusion |
+**Check:** the project appears in the task tree. Project membership organizes the team; submitted tasks remain visible to the whole team.
 
-A is the delivery goal; B, C and D are its child tasks. They also have prerequisites: B's rules are required for acceptance of C, and C's implementation is required for acceptance of D.
+## 2. Write requirements and submit for approval
 
-![CSV export relations: A is the parent of B, C and D; B must complete before C passes review, and C must complete before D passes review](../assets/diagrams/en/csv-task-relations.svg)
+Switch to `member`. Choose **New task** and enter the following for task **C**:
 
-Dashed lines show parent/child structure. Thick solid lines show acceptance order from prerequisite results to dependent tasks. C and D may start early, but their prerequisites must be complete when results are accepted. These arrows explain the relations; they do not show the API's sourceId / targetId storage direction.
+| Field | Copy or select |
+| --- | --- |
+| Title | `Implement CSV export` |
+| Project | `IssueLite · CSV export` |
+| Owner | Test Member |
+| Reviewer | Test Project Manager (the default for this owner/project) |
+| Expected result | Synthetic walkthrough: export the filtered issue list as CSV, with implementation and self-test notes. |
+| Scope | Number, title and status. No import, attachments or permission changes. |
+| Acceptance criteria | Preserve filters; readable international text; escape commas, quotes and line breaks; keep headers for empty results. |
 
-The task tree and setup are:
+![Task agreement: 1 owner, 2 reviewer, 3 expected result](../assets/walkthrough/en/03-task-agreement.svg)
 
-```text
-A Deliver CSV export v0.1
-├── B Confirm export rules
-├── C Implement CSV export
-└── D Verify and prepare delivery notes
+**① Owner** accepts and performs the work. **② Reviewer** decides whether the result meets **③ the expected outcome** and acceptance criteria. The creator can be a different person from both.
 
-Prerequisite result order: B → C → D
-Setup: select B as a prerequisite in C; select C as a prerequisite in D.
-```
+Scroll down to the dates. Use dates in the future relative to your run, in **Shanghai time**, formatted as `YYYY-MM-DD HH:mm`. The screenshots use this schedule:
 
-A is only the parent, not a prerequisite of B, C or D. Parent/child structure explains decomposition, rather than completion order.
+| Field | Screenshot value | Meaning |
+| --- | --- | --- |
+| Planned start | 2026-10-14 09:00 | Optional plan start |
+| Accept by | 2026-10-14 10:00 | When the owner should respond |
+| Next feedback | 2026-10-14 16:00 | When the next formal update is due |
+| Delivery deadline | 2026-10-16 18:00 | When the result should be ready |
 
-## 1. Prepare the environment and roles
+![Schedule: 1 delivery deadline, 2 next feedback, 3 save draft](../assets/walkthrough/en/04-task-schedule.svg)
 
-Follow "Using an isolated case environment" in [local setup](QUICKSTART.md). If you have run `npm run case:check`, the database already contains completed API example tasks. For a manual walkthrough, create a new project marked `[Synthetic walkthrough]`, preserving existing examples and verification records.
+Click **③ Submit**. **Check:** the task is **Draft**, visible only to its creator. This button saves the form; it does not issue the task. Open C and choose **Submit for approval → Submit** to make it team-visible and begin approval.
 
-leader, manager, member and other are test usernames; account details are in local setup. The initial interface is English and can switch to Simplified Chinese. The instructions and embedded screenshots below use English controls. Task text in the recorded screenshots remains as originally entered in Chinese. Chinese-interface verification screenshots are provided as labeled links.
+## 3. Complete two levels of creation approval
 
-To switch roles, use Account → Switch user at the top, then log in as the required account. Copy the task URL and reopen it after switching accounts to continue working on the same task.
+As `manager`, open C. To practice a correction, choose **Return for editing**, with reason `Please make the empty-result behavior explicit before approval.`
 
-## 2. leader creates a project
+As `member`, open C, choose **Edit draft**, and make the final criterion explicit: `An empty result contains the three column headers and no data rows.` Save, then **Submit for approval** again.
 
-Log in as leader, click New project and enter:
+As `manager`, choose **Approve creation → Submit**. The task still says **① Creation approval**, and **② Waiting for** now names **Test Leader**.
 
-- Name: `[Synthetic walkthrough] IssueLite CSV export`.
-- Project manager: Test Project Manager.
-- Project members: Test Member and Test Other Member.
+![After the project manager approves, creation approval still waits for the team leader](../assets/walkthrough/en/06-approval-handoff.svg)
 
-After submission, the project should appear on the left.
+As `leader`, open C and **Approve creation**. **Check:** C becomes **Awaiting acceptance**, waiting for Test Member. The task has been approved; its owner must still accept it.
 
-## 3. member creates C and submits it for approval
+A project manager creating a task in their own project goes directly to the leader. A leader can issue their own draft directly. `admin` has account-management powers, not automatic business approval powers.
 
-Log in as member, click New task, select the new project and choose Test Member as owner. The reviewer should default to Test Project Manager. Enter:
+## 4. Create parent and child tasks and set prerequisites
 
-| Field               | Content to copy                                                                                                  |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Title               | `[Synthetic walkthrough] Implement CSV export`                                                                   |
-| Expected result     | Synthetic: export the currently filtered issue list as CSV; submit implementation and self-test descriptions.    |
-| Scope               | Number, title and status only; no import, attachments or permission changes.                                     |
-| Acceptance criteria | Readable Chinese; correct escaping of commas, double quotes and line breaks; headers retained for empty results. |
+As `leader`, create and **Issue task** for A, B and D. Use the same future schedule and these assignments; saving each form still creates a draft first.
 
-Use the schedule below. D0 is the demo day and D1 is the next day. Replace these with actual future dates in Shanghai time, using `YYYY-MM-DD HH:mm`.
+| Label | Title | Owner → reviewer | Expected result and acceptance criteria |
+| --- | --- | --- | --- |
+| A | Deliver CSV export v0.1 | manager → leader | A delivery summary referencing the accepted rules, implementation and verification |
+| B | Confirm export rules | manager → leader | Three columns, current filters, encoding, escaping and empty-result behavior are explicit |
+| C | Implement CSV export | member → manager | Already created in steps 2–3 |
+| D | Verify and prepare delivery notes | other → manager | Notes cover filters, international text, commas, quotes, line breaks and empty results |
 
-| Time field        | Suggested value    |
-| ----------------- | ------------------ |
-| Planned start     | D0, or leave empty |
-| Accept by         | D1 09:00           |
-| Next feedback     | D1 12:00           |
-| Delivery deadline | D1 18:00           |
+In each child's **Task content → Connections & delivery → Relations → Add relation**, select A as **Primary parent** and explain its contribution. Then, in C, add B as **Prerequisite**; in D, add C as **Prerequisite**.
 
-Submit in the new-task form saves only a draft. Open the task, confirm Draft status, then choose Submit for approval → Submit. The task becomes team-visible only after submission for approval.
+![Add a prerequisite: 1 choose the needed task; 2 select Prerequisite](../assets/walkthrough/en/07-add-prerequisite.svg)
 
-`npm run case:check` uses times relative to when it runs instead of the fixed tutorial dates, which would otherwise make tasks overdue.
+**① Target task** selects the prerequisite task that provides the result you need. **② Prerequisite** means that result must be accepted before this task can pass review. It does not prevent work from starting.
 
-## 4. manager and leader approve in sequence
+![A contains B, C and D; acceptance follows B then C then D](../assets/diagrams/en/csv-task-relations.svg)
 
-First log in as manager, open C, inspect its expected result, acceptance criteria and dates, then choose Approve creation → Submit.
+The tutorial diagram shows **acceptance order**. In the application's graph, a prerequisite arrow points from the dependent task to the prerequisite it needs. Parent/child structure answers “what contributes to this goal?”; dependencies answer “which result must be accepted first?”.
 
-At this point, **the task should still be in Creation approval, with Test Leader as the current handler**. The team leader must give final approval after the project manager.
+![Workspace overview with the tree, graph, selected task and action inbox marked](../assets/walkthrough/en/08-workspace.svg)
 
-Log in as leader, open the same task and choose Approve creation. It should become Awaiting acceptance, with Test Member as the current handler.
+Read the workspace from **① the task tree**, through **② the relation graph**, to **③ the selected task**. **④ Action inbox** tells each person what needs a response. Selecting a graph node and selecting its tree row open the same record. Dragging a graph node changes its layout only.
 
-One point to check in this step: admin manages accounts and should not be a business approver at any level.
+## 5. Accept the task and request a checklist
 
-## 5. leader creates A/B/D and adds relations
+As `member`, open C and choose **Accept task → Submit**. It becomes **Accepted**. Then **Start work → Submit** makes it **In progress**. **Accept and start** is the shortcut when both decisions happen together.
 
-As leader, create A, B and D from the task table. Fill in their expected results, acceptance criteria and complete schedules, explicitly selecting the listed owners and reviewers. After saving drafts, choose Issue task. These tasks created by leader can be issued directly, without the two-level approval used for member-created tasks.
-
-Under Connections & delivery → Relations → Add relation, configure the following and give a reason for each:
-
-- In B, C and D, select A as Primary parent.
-- In C, select B as Prerequisite.
-- In D, select C as Prerequisite.
-
-Switch to manager, accept and start A, and leave its final summary and review until the end. The tree and graph should show all four tasks with parent/child and prerequisite relations. Dragging graph tasks changes only layout, not relations.
-
-## 6. member accepts C and requests a checklist
-
-As member, open C and choose Accept and start. The task should become In progress, showing that its owner accepted the agreement and began work.
-
-Choose Request checklist edit, entering one item per line:
+Choose **Request checklist edit** (called **Request checklist change** in the dated capture). Enter one item per line:
 
 ```text
-Export the currently filtered results
-Chinese encoding and special-character escaping
-Empty-result headers and self-test record
+Export currently filtered results
+Document encoding and CSV escaping
+Cover empty results and six verification cases
 ```
 
-For the reason, enter "Break down agreed work without changing acceptance scope". Leave the scope or acceptance-criteria change option unchecked.
+Reason: `Break the agreed result into visible execution steps.` Leave **Changes scope or acceptance criteria** unchecked.
 
-After requesting the change, the current checklist should still be empty. Switch to leader, open C from Followups and choose Approve checklist. Refresh after approval; the three items should appear with 0/3 complete.
+![Checklist request: 1 the proposed steps; 2 whether the agreement changes](../assets/walkthrough/en/09-checklist-request.svg)
 
-## 7. Clarify encoding rules and confirm the new version
+**① These are proposed steps**, not an immediately active checklist. **② The unchecked box** says this is a breakdown of already agreed work. As `leader`, open C and **Approve checklist**. Back as `member`, refresh: the checklist now has three unchecked items.
 
-As leader, open C and choose Adjust agreement. Add "Chinese files include a UTF-8 BOM" to acceptance criteria, explain "Clarify the encoding required for Chinese files opened in Excel", and enter a future adjustment confirmation deadline.
+## 6. Report a blocker and request help
 
-Switch to member and open the same task. The agreement version should have increased and Confirm this version should be available. Read the differences and confirm the new version.
+As `member`, choose **Report blocker**:
 
-Check two restrictions: an operation using an old version conflicts; even after reading the latest version, results cannot be submitted before confirming it. This adjustment changes acceptance criteria, not checklist content. Agreement and checklist versions record their own changes separately.
+- Reason: `The empty-result header behavior needs confirmation.`
+- Help needed: `Confirm whether an empty export keeps all three column headers.`
+- Helper: **Test Project Manager**.
 
-### Optional: practice blocker collaboration
+![Report a blocker: 1 describe the obstacle; 2 name the helper](../assets/walkthrough/en/10-report-blocker.svg)
 
-To try blocker handling, complete this exchange:
+**① State the decision you need**, and **② assign a helper** so it becomes actionable. As `manager`, open C, select **Connections & delivery → Blockers → Reply to blocker**, and reply `Keep number, title and status as headers, with no data rows.`
 
-1. member chooses Report blocker: reason "Need confirmation of empty-result headers", help "Confirm the exact output", helper manager.
-2. manager chooses Reply to blocker under Blockers and responds "Keep the three-column header with no data rows".
-3. member chooses Resolve blocker.
+![The blocker retains its requested help and the manager's reply](../assets/walkthrough/en/11-blocker-reply.svg)
 
-Resolving a blocker does not automatically change task deadlines.
+As `member`, use **Resolve blocker**, explaining `The header behavior is now clear; continuing the implementation notes.` **Check:** the blocker and reply remain in history. Reporting or resolving it does not move the delivery deadline or replace formal progress.
 
-## 8. Save formal progress and checklist completion
+## 7. Change requirements and confirm the new version
 
-As member, choose Record progress and enter:
+As `member`, choose **Request agreement change**: `Specify UTF-8 BOM so exported international text opens correctly in Excel.`
+
+As `leader`, open **Adjust agreement**, add `Include UTF-8 BOM for Excel` to the acceptance criteria, set a future **① Confirm adjustment by** date and **② explain the change**. Submit.
+
+![Agreement adjustment requires a confirmation deadline and a reason](../assets/walkthrough/en/12-adjust-agreement.svg)
+
+As `member`, open C. Under **Confirm this version → Agreement changes**, read the before/after agreements. The version number has increased; the previously accepted task agreement remains visible until you confirm.
+
+Try **Submit result** before confirming: enter a short result and a future **Review by** date. The server keeps the form open with this message:
+
+![Results cannot be submitted before confirming the current agreement](../assets/walkthrough/en/14-confirmation-required.svg)
+
+Close that form with **Discard form**, then **Confirm this version → Submit**. **Check:** the confirmation followup disappears. Changing an agreement records a new version; merely changing a checklist checkmark does not.
+
+## 8. Report progress and save the checklist
+
+As `member`, choose **Record progress**:
+
+| Field | Example |
+| --- | --- |
+| Current result / message | Synthetic progress: filtered export and encoding notes are ready. |
+| Next step | Add escaping and empty-result verification notes, then request review. |
+| Next feedback | A future time, such as 2026-10-15 14:00 in this run |
+
+![Formal progress records 1 current result, 2 next step and 3 the next feedback time](../assets/walkthrough/en/15-formal-progress.svg)
+
+These three fields let another person understand what exists, what comes next and when to expect news. **Add comment** is available for discussion, but a comment does not satisfy or postpone formal feedback.
+
+Check all three checklist items and click **Save checked progress** (called **Confirm submission** in the dated capture). Unsubmitted checks are local edits. Refresh to see the saved state:
+
+![The saved checklist is at 100 percent while the task is still In progress](../assets/walkthrough/en/16-checklist-complete.svg)
+
+**① In progress + ② 3/3, 100% is correct.** The checklist describes execution; the reviewer still needs to examine the delivered result.
+
+## 9. Submit a result and review deadline
+
+As `member`, choose **Submit result**. Enter:
 
 ```text
-Current result: Synthetic progress: filtered-export notes prepared; adding special-character cases.
-Next step: Complete descriptions for six verification categories, then submit for review.
-Next feedback: D1 14:00 (replace with an actual date)
+Synthetic result v1: filtered export and UTF-8 BOM are documented.
+Special-character evidence is still missing.
 ```
 
-Check all three checklist items and choose Save checked progress to save. Completion should show 3/3 and 100%, but **the task should remain In progress**. The checklist records execution progress; the reviewer still decides completion.
+Set a future **Review by** time. Evidence links are optional. Add HTTP(S) links when you have supporting material, or leave them empty for this exercise.
 
-![Recorded English interface: the checklist is complete, but the task is still in progress](../assets/release-case/checklist.jpg)
+![Result submission: 1 delivered result, 2 optional evidence links, 3 review deadline](../assets/walkthrough/en/17-submit-result.svg)
 
-A Chinese-interface screenshot captured on 2026-10-10 after reopening synthetic task OT-6437 in the isolated test database: [all three checklist items are saved as complete while the task is still in progress](../assets/release-case/checklist-zh-CN.png). It illustrates this step's state and is not part of the historical verification run.
+**① Describe what was delivered. ② Link to real evidence when available. ③ Say when a review is needed.** OpenTask stores text and HTTP(S) links; it does not upload files or verify their contents. **Check:** the task becomes **Awaiting review**, waiting for Test Project Manager.
 
-## 9. Submit the first result, check prerequisites and return it
+## 10. Check the prerequisite and return an incomplete result
 
-As member, choose Submit result. Enter "Synthetic result v1: filtered export and Chinese encoding described; special-character evidence is still missing", with Review by set to D1 19:00. Evidence links can remain empty; do not invent PR or test-report links.
+Keep B unfinished. As `manager`, try **Accept result → Submit** on C.
 
-Keep B unfinished for now. Switch to manager and attempt Accept result on C. The system should report an unfinished prerequisite; C should remain Awaiting review. This checks the constraint: C can execute early, but cannot pass review before B is accepted as complete.
+![Result acceptance is blocked until the prerequisite has been accepted](../assets/walkthrough/en/18-prerequisite-blocked.svg)
 
-As manager, choose Return result with reason "Missing verification descriptions for commas, double quotes, line breaks and empty results; please add them", and Next feedback set to D1 16:00.
+**Check:** acceptance is rejected and C stays **Awaiting review**. Close the form. Choose **Return result**, give the reason `Add verification notes for commas, double quotes, line breaks and empty results.`, and set a future **Next feedback** time.
 
-C should return to In progress. Submissions should retain the first result and return reason.
+![Return a result with 1 a specific gap and 2 a next feedback time](../assets/walkthrough/en/19-return-result.svg)
 
-![Recorded English interface: the first submission and return reason remain after a return](../assets/release-case/returned.jpg)
+After submission, C is **In progress** again. The return gives the owner a concrete next action. It keeps the first result and review decision in the same task.
 
-A Chinese-interface reproduction of the same step: [the first submission and return reason remain](../assets/release-case/returned-zh-CN.jpg).
+## 11. Complete the prerequisite and resubmit the result
 
-## 10. Complete the prerequisite, resubmit and accept
+As `manager`, open B and **Accept and start**. **Submit result** with the agreed columns, filters, UTF-8 BOM, escaping and empty-result rules. As `leader`, **Accept result** on B.
 
-As manager, accept and start B, then submit "Synthetic rules: three columns, UTF-8 BOM, CSV escaping and empty-result headers". Switch to leader and accept B's result.
-
-As member, choose Submit result again in C and enter:
+As `member`, submit C again:
 
 ```text
-Synthetic result v2: descriptions now cover filtering, Chinese text, commas, double quotes, line breaks and empty results.
-This case verifies only OpenTask; no real CSV software has been developed.
+Synthetic result v2: notes now cover filters, international text,
+commas, double quotes, line breaks and empty results.
+This is an OpenTask workflow rehearsal, not a shipped IssueLite feature.
 ```
 
-Enter a future review deadline, then have manager accept the result. C should show Completed, with no execution followups. Submissions should retain one returned record and one accepted record.
+Set a future review deadline. As `manager`, **Accept result**. Under **Connections & delivery → Submissions**, both decisions remain:
 
-Both submissions can use the same agreement version, but each remains a separate record.
+![Submission history retains the returned first result and accepted second result](../assets/walkthrough/en/21-accepted-history.svg)
 
-Original verification screenshot (Chinese interface): [completed status and result records](../assets/release-case/completed.jpg).
+**Check:** C is **Completed**. One submission is **Returned**, the next is **Accepted**. Both can use the same agreement version while remaining separate submissions.
 
-## 11. Test delivery and complete the parent
+## 12. Summarize child results and review the parent
 
-As other, accept and start D and submit "Synthetic delivery notes: rules and implementation accepted; six case categories summarized; verifies only OpenTask". Have manager accept its result.
+As `other`, **Accept and start** D, then submit the six-category verification and delivery notes, clearly marked synthetic. As `manager`, accept D's result.
 
-After B, C and D complete, A should remain unfinished. As manager, submit the delivery summary in A; only after leader accepts it does A complete.
+Now B, C and D are complete. **A has not completed itself.** As `manager`, accept/start A and submit a summary referencing the three accepted child results. As `leader`, accept A.
 
-Select this project, all statuses and all time. You should see four completed tasks. Activity should retain actors, versions and results. Refresh, log out and log in again; states, relations and results should remain.
+![All four tasks are completed after the parent has its own result accepted](../assets/walkthrough/en/22-completed-project.svg)
 
-Completed tasks cannot reopen. Create a new task related to the original if a defect is found later.
+**① The parent has its own review. ② All four tasks now read Completed.** Reopen C by its URL and refresh: its versions, submissions and relations remain. A completed task cannot reopen; later fixes get a new related task.
 
-## Automated checks and evidence
+## 13. Adjust and cancel a follow-up task
 
-`npm run case:check` automatically runs this business flow through the HTTP API, checking permission errors, idempotent retries, version conflicts, prerequisite rejection, submission history, and behavior after API and worker restarts. It does not control a browser and cannot replace a manual interface walkthrough.
+The team now asks about CSV import. Stay in the same project and create **E: Explore CSV import follow-up**, owner `member`, reviewer `manager`. Its expected result is a **feasibility proposal**, not an implementation. Issue it and add a **Related task** link to C. This records context without creating an acceptance dependency.
 
-See the [verification report](RELEASE-CASE-RESULT.md) for the separate coverage of the four-task automated case and three-role interface walkthrough. Use [release checks](RELEASE-CHECK.md) to decide release readiness.
+Walk through the following planning conversation:
+
+1. As `member`, choose **Unable to accept** and explain the capacity conflict. E remains Awaiting acceptance; the issuer must respond.
+2. As `leader`, **Adjust agreement**, transfer ownership to Test Other Member, and explain why. As `other`, **Accept and start**. A new owner accepts anew.
+3. As `other`, request a checklist containing `Build a complete CSV import engine`. As `leader`, **Reject checklist** because only a proposal was agreed. The rejected proposal stays recorded, while the current checklist is unchanged.
+4. As `other`, request `Compare import options` and `Document permission and validation risks`. Mark **Changes scope or acceptance criteria** to add the risk review. As `leader`, approve with a confirmation deadline; as `other`, confirm the new version.
+5. As `other`, request agreement change to include implementation this week. As `leader`, use **Close adjustment request with response** to explain that implementation needs a separate decision. Closing a request alone does not change the agreement.
+6. As `other`, submit a proposal for review. As `leader`, adjust acceptance criteria to require an effort estimate. E returns to **In progress** and the pending submission becomes **Superseded**. A revised result would require confirmation and resubmission.
+7. As `leader`, use **Title** to rename E `Assess CSV import for a later release`, then **Cancel task**, explaining that the team has deferred import. E becomes **Cancelled** and keeps its decisions and relation to C.
+
+![An owner who cannot accept leaves the task awaiting the issuer's response](../assets/walkthrough/en/23-unable-to-accept.svg)
+
+In the issuer’s view, **① Awaiting acceptance** means the owner has not accepted the task, and **② Waiting for** names the leader. Open the issuer’s Action inbox to handle the refusal.
+
+![Cancelling a task records why this work is stopping](../assets/walkthrough/en/26-cancel-task.svg)
+
+This branch shows how OpenTask records a change of plan. Cancellation ends the task; it does not erase the conversation or count as completing a prerequisite.
+
+## 14. Practice search, filters and activity views
+
+Continue with the same project in [the user guide](USER-GUIDE.md): search for C by title/number, filter completed work by time, inspect activity, change project color, use the mobile layout and inspect account management. A private, undated **Temporary tasks** draft called `Collect feedback for the next iteration` demonstrates work that is not ready for a project yet.
+
+See [features and controls](FEATURES.md) for explanations of other features.
+
+## Read the records retained in the task
+
+Open C's activity and submissions to see when its owner accepted the task, how requirements changed, what help was requested, why the first result was returned and who accepted the second.
+
+This case does not build or ship a real CSV feature. To check an OpenTask candidate, follow [release checks](RELEASE-CHECK.md). Earlier results remain in the [historical case report](RELEASE-CASE-RESULT.md).

@@ -17,7 +17,7 @@
     "start": "tsx server/main.ts",
     "test": "tsx --test tests/*.test.ts",
     "case:check": "bash scripts/release-case.sh",
-    "docs:build": "tsx scripts/render-docs.ts"
+    "docs:build": "node --env-file-if-exists=.env --import tsx scripts/render-docs.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.2",

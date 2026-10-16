@@ -2,7 +2,7 @@ flowchart TB
   accTitle: 约定版本变更后的确认流程
   accDescr: 调整约定产生新版本，原负责人阅读差异后确认；若更换负责人，新负责人重新接收。未确认当前版本时不能提交成果。
   old["负责人已接受约定 vN"] --> adjust["团队负责人调整约定<br/>填写原因与确认期限"]
-  adjust --> latest["产生新约定 vN+1<br/>此前承诺保留，等待新版本确认"]
+  adjust --> latest["产生新约定 vN+1<br/>保留此前已接受的约定<br/>等待确认新版本"]
   latest --> changed{"负责人是否更换？"}
   changed -->|否| compare["原负责人阅读差异"]
   compare -->|确认当前版本| confirm["当前约定 vN+1 已确认"]

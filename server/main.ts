@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import { buildApp } from "./app.js";
 import { initJobs, boss } from "./jobs.js";
 import { pool } from "./db.js";
+const port = Number(process.env.PORT ?? 4310);
+const host = process.env.HOST ?? "127.0.0.1";
 await initJobs();
 const app = await buildApp();
 await app.register(staticPlugin, {
@@ -13,8 +15,8 @@ app.setNotFoundHandler((req, reply) =>
     ? reply.code(404).send({ error: { code: "notFound" } })
     : reply.sendFile("index.html"),
 );
-await app.listen({ port: Number(process.env.PORT ?? 4310), host: "127.0.0.1" });
-console.log(`Open Task: http://127.0.0.1:${process.env.PORT ?? 4310}`);
+await app.listen({ port, host });
+console.log(`Open Task: http://${host}:${port}`);
 for (const signal of ["SIGINT", "SIGTERM"])
   process.on(signal, async () => {
     await app.close();

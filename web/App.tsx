@@ -69,6 +69,7 @@ import type { Task, User, Project, Relation, Event } from "../shared/model.js";
 import { reconcileChecklist } from "../shared/checklist.js";
 import { terminal, terms } from "../shared/model.js";
 import { api, ApiError, allPages, pagesUntil } from "./api.js";
+import { randomUUID } from "./uuid.js";
 import { useI18n, dateText } from "./i18n.js";
 import { TaskForm, termFields, emptyTerms, type FormSpec } from "./Forms.js";
 const Graph = lazy(() =>
@@ -345,7 +346,7 @@ export function App() {
         "/time-preferences",
         "PUT",
         { scope: project || "global", filter: value },
-        crypto.randomUUID(),
+        randomUUID(),
       );
       setTimePreferences((old) => {
         if (!project) return { ...old, global: value! };
@@ -585,7 +586,7 @@ export function App() {
           return {
             ...v,
             items: reconcileChecklist(lines, task.checklist, () =>
-              crypto.randomUUID(),
+              randomUUID(),
             ),
           };
         }
@@ -641,7 +642,7 @@ export function App() {
             ...change,
           })),
         },
-        crypto.randomUUID(),
+        randomUUID(),
       );
       if (epoch !== scope.current.epoch) return;
       // An older auto-refresh must not replace this acknowledged server state.

@@ -35,7 +35,9 @@ declare module "fastify" {
     csrf: string;
   }
 }
-export async function buildApp() {
+export async function buildApp({
+  hideApiDocs = process.env.OPEN_TASK_HIDE_API_DOCS === "1",
+}: { hideApiDocs?: boolean } = {}) {
   const app = Fastify({
     logger: {
       redact: [
@@ -554,6 +556,9 @@ export async function buildApp() {
       nextCursor: r.rows.length > q.limit ? r.rows[q.limit - 1].cursor : null,
     };
   });
-  app.get("/api/v1/openapi.json", async () => describeAPI(app.swagger()));
+  app.get("/api/v1/openapi.json", async () => {
+    ensure(!hideApiDocs, "notFound", 404);
+    return describeAPI(app.swagger());
+  });
   return app;
 }

@@ -1,4 +1,4 @@
-# Alpha candidate readiness
+# Alpha candidate check results
 
 [简体中文](../zh-CN/RELEASE-READINESS.md)
 
@@ -26,7 +26,7 @@ It differs from the [case report](RELEASE-CASE-RESULT.md) in scope: that report 
 | Current interface | In-app browser used the isolated `open_task_test` database on port `4319`; three-role workflow passed |
 | Responsive and browser errors | Chinese direct link and language survived reload; the 390px viewport had scrollWidth 390, that is, no horizontal overflow; browser error log empty |
 
-The UI task was `[Alpha UI] Verify release delivery`, OT-5959. It passed member creation → manager approval → leader approval → acceptance/start → checklist request/leader approval → agreement adjustment/version 2 confirmation → formal progress → first result → return → second result → final acceptance. Both submissions remained readable. This run tested checklist approval; it did not claim a 100% checklist completion check. The existing API regressions cover checklist completion semantics.
+The UI task was `[Alpha UI] Verify release delivery`, OT-5959. It passed member creation → manager approval → leader approval → acceptance/start → checklist request/leader approval → agreement adjustment/version 2 confirmation → formal progress → first result → return → second result → final acceptance. Both submissions remained readable. This run tested checklist approval; it did not claim a 100% checklist completion check. The existing API regressions cover the rules for checklist completion and task completion.
 
 The screenshots below were captured on 2026-10-09 using a different synthetic task, OT-6439. They illustrate only the completed state in the English interface and the dark mobile layout; they are not evidence for the three-role verification workflow above. Links to that run's original Chinese screenshots follow below.
 

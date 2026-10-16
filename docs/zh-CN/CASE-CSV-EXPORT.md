@@ -1,211 +1,255 @@
-# 案例：交付一个 CSV 导出功能
+# 进阶案例：用 CSV 导出项目练习任务协作
 
 [English](../en/CASE-CSV-EXPORT.md)
 
-本案例模拟小型问题跟踪工具 IssueLite 的一次开发迭代：用户希望把当前筛选的问题列表导出为 CSV。我们用四个任务组织这次交付，检查 OpenTask 能否支持从创建审批、接受任务到成果验收的完整过程。
+客服团队用 IssueLite 跟踪问题，希望把当前筛选的列表导出，用于每周复盘。开发人员可以实现导出，但还需要有人明确规则、验收结果、整理交付说明。这就是我们要用 OpenTask 组织的一次交付。
 
-跟做时，所有成果都要写明“模拟”，不使用真实业务记录。本案例只验证 OpenTask 的任务流程，不开发真实的 CSV 功能；填写的实现说明和用例说明也不属于软件测试证据。
+先[完成第一条任务](FIRST-TASK.md)，再用本案例练习四人协作、审批、阻塞、变更和退回。完整跟做约需 45–60 分钟；任何编号步骤结束后都可以停下，保存任务链接，下次接着做。
 
-## 目标、范围与通过标准
+这是任务协作演练，人员和 IssueLite 成果均为模拟内容。配图来自 2026-10-13 的英文界面，编号对应下方操作说明；中文说明保留英文按钮名，便于照图操作。[截图与检查记录](SCREENSHOTS.md)保存当次操作范围和结果。
 
-模拟需求的范围是：导出编号、标题、状态三列，保留当前筛选范围。中文应正常显示；逗号、双引号和换行应正确转义；没有数据时仍保留表头。范围不包括 CSV 导入、附件、权限改造和复杂报表。
+## 1. 创建示例项目
 
-跟做后，检查 OpenTask 是否符合以下要求：
+先完成[本地启动](QUICKSTART.md)，已有工作区时，建议先[准备独立演练数据库](DEVELOPMENT.md#为教程操作准备独立数据库)。以 `leader` 登录，演示密码为 `OpenTask-Test-2026!`。每当步骤切换账号，就用 **Account → Switch user（账户 → 切换用户）**。切换前复制任务 URL：它包含任务 UUID，其他团队账号可以用它打开同一条任务。
 
-- 各角色能完成自己负责的操作，不能越权操作。
-- 正式进展、执行清单、约定版本和成果提交分别保存。
-- 成果被退回后，可以查看原提交和退回理由，也可以重新提交。
-- 前置任务尚未验收完成时，后置任务不能验收通过。
-- 四个任务最终均为已完成，刷新页面或重启服务后仍能查看记录。
+| 账号 | 在本次交付中的责任 |
+| --- | --- |
+| `leader` / Test Leader | 批准任务约定，验收整体交付 |
+| `manager` / Test Project Manager | 明确导出规则，验收实现与验证结果 |
+| `member` / Test Member | 提交实现说明与自测说明 |
+| `other` / Test Other Member | 整理验证结果和交付说明 |
 
-## 任务拆分
+点击 **New project（新建项目）**，名称填 `IssueLite · CSV export`。选择 **① Test Project Manager** 为项目负责人，**② Test Member + Test Other Member** 为项目成员（按住 Ctrl/Cmd 多选），然后提交。
 
-用 A、B、C、D 指代下面四个任务，方便后续操作时定位。
+![创建项目：1 指定项目负责人，2 选择参与成员](../assets/walkthrough/en/02-new-project.svg)
 
-| 简称 | 标题               | 负责人  | 验收人  | 成果                         |
-| ---- | ------------------ | ------- | ------- | ---------------------------- |
-| A    | 交付 CSV 导出 v0.1 | manager | leader  | 交付汇总，引用三个子任务     |
-| B    | 确认导出规则       | manager | leader  | 字段、编码、转义及空结果规则 |
-| C    | 实现 CSV 导出      | member  | manager | 实现说明与自测说明           |
-| D    | 验证并整理交付说明 | other   | manager | 六类用例说明与交付结论       |
+**检查结果：** 左侧任务树出现新项目。成员列表用于组织协作；任务提交后仍然对全团队可见。
 
-A 是交付目标，B、C、D 是拆分出的子任务。子任务之间还有前置依赖：B 的规则成果是 C 的验收前提，C 的实现成果是 D 的验收前提。
+## 2. 写清任务要求并提交审批
 
-![CSV 导出任务关系：A 为 B、C、D 的父任务；B 完成是 C 验收通过的前提，C 完成是 D 验收通过的前提](../assets/diagrams/zh-CN/csv-task-relations.svg)
+切换到 `member`，点击 **New task（新建任务）**，为任务 **C** 填写以下内容：
 
-虚线表示父子归属，粗实线表示前置成果到后置任务的验收顺序。C、D 可以提前开始执行，但验收通过时，前置任务必须已经完成。图中箭头用于说明这些关系，不表示 API 中 sourceId / targetId 的存储方向。
+| 字段 | 复制或选择 |
+| --- | --- |
+| Title（标题） | `Implement CSV export` |
+| Project（项目） | `IssueLite · CSV export` |
+| Owner（负责人） | Test Member |
+| Reviewer（验收人） | Test Project Manager，此项目与负责人的默认值 |
+| Expected result（预期结果） | Synthetic walkthrough: export the filtered issue list as CSV, with implementation and self-test notes. |
+| Scope（范围） | Number, title and status. No import, attachments or permission changes. |
+| Acceptance criteria（验收标准） | Preserve filters; readable international text; escape commas, quotes and line breaks; keep headers for empty results. |
 
-对应的任务树与设置方法如下：
+![任务约定：1 负责人，2 验收人，3 预期结果](../assets/walkthrough/en/03-task-agreement.svg)
 
-```text
-A 交付 CSV 导出 v0.1
-├── B 确认导出规则
-├── C 实现 CSV 导出
-└── D 验证并整理交付说明
+这里约定的是：导出筛选后的编号、标题、状态三列，国际文字可读，特殊字符正确转义，空结果保留表头。**① 负责人** 接受并执行，**② 验收人** 检查成果是否满足 **③ 预期结果** 和验收标准。创建者可以是另外一个人。
 
-前置成果顺序：B → C → D
-设置时：在 C 里选择 B 为前置；在 D 里选择 C 为前置。
-```
+向下滚动填写日期。请按你跟做的当天选择 **未来日期**，使用 **上海时区**，格式为 `YYYY-MM-DD HH:mm`。截图中的安排如下：
 
-A 只作为父任务，不设为 B、C、D 的前置。父子归属说明任务如何拆分，不规定完成顺序。
+| 字段 | 截图中的值 | 含义 |
+| --- | --- | --- |
+| Planned start（计划开始） | 2026-10-14 09:00 | 可选的计划起点 |
+| Accept by（接收期限） | 2026-10-14 10:00 | 负责人应在何时回应 |
+| Next feedback（下次反馈） | 2026-10-14 16:00 | 下次正式汇报进展的时间 |
+| Delivery deadline（交付期限） | 2026-10-16 18:00 | 何时应拿出交付结果 |
 
-## 1. 准备环境和角色
+![日期设置：1 交付期限，2 下次反馈，3 保存草稿](../assets/walkthrough/en/04-task-schedule.svg)
 
-先按[本地启动](QUICKSTART.md)中的“使用独立案例环境”准备环境。若已运行 `npm run case:check`，数据库中会有一组已完成的 API 示例任务。手动跟做时，请新建带 `[模拟跟做]` 标记的项目，保留已有示例和验证记录。
+点击 **③ Submit（提交）**。**检查结果：** 任务为 **Draft（草稿）**，只有创建者可见。这个按钮只是保存表单，还没有下发任务。打开 C，再点 **Submit for approval → Submit（提交审核 → 提交）**，任务才对团队可见并开始审批。
 
-文中的 leader、manager、member、other 都是测试用户名，账号信息见“本地启动”。初次打开界面时显示英文，可以切换为简体中文；下面按中文界面的按钮名称说明操作。内嵌截图使用中文界面，英文界面的原始验收截图以标明语言的链接提供。截图中的任务正文保留原始中文输入。
+## 3. 完成两级创建审批
 
-需要切换角色时，使用顶部“账户 → 切换用户”，退出后登录对应账号。复制任务 URL，切换账号后打开该链接，就能继续处理同一任务。
+用 `manager` 打开 C。先练习一次纠正：点击 **Return for editing（退回修改）**，原因填 `Please make the empty-result behavior explicit before approval.`，即“请先明确空结果的表现”。
 
-## 2. leader 建立项目
+切换到 `member`，打开 C，点 **Edit draft（修改草稿）**，将最后一条标准改成 `An empty result contains the three column headers and no data rows.`，明确空结果只有三列表头。保存后，再次 **Submit for approval（提交审核）**。
 
-使用 leader 登录，点击“新建项目”，填写：
+用 `manager` 执行 **Approve creation → Submit（通过创建审核 → 提交）**。此时仍是 **① Creation approval（待创建审核）**，**② Waiting for（等待处理人）** 变为 **Test Leader**。
 
-- 名称：`[模拟跟做] IssueLite CSV 导出`。
-- 项目负责人：Test Project Manager。
-- 项目成员：Test Member、Test Other Member。
+![项目负责人审批后，任务仍等待团队负责人做最终审批](../assets/walkthrough/en/06-approval-handoff.svg)
 
-提交后，应能在左侧看到这个项目。
+切换到 `leader`，打开 C 并 **Approve creation（通过创建审核）**。**检查结果：** 变为 **Awaiting acceptance（待接收）**，等待 Test Member。“批准可以做”之后，还需要执行方明确接受。
 
-## 3. member 创建 C 并提交审核
+项目负责人自己创建本项目任务时直接交给团队负责人；团队负责人自己的草稿可以直接下发。`admin` 只有账号管理权限，不会自动获得业务审批权限。
 
-使用 member 登录，点击“新建任务”，选择刚创建的项目，负责人选 Test Member。验收人应自动设为 Test Project Manager。填写以下内容：
+## 4. 创建父子任务并设置前置依赖
 
-| 字段     | 可复制的内容                                               |
-| -------- | ---------------------------------------------------------- |
-| 标题     | `[模拟跟做] 实现 CSV 导出`                                 |
-| 预期结果 | 模拟：导出当前筛选的问题列表 CSV，提交实现说明与自测说明。 |
-| 工作范围 | 仅编号、标题、状态；不含导入、附件、权限改造。             |
-| 验收标准 | 中文可读；逗号、双引号、换行正确转义；空结果保留表头。     |
+用 `leader` 创建 A、B、D，采用同样的未来时间安排和下表分工。每个表单保存后仍是草稿，还需 **Issue task（下发任务）**。
 
-时间可以按下表安排。D0 表示演示当天，D1 表示次日。输入时请换成实际未来日期，采用上海时区，格式为 `YYYY-MM-DD HH:mm`。
+| 简称 | 标题 | 负责人 → 验收人 | 预期结果与验收标准 |
+| --- | --- | --- | --- |
+| A | Deliver CSV export v0.1 | manager → leader | 交付汇总，引用已验收的规则、实现和验证结果 |
+| B | Confirm export rules | manager → leader | 明确三列字段、筛选范围、编码、转义和空结果行为 |
+| C | Implement CSV export | member → manager | 已在第 2–3 步创建 |
+| D | Verify and prepare delivery notes | other → manager | 说明覆盖筛选、国际文字、逗号、双引号、换行、空结果六类情况 |
 
-| 时间字段 | 建议       |
-| -------- | ---------- |
-| 计划开始 | D0，或留空 |
-| 接收期限 | D1 09:00   |
-| 下次反馈 | D1 12:00   |
-| 交付期限 | D1 18:00   |
+分别打开 B、C、D，在 **Task content → Connections & delivery → Relations → Add relation（任务内容 → 关联与交付 → 关系 → 添加关系）** 里，将 A 设为 **Primary parent（主归属）** 并说明贡献。然后在 C 中将 B 设为 **Prerequisite（前置依赖）**，在 D 中将 C 设为前置依赖。
 
-点击新建表单中的“提交”后，任务只保存为草稿。打开任务，确认状态为草稿，再点击“提交审核 → 提交”。提交审核后，任务才在团队内可见。
+![添加前置依赖：1 选择需要的任务，2 选择 Prerequisite](../assets/walkthrough/en/07-add-prerequisite.svg)
 
-`npm run case:check` 使用相对运行时间，不会沿用教程中的固定日期而制造逾期。
+**① Target task（目标任务）** 选择提供所需成果的前置任务。**② Prerequisite** 意味着它必须先验收完成，本任务才能验收通过，但不会阻止本任务提前开始。
 
-## 4. manager 和 leader 顺序审批
+![A 下包含 B、C、D，验收成果按 B、C、D 的顺序完成](../assets/diagrams/zh-CN/csv-task-relations.svg)
 
-先使用 manager 登录，打开 C，检查预期结果、验收标准和时间，点击“通过创建审核 → 提交”。
+教程图表示 **成果验收顺序**。应用图谱中的依赖箭头则从后置任务指向它需要的前置任务。父子关系回答“这个目标由哪些工作组成”，前置依赖回答“验收之前需要哪个结果”。
 
-此时，**任务仍应为“待创建审核”，等待处理人变为 Test Leader**。项目负责人通过审核后，还需要团队负责人做最后一级审批。
+![工作区全景：标出任务树、关系图谱、任务详情和待办入口](../assets/walkthrough/en/08-workspace.svg)
 
-再使用 leader 登录，打开同一任务，执行“通过创建审核”。任务应变为“待接收”，等待处理人是 Test Member。
+从 **① 任务树** 找工作，用 **② 图谱** 看关系，在 **③ 详情** 阅读同一条任务，**④ Action inbox（待处理事项）** 告诉每个人现在需要回应什么。点击图谱节点和树中的任务行会打开同一记录；拖动图谱节点只改变布局。
 
-本步骤要确认的一点：admin 负责账号管理，不应成为任何一级业务审批人。
+## 5. 接收任务并申请执行清单
 
-## 5. leader 创建 A/B/D 并建立关系
+用 `member` 打开 C，执行 **Accept task → Submit（接收任务 → 提交）**，状态变为 **Accepted（已接收）**；再 **Start work → Submit（开始执行 → 提交）**，变为 **In progress（进行中）**。如果这两个决定同时发生，也可直接用 **Accept and start（接收并开始）**。
 
-使用 leader 按任务表分别创建 A、B、D。填写各自的预期结果、验收标准和完整时间，并显式选择表中的负责人、验收人。保存草稿后，点击“下发任务”。leader 创建的这些任务可以直接下发，无须经过成员创建任务时的两级审批。
-
-然后在“关联与交付 → 关系 → 添加关系”中设置关系，每条都填写原因：
-
-- 分别打开 B、C、D，将 A 选为“主归属”。
-- 打开 C，将 B 选为“前置依赖”。
-- 打开 D，将 C 选为“前置依赖”。
-
-切换为 manager，接收并开始 A，最后再汇总成果并提交验收。此时，任务树和图谱中应能找到四个任务，以及父子、前置依赖两类关系。拖动图谱中的任务只改变布局，不改变关系。
-
-## 6. member 接受 C，申请清单
-
-使用 member 打开 C，点击“接收并开始”。任务应变为“进行中”，表示负责人已接受约定并开始执行。
-
-点击“申请修改清单”，每行填写一项：
+点击 **Request checklist edit（申请修改清单；较早截图中为 Request checklist change）**，每行填写一项：
 
 ```text
-导出当前筛选结果
-中文编码与特殊字符转义
-空结果表头与自测记录
+Export currently filtered results
+Document encoding and CSV escaping
+Cover empty results and six verification cases
 ```
 
-原因填“分解已约定的工作，不变更验收范围”。本次不勾选“改变工作范围或验收标准”。
+这三项分别是筛选导出、编码与转义、空结果与六类验证。原因填 `Break the agreed result into visible execution steps.`，不要勾选 **Changes scope or acceptance criteria（改变范围或验收标准）**。
 
-提交申请后，现行清单应仍为空。切换为 leader，在待办中找到 C，执行“确认清单变更”。批准后刷新任务，应看到三项清单，完成数为 0/3。
+![清单申请：1 提议的步骤，2 是否改变原约定](../assets/walkthrough/en/09-checklist-request.svg)
 
-## 7. 明确编码规则并重新确认
+**① 此时提交的是提议**，清单尚未生效。**② 不勾选** 表示只是分解已约定的工作。用 `leader` 打开 C，**Approve checklist（确认清单变更）**。再用 `member` 刷新，应看到三项尚未完成的清单。
 
-使用 leader 打开 C，点击“调整约定”。在验收标准中补充“中文文件带 UTF-8 BOM”，原因填写“明确 Excel 打开中文文件的编码要求”，并填写未来的调整确认期限。
+## 6. 报告阻塞并请求协助
 
-切换为 member，打开同一任务。约定版本应已增加，并出现“确认当前版本”入口。阅读前后差异，再确认新版本。
+用 `member` 点击 **Report blocker（报告阻塞）**：
 
-这里需要检查两个限制：用旧版本发起操作会发生版本冲突；即使已读取新版本，未确认当前版本也不能提交成果。这次调整的是验收标准，清单内容没有变化。约定版本和清单版本分别记录各自的变更。
+- Reason（原因）：`The empty-result header behavior needs confirmation.`
+- Help needed（所需协助）：`Confirm whether an empty export keeps all three column headers.`
+- Helper（协助人）：**Test Project Manager**。
 
-### 可选：练习阻塞协作
+![报告阻塞：1 写清卡在哪里，2 指定协助人](../assets/walkthrough/en/10-report-blocker.svg)
 
-如果还想体验阻塞处理，可以完成下面一轮协作：
+**① 说清需要确认的决定，② 指定一个能回应的人。** 用 `manager` 打开 C，进入 **Connections & delivery → Blockers → Reply to blocker（关联与交付 → 阻塞 → 回复协助）**，答复 `Keep number, title and status as headers, with no data rows.`，即“保留三列表头，没有数据行”。
 
-1. member 执行“报告阻塞”：原因填“需确认空结果表头”，所需协助填“确认具体表现”，协助人选 manager。
-2. manager 在“阻塞”页执行“回复协助”，答复“保留三列表头，无数据行”。
-3. member 执行“解除阻塞”。
+![阻塞记录保留了所需协助和项目负责人的回复](../assets/walkthrough/en/11-blocker-reply.svg)
 
-解除阻塞不会自动修改任务期限。
+用 `member` 执行 **Resolve blocker（解除阻塞）**，说明 `The header behavior is now clear; continuing the implementation notes.`。**检查结果：** 阻塞和回复仍可查看。报告或解除阻塞都不会自动改交付期限，也不代替正式进展。
 
-## 8. 正式进展与清单保存
+## 7. 调整任务要求并确认新版本
 
-使用 member 执行“提交正式进展”，填写：
+用 `member` 执行 **Request agreement change（申请调整约定）**：`Specify UTF-8 BOM so exported international text opens correctly in Excel.`，请求明确 Excel 打开文件时的编码要求。
+
+用 `leader` 打开 **Adjust agreement（调整约定）**，在验收标准中加上 `Include UTF-8 BOM for Excel`，填写未来的 **① Confirm adjustment by（调整确认期限）** 和 **② 变更原因**，然后提交。
+
+![调整约定时填写确认期限和变更原因](../assets/walkthrough/en/12-adjust-agreement.svg)
+
+用 `member` 打开 C，在 **Confirm this version → Agreement changes（确认当前版本 → 约定变更）** 中比较前后约定。版本号已经增加；确认之前，此前已接收的任务约定仍可查看。
+
+先试一次未确认就 **Submit result（提交成果）**：填写简短成果和未来的 **Review by（验收期限）** 后提交。系统会保留表单，并提示：
+
+![未确认当前约定版本时，系统阻止提交成果](../assets/walkthrough/en/14-confirmation-required.svg)
+
+用 **Discard form（关闭表单）** 退出，再 **Confirm this version → Submit（确认当前版本 → 提交）**。**检查结果：** 版本确认待办消失。约定变更会留下新版本；勾选清单本身不会改变约定版本。
+
+## 8. 汇报进展，并保存清单完成情况
+
+用 `member` 点击 **Record progress（提交正式进展）**：
+
+| 字段 | 示例 |
+| --- | --- |
+| Current result / message（当前结果） | Synthetic progress: filtered export and encoding notes are ready. |
+| Next step（下一步） | Add escaping and empty-result verification notes, then request review. |
+| Next feedback（下次反馈） | 未来时间，本次使用 2026-10-15 14:00 |
+
+![正式进展包含 1 当前结果、2 下一步和 3 下次反馈时间](../assets/walkthrough/en/15-formal-progress.svg)
+
+三项信息一起回答：现在已有了什么、接着做什么、什么时候再有消息。讨论可以用 **Add comment（发表评论）**，但评论不算正式反馈，也不会推迟反馈期限。
+
+勾选三项清单，再点击 **Save checked progress（保存勾选进度；较早截图中为 Confirm submission）**；未提交的勾选只是本地编辑。刷新后看保存结果：
+
+![清单已保存为 100%，任务仍是进行中](../assets/walkthrough/en/16-checklist-complete.svg)
+
+**① In progress（进行中）与 ② 3/3、100% 同时出现是正确的。** 清单说明执行到了哪里，验收人还需要检查真正提交的成果。
+
+## 9. 提交成果与验收期限
+
+用 `member` 执行 **Submit result（提交成果）**，填写：
 
 ```text
-当前结果：模拟进展：已整理筛选导出说明，正在补充特殊字符用例。
-下一步：补齐六类验证说明，然后提交成果验收。
-下次反馈：D1 14:00（替换成实际日期）
+Synthetic result v1: filtered export and UTF-8 BOM are documented.
+Special-character evidence is still missing.
 ```
 
-接着勾选清单三项，点击“保存勾选进度”保存。完成数应显示为 3/3、100%，但**任务状态仍为“进行中”**。清单记录执行进度，任务是否完成还要由验收人判断。
+这里故意说明第一版还缺特殊字符验证。填写未来的 **Review by（验收期限）**。证据链接可选，有相关材料时填写 HTTP(S) 链接；本练习可以留空。
 
-![中文界面：执行清单 3/3、100%，任务仍在进行中](../assets/release-case/checklist-zh-CN.png)
+![提交成果：1 交付结果，2 可选证据链接，3 验收期限](../assets/walkthrough/en/17-submit-result.svg)
 
-2026-10-10 在隔离测试库中重新打开模拟任务 OT-6437 后截取的中文界面截图，清单三项均已保存。它展示本步骤的状态，不属于历史验收运行。原始验收截图使用英文界面：[清单完成但任务仍在进行中](../assets/release-case/checklist.jpg)。
+**① 说明交付了什么，② 有真实证据就附链接，③ 约定何时验收。** OpenTask 保存文字和 HTTP(S) 链接，不上传文件，也不验证链接内容。**检查结果：** 任务变成 **Awaiting review（待验收）**，等待 Test Project Manager。
 
-## 9. 提交第一版，检查依赖并退回
+## 10. 检查前置依赖并退回不完整成果
 
-使用 member 执行“提交成果”。正文填“模拟成果 v1：已说明筛选导出与中文编码；特殊字符证据暂缺”，验收期限填 D1 19:00。证据链接可以留空，不使用虚构的 PR 或测试报告链接。
+先保持 B 未完成。用 `manager` 对 C 执行 **Accept result → Submit（验收通过 → 提交）**。
 
-此时先保留 B 未完成。切换为 manager，尝试对 C 执行“验收通过”。系统应提示前置任务未完成，C 仍为“待验收”。这一步用于检查依赖限制：C 可以先执行，但 B 尚未验收完成时，C 不能验收通过。
+![前置成果未验收时，系统阻止后置任务验收通过](../assets/walkthrough/en/18-prerequisite-blocked.svg)
 
-接着由 manager 执行“验收退回”，原因填“缺少逗号、双引号、换行和空结果的验证说明，请补齐”，下次反馈时间填 D1 16:00。
+**检查结果：** 操作被拒绝，C 仍为 **Awaiting review（待验收）**。关闭表单，改用 **Return result（验收退回）**，原因填 `Add verification notes for commas, double quotes, line breaks and empty results.`，并设定未来的 **Next feedback（下次反馈）** 时间。
 
-C 应回到“进行中”。打开“成果提交”，应仍能看到第一版成果和退回理由。
+![退回成果时写清 1 缺少什么，2 什么时候再反馈](../assets/walkthrough/en/19-return-result.svg)
 
-![中文界面：成果提交中保留着第一版成果和退回理由](../assets/release-case/returned-zh-CN.jpg)
+提交后 C 回到 **In progress（进行中）**。退回把“还不行”变成了具体的下一步，并在同一任务中保留第一版成果和验收意见。
 
-按本教程复现的中文界面截图。原始验收截图使用英文界面：[退回后仍保留第一版成果和理由](../assets/release-case/returned.jpg)。
+## 11. 完成前置任务并重新提交成果
 
-## 10. 完成前置、重交并验收
+用 `manager` 打开 B，**Accept and start（接收并开始）**，再 **Submit result（提交成果）**，说明字段、筛选、UTF-8 BOM、转义和空结果规则。用 `leader` 对 B 执行 **Accept result（验收通过）**。
 
-先使用 manager 接收并开始 B，提交“模拟规则成果：三列、UTF-8 BOM、CSV 转义、空结果表头”。切换为 leader，验收通过 B。
-
-然后使用 member，在 C 中重新执行“提交成果”，填写：
+用 `member` 再次提交 C：
 
 ```text
-模拟成果 v2：补齐筛选范围、中文、逗号、双引号、换行、空结果六类说明。
-本例仅验证 OpenTask，未开发真实 CSV 软件。
+Synthetic result v2: notes now cover filters, international text,
+commas, double quotes, line breaks and empty results.
+This is an OpenTask workflow rehearsal, not a shipped IssueLite feature.
 ```
 
-填写未来的验收期限，再由 manager 验收通过。C 应显示“已完成”，不再有执行待办；“成果提交”中应保留一条已退回记录和一条已接收记录。
+这次补齐六类说明，并注明是 OpenTask 流程演练。填写未来的验收期限，再由 `manager` 验收通过。在 **Connections & delivery → Submissions（关联与交付 → 成果提交）** 中，两次结论都还在：
 
-两次成果可以基于同一个约定版本，但每次提交仍是独立记录。
+![成果历史中同时保留已退回的第一版和已接收的第二版](../assets/walkthrough/en/21-accepted-history.svg)
 
-![中文界面的已完成状态和成果记录](../assets/release-case/completed.jpg)
+**检查结果：** C 为 **Completed（已完成）**。一条成果是 **Returned（已退回）**，另一条是 **Accepted（已接收）**。同一个约定版本下，也可以有多次独立提交。
 
-## 11. 测试交付与父任务收尾
+## 12. 汇总子任务成果并验收父任务
 
-使用 other 接收并开始 D，提交“模拟交付说明：规则和实现已验收，汇总六类用例；仅验证 OpenTask”，再由 manager 验收通过。
+用 `other` **Accept and start（接收并开始）** D，提交标明模拟的六类验证和交付说明；用 `manager` 验收通过。
 
-B、C、D 全部完成后，A 应仍未自动完成。使用 manager 在 A 中提交交付汇总，再由 leader 验收通过，A 才完成。
+这时 B、C、D 都完成了，**A 并没有自动完成**。用 `manager` 接收并开始 A，提交引用三个已验收子任务的交付汇总；再由 `leader` 验收。
 
-选择本项目、全部状态、全部时间，应能看到四个已完成任务。各任务的“动态”中应保留操作人、版本和结果。刷新页面、退出后重新登录，状态、关系和成果也应保留。
+![父任务独立验收后，四个交付任务全部完成](../assets/walkthrough/en/22-completed-project.svg)
 
-已完成任务不能重开；如果后续发现缺陷，应创建新任务并关联原任务。
+**① 父任务有自己的验收，② 四个任务现在都显示 Completed（已完成）。** 用链接重新打开 C，再刷新，版本、成果和关系仍在。已完成任务不能重开，后续修复应另建关联任务。
 
-## 自动复核与证据
+## 13. 调整并取消后续任务
 
-`npm run case:check` 会通过 HTTP API 自动执行本案例的业务流程，检查权限错误、幂等重试、版本冲突、依赖拦截、成果历史，以及 API 和 worker 重启后的行为。它不操作浏览器，不能替代手动界面跟做。
+团队接着提出 CSV 导入。在同一个项目里创建 **E：Explore CSV import follow-up**，负责人为 `member`，验收人为 `manager`。预期结果是 **可行性建议**，还不是实现。下发后，将 C 添加为 **Related task（普通关联）**，只记录背景，不设验收依赖。
 
-本次四任务自动案例和三角色界面跟做分别验证了哪些内容，见[验收报告](RELEASE-CASE-RESULT.md)。判断是否具备发布条件，继续阅读[发布检查](RELEASE-CHECK.md)。
+跟做下面这段规划过程：
+
+1. `member` 用 **Unable to accept（无法接收）** 说明时间冲突。E 仍为待接收，下发人需要回应。
+2. `leader` **Adjust agreement（调整约定）**，将负责人换成 Test Other Member，解释原因；`other` **Accept and start（接收并开始）**。换人后要重新接受工作。
+3. `other` 申请清单 `Build a complete CSV import engine`。`leader` 用 **Reject checklist（退回清单变更）** 说明当前只约定了可行性建议。申请留在记录里，现行清单不受影响。
+4. `other` 重新申请 `Compare import options` 和 `Document permission and validation risks`，勾选 **Changes scope or acceptance criteria（改变范围或验收标准）**，增加风险评估范围。`leader` 批准并设确认期限，`other` 确认新版本。
+5. `other` 申请把本周实现也纳入任务。`leader` 用 **Close adjustment request with response（回复并结束调整申请）** 解释实现需要另行决定。关闭申请本身不会改约定。
+6. `other` 提交建议等待验收；`leader` 调整标准，增加工作量估算要求。E 回到 **In progress（进行中）**，原待验收成果变为 **Superseded（已被新版本取代）**。如果继续，需要确认新约定并重交成果。
+7. `leader` 用 **Title（标题）** 改名为 `Assess CSV import for a later release`，然后 **Cancel task（取消任务）**，说明团队已决定延期考虑导入。E 变为 **Cancelled（已取消）**，相关决定和与 C 的联系保留下来。
+
+![无法接收后，任务等待下发人处理](../assets/walkthrough/en/23-unable-to-accept.svg)
+
+图中是下发人的视图：**① Awaiting acceptance（待接收）** 表示负责人尚未接收任务，**② Waiting for（等待处理人）** 显示团队负责人。切换到下发人的待办处理这次拒绝。
+
+![取消任务时说明为什么停止这项工作](../assets/walkthrough/en/26-cancel-task.svg)
+
+这个分支展示了计划如何被修正并留下记录。取消会结束任务，但不会擦掉讨论，也不等于一个前置成果已经完成。
+
+## 14. 继续练习搜索、筛选和查看动态
+
+继续在[使用指南](USER-GUIDE.md)里操作这个项目：按标题或编号找 C，按时间筛选已完成工作，查看动态，调整项目颜色，使用手机界面，了解账号管理。再建一条不填日期的私有草稿 `Collect feedback for the next iteration`，放在 **Temporary tasks（临时任务）** 里，体验尚未准备好归入项目的工作。
+
+其他功能的说明见[功能与操作入口](FEATURES.md)。
+
+## 查看任务中保留的记录
+
+打开 C 的动态和成果记录，可以查看负责人何时接收任务、任务要求怎样改变、请求过哪些协助、第一版成果为何被退回，以及第二版由谁验收通过。
+
+本案例不包含真实 CSV 功能的开发或发布。若要检查 OpenTask 候选版本，按[发布检查](RELEASE-CHECK.md)操作；此前的结果保留在[历史验收记录](RELEASE-CASE-RESULT.md)中。

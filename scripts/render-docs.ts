@@ -18,8 +18,8 @@ import { fileURLToPath } from "node:url";
 const editions = {
   "zh-CN": {
     name: "简体中文",
-    description: "OpenTask 本地 MVP 使用文档与开发案例",
-    subtitle: "本地 MVP · 使用文档",
+    description: "OpenTask 安装、使用、开发与版本检查文档",
+    subtitle: "安装与使用文档",
     navigation: "文档导航",
     languages: "阅读语言",
     entry: "语言入口",
@@ -29,11 +29,18 @@ const editions = {
     scroll: "小屏幕可横向滚动",
     original: "查看 SVG 原图",
     download: "下载 Mermaid 源码",
+    contents: "本页内容",
+    screenshot: "查看完整截图（英文界面）",
+    browse: "浏览文档",
+    usage: "安装与使用",
+    development: "开发与维护",
+    releases: "版本与检查记录",
+    more: "其他文档",
   },
   en: {
     name: "English",
-    description: "OpenTask local MVP documentation and development case",
-    subtitle: "Local MVP · Documentation",
+    description: "OpenTask installation, usage, development and release checks",
+    subtitle: "Installation and user documentation",
     navigation: "Documentation navigation",
     languages: "Reading language",
     entry: "Language entry",
@@ -43,20 +50,93 @@ const editions = {
     scroll: "Scroll horizontally on small screens",
     original: "View original SVG",
     download: "Download Mermaid source",
+    contents: "On this page",
+    screenshot: "Open full screenshot (English interface)",
+    browse: "Browse documentation",
+    usage: "Install and use",
+    development: "Develop and maintain",
+    releases: "Versions and check records",
+    more: "More documentation",
   },
 } as const;
 type Locale = keyof typeof editions;
 const locales = Object.keys(editions) as Locale[];
+const navigationTitles: Record<Locale, Record<string, string>> = {
+  en: {
+    "README.md": "Overview",
+    "QUICKSTART.md": "Quick start",
+    "FIRST-TASK.md": "Your first task",
+    "CASE-CSV-EXPORT.md": "Advanced project walkthrough",
+    "USER-GUIDE.md": "User guide",
+    "FAQ.md": "Everyday Q&A",
+    "FEATURES.md": "Features and controls",
+    "MAINTAINING.md": "Documentation maintenance",
+    "SCREENSHOTS.md": "Screenshots and check records",
+    "DEVELOPMENT.md": "Development",
+    "API.md": "API v1",
+    "RELEASE-CHECK.md": "Release checks",
+    "RELEASE-CASE-RESULT.md": "Historical verification",
+    "RELEASE-NOTES.md": "Release notes",
+    "RELEASE-READINESS.md": "Candidate check results",
+    "THIRD-PARTY-NOTICES.md": "Licenses",
+  },
+  "zh-CN": {
+    "README.md": "文档首页",
+    "QUICKSTART.md": "本地启动",
+    "FIRST-TASK.md": "完成第一条任务",
+    "CASE-CSV-EXPORT.md": "进阶协作案例",
+    "USER-GUIDE.md": "使用指南",
+    "FAQ.md": "日常协作 Q&A",
+    "FEATURES.md": "功能与操作入口",
+    "MAINTAINING.md": "文档维护",
+    "SCREENSHOTS.md": "截图与检查记录",
+    "DEVELOPMENT.md": "开发指南",
+    "API.md": "API v1",
+    "RELEASE-CHECK.md": "发布检查",
+    "RELEASE-CASE-RESULT.md": "历史验收记录",
+    "RELEASE-NOTES.md": "版本说明",
+    "RELEASE-READINESS.md": "候选版本检查结果",
+    "THIRD-PARTY-NOTICES.md": "许可与声明",
+  },
+};
 const order = [
   "README.md",
   "QUICKSTART.md",
-  "USER-GUIDE.md",
   "CASE-CSV-EXPORT.md",
+  "USER-GUIDE.md",
   "RELEASE-CHECK.md",
   "RELEASE-CASE-RESULT.md",
   "API.md",
   "THIRD-PARTY-NOTICES.md",
 ];
+const navigationGroups = [
+  {
+    label: "usage",
+    files: [
+      "README.md",
+      "QUICKSTART.md",
+      "FIRST-TASK.md",
+      "USER-GUIDE.md",
+      "FAQ.md",
+      "CASE-CSV-EXPORT.md",
+      "FEATURES.md",
+    ],
+  },
+  {
+    label: "development",
+    files: ["DEVELOPMENT.md", "API.md", "MAINTAINING.md", "RELEASE-CHECK.md"],
+  },
+  {
+    label: "releases",
+    files: [
+      "RELEASE-NOTES.md",
+      "RELEASE-READINESS.md",
+      "RELEASE-CASE-RESULT.md",
+      "SCREENSHOTS.md",
+      "THIRD-PARTY-NOTICES.md",
+    ],
+  },
+] as const;
 const escape = (text: string) =>
   text.replace(
     /[&<>"']/g,
@@ -98,11 +178,23 @@ const headingIds = () => (tree: Root) => {
   });
 };
 
-export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
+export async function buildDocs(
+  root = resolve(import.meta.dirname, ".."),
+  { hideApiDocs = false }: { hideApiDocs?: boolean } = {},
+) {
   // Keep the existing Markdown stack; static output needs no runtime JS or CDN.
   const source = resolve(root, "docs");
   const output = resolve(root, "artifacts/docs");
   const assetDirectory = resolve(source, "assets");
+  const screenshotLocales: Record<string, string> = await readFile(
+    resolve(assetDirectory, "screenshot-locales.json"),
+    "utf8",
+  )
+    .then(JSON.parse)
+    .catch((error) => {
+      if (error.code === "ENOENT") return {};
+      throw error;
+    });
   const inventories = await Promise.all(
     locales.map(async (locale) => ({
       locale,
@@ -132,9 +224,14 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
         ),
       );
   }
+  const navigationOrder: readonly string[] = navigationGroups.flatMap(
+    (group) => [...group.files],
+  );
   const ranked = [...inventories[0].files].sort((a, b) => {
     const rank = (name: string) =>
-      order.includes(name) ? order.indexOf(name) : order.length;
+      navigationOrder.includes(name)
+        ? navigationOrder.indexOf(name)
+        : navigationOrder.length;
     return rank(a) - rank(b) || a.localeCompare(b);
   });
   const files = [
@@ -153,15 +250,24 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
       headings: number[];
       links: Map<string, string>;
       diagramWidths: Map<string, number>;
+      images: Set<string>;
+      contents: { id: string; text: string }[];
     }
   >();
   await Promise.all(
     files.map(async (file) => {
-      const text = await readFile(resolve(source, file), "utf8");
+      const text =
+        hideApiDocs && basename(file) === "API.md"
+          ? file.startsWith("en/")
+            ? "# API documentation\n\n[简体中文](../zh-CN/API.md)\n\nAPI documentation is hidden on this deployment.\n"
+            : "# API 文档\n\n[English](../en/API.md)\n\n此部署已隐藏 API 文档。\n"
+          : await readFile(resolve(source, file), "utf8");
       let title = basename(file, ".md");
       const references = new Set<string>();
       const anchors = new Set<string>();
       const headings: number[] = [];
+      const images = new Set<string>();
+      const contents: { id: string; text: string }[] = [];
       const collect = () => (tree: Root) => {
         walk(tree, (node) => {
           if (
@@ -170,10 +276,16 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
             node.type === "definition"
           )
             references.add(node.url);
+          if (node.type === "image") images.add(node.url);
           if (node.type === "heading") {
             if (node.depth === 1) title = nodeText(node);
             headings.push(node.depth);
             anchors.add(String(node.data?.hProperties?.id));
+            if (node.depth === 2)
+              contents.push({
+                id: String(node.data?.hProperties?.id),
+                text: nodeText(node),
+              });
           }
         });
       };
@@ -196,6 +308,8 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
         headings,
         links: new Map(),
         diagramWidths: new Map(),
+        images,
+        contents,
       });
     }),
   );
@@ -235,6 +349,23 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
           throw new Error(`Missing heading anchor: ${file}: ${href}`);
       } else if (local.startsWith(assetDirectory + "/")) {
         destination = "assets/" + relative(assetDirectory, local);
+        const asset = relative(assetDirectory, local);
+        if (
+          page.locale === "en" &&
+          page.images.has(href) &&
+          (/\.(?:png|jpe?g|webp|gif)$/i.test(local) ||
+            asset.startsWith("walkthrough/")) &&
+          screenshotLocales[asset] !== "en"
+        )
+          throw new Error(
+            `English screenshot needs verified en locale: ${file}: ${href}`,
+          );
+        if (
+          page.images.has(href) &&
+          asset.startsWith("walkthrough/") &&
+          local.endsWith(".svg")
+        )
+          await stat(local.replace(/\.svg$/, ".jpg"));
         if (
           local.startsWith(resolve(assetDirectory, "diagrams") + "/") &&
           local.endsWith(".svg")
@@ -284,16 +415,36 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
     const page = pages.get(file)!;
     const locale = page.locale ?? "zh-CN";
     const labels = editions[locale];
-    const navigation = (
-      page.locale
-        ? ranked.map((name) => `${page.locale}/${name}`)
-        : locales.map((code) => `${code}/README.md`)
-    )
-      .map((name) => {
-        const target = pages.get(name)!;
-        return `<a href="${escape(linkFrom(page.target, target.target))}"${name === file ? ' aria-current="page"' : ""}>${escape(target.title)}</a>`;
-      })
-      .join("\n");
+    const navigationLink = (name: string) => {
+      const target = pages.get(name)!;
+      const title = page.locale
+        ? (navigationTitles[page.locale][basename(name)] ?? target.title)
+        : editions[target.locale!].name;
+      return `<a href="${escape(linkFrom(page.target, target.target))}"${name === file ? ' aria-current="page"' : ""}>${escape(title)}</a>`;
+    };
+    const groups = [
+      ...navigationGroups.map((group) => ({
+        label: labels[group.label],
+        files: ranked.filter(
+          (name) =>
+            (group.files as readonly string[]).includes(name) &&
+            !(hideApiDocs && name === "API.md"),
+        ),
+      })),
+      {
+        label: labels.more,
+        files: ranked.filter((name) => !navigationOrder.includes(name)),
+      },
+    ];
+    const navigation = page.locale
+      ? groups
+          .filter((group) => group.files.length)
+          .map(
+            (group) =>
+              `<div class="docs-nav-group" role="group" aria-label="${escape(group.label)}"><p class="docs-nav-heading">${escape(group.label)}</p><div class="docs-nav-links">${group.files.map((name) => navigationLink(`${page.locale}/${name}`)).join("\n")}</div></div>`,
+          )
+          .join("\n")
+      : locales.map((code) => navigationLink(`${code}/README.md`)).join("\n");
     const languages = locales
       .map((code) => {
         const counterpart = `${code}/${basename(file)}`;
@@ -307,11 +458,23 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
           remarkPlugins: [remarkGfm, headingIds],
           components: {
             a: ({ href, children }) => {
+              if (hideApiDocs && /(?:^|\/)API\.md(?:#|$)/.test(href ?? ""))
+                return createElement("span", null, children);
               const language = href?.match(/^\.\.\/(zh-CN|en)\//)?.[1];
+              // ReactMarkdown percent-encodes Unicode fragments. Match them
+              // against the original Markdown references before rendering.
+              let target = page.links.get(href ?? "");
+              if (!target && href) {
+                try {
+                  target = page.links.get(decodeURI(href));
+                } catch {
+                  // Preserve external URLs with malformed escape sequences.
+                }
+              }
               return createElement(
                 "a",
                 {
-                  href: page.links.get(href ?? "") ?? href,
+                  href: target ?? href,
                   rel: "noreferrer noopener",
                   ...(language ? { lang: language, hrefLang: language } : {}),
                 },
@@ -334,7 +497,28 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
                     }
                   : {}),
               });
-              if (!width) return image;
+              if (!width) {
+                if (target.includes("/assets/walkthrough/"))
+                  return createElement(
+                    "span",
+                    { className: "screenshot" },
+                    createElement(
+                      "a",
+                      { href: target, "aria-label": alt },
+                      image,
+                    ),
+                    createElement(
+                      "span",
+                      { className: "screenshot-links" },
+                      createElement(
+                        "a",
+                        { href: target.replace(/\.svg$/, ".jpg") },
+                        labels.screenshot,
+                      ),
+                    ),
+                  );
+                return image;
+              }
               return createElement(
                 "span",
                 { className: "diagram" },
@@ -388,9 +572,14 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
           )
           .join("")
       : "";
+    const contents =
+      page.contents.length > 2
+        ? `<details class="page-contents"><summary>${labels.contents}</summary><ol>${page.contents.map((item) => `<li><a href="#${escape(item.id)}">${escape(item.text)}</a></li>`).join("")}</ol></details>`
+        : "";
+    const contentWithContents = content.replace(/(<\/h1>)/, `$1${contents}`);
     const html = `<!doctype html>
 <html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${escape(labels.description)}"><title>${escape(page.title)} · OpenTask</title>${alternates}<link rel="icon" type="image/png" href="${assets}/brand/opentask-cat-mark.png"><link rel="stylesheet" href="${stylesheet}"></head>
-<body><a class="skip" href="#content">${labels.skip}</a><header><a class="docs-brand" href="${home}"><img src="${assets}/brand/opentask-cat-mark.png" alt="" width="44" height="44">OpenTask</a><span>${labels.subtitle}</span><div class="language-switch" role="navigation" aria-label="${labels.languages}">${languages} · <a href="${entry}">${labels.entry}</a></div></header><div class="layout"><nav aria-label="${labels.navigation}">${navigation}</nav><main id="content">${content}</main></div><footer>${labels.footer}</footer></body></html>`;
+<body><a class="skip" href="#content">${labels.skip}</a><header><a class="docs-brand" href="${home}"><img src="${assets}/brand/opentask-cat-mark.png" alt="" width="44" height="44">OpenTask</a><span>${labels.subtitle}</span><div class="language-switch" role="navigation" aria-label="${labels.languages}">${languages} · <a href="${entry}">${labels.entry}</a></div></header><div class="layout"><nav class="desktop-docs-nav" aria-label="${labels.navigation}">${navigation}</nav><details class="mobile-docs-nav"><summary>${labels.browse}</summary><nav aria-label="${labels.navigation}">${navigation}</nav></details><main id="content">${contentWithContents}</main></div><footer>${labels.footer}</footer></body></html>`;
     await mkdir(dirname(resolve(output, page.target)), { recursive: true });
     await writeFile(resolve(output, page.target), html);
   }
@@ -415,6 +604,15 @@ export async function buildDocs(root = resolve(import.meta.dirname, "..")) {
     "\n.language-switch{margin-left:auto;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.language-switch a{font-size:14px;font-weight:500}nav a[aria-current=page]{background:#e8eef5;font-weight:750}.language-switch a[aria-current=page]{font-weight:750;text-decoration:underline}@media(max-width:800px){.language-switch{width:100%;margin-left:0}}\n",
     { flag: "a" },
   );
+  await writeFile(
+    resolve(output, "style.css"),
+    `
+.mobile-docs-nav{display:none}@media(max-width:800px){.desktop-docs-nav{display:none}.mobile-docs-nav{display:block;background:white;border:1px solid var(--line);padding:12px 18px;border-radius:4px}.mobile-docs-nav summary{cursor:pointer;font-weight:700}.mobile-docs-nav nav{margin-top:12px}}@media print{.mobile-docs-nav{display:none}}
+nav{gap:20px}.docs-nav-links{display:grid;gap:4px}.docs-nav-heading{margin:0 12px 6px;color:var(--muted);font-size:12px;font-weight:700}@media(max-width:800px){.mobile-docs-nav nav{grid-template-columns:1fr}.docs-nav-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
+body{line-height:1.8}.layout{max-width:1440px;grid-template-columns:235px minmax(0,1fr);gap:30px}main{padding:38px 48px;border-radius:3px;background:white}main>p,main>ul,main>ol,main>blockquote{max-width:76ch}h1{font-family:Georgia,"Noto Serif CJK SC",serif;font-size:38px;letter-spacing:-.025em;max-width:24ch}h2{margin-top:56px;scroll-margin-top:24px}h3{scroll-margin-top:24px}nav a[aria-current=page]{background:#e8eef5;border-left:3px solid var(--accent)}.page-contents{margin:20px 0 28px;padding:12px 18px;border:1px solid var(--line);background:#edf3f8;border-radius:4px;font-size:14px}.page-contents summary{cursor:pointer;font-weight:700}.page-contents ol{padding-left:24px;columns:2;column-gap:32px}.page-contents li{break-inside:avoid;margin:5px 0}.screenshot{display:block;margin:24px 0 10px}.screenshot>a{display:block;width:fit-content;max-width:100%;margin:0 auto}.screenshot img{box-shadow:0 3px 16px #17263a12}.screenshot-links{display:block;text-align:center;margin-top:8px;font-size:13px;color:var(--muted)}img{background:white}summary:focus-visible{outline:3px solid #d78b24;outline-offset:4px}@media(max-width:800px){.layout{grid-template-columns:1fr;gap:16px;padding:16px 10px}main{padding:24px 18px}h1{font-size:31px}h2{margin-top:40px}.page-contents ol{columns:1}nav{grid-template-columns:repeat(2,minmax(0,1fr))}.screenshot-links{font-size:12px}}@media print{.page-contents,.screenshot-links{display:none}main{padding:0}.screenshot img{box-shadow:none}}
+`,
+    { flag: "a" },
+  );
   console.log(
     `Docs built: ${pages.size} pages, ${ranked.length} translation pairs, ${checkedLinks} local links and ${checkedDiagrams} diagram sources verified; ${output}/index.html`,
   );
@@ -431,4 +629,6 @@ if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 )
-  await buildDocs();
+  await buildDocs(undefined, {
+    hideApiDocs: process.env.OPEN_TASK_HIDE_API_DOCS === "1",
+  });

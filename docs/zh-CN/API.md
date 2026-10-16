@@ -4,7 +4,7 @@
 
 前端是第一个客户端，同源 API 位于 `/api/v1`。会话使用带 HttpOnly 和 SameSite=Strict 属性的 cookie。写入请求需要当前会话的 `X-CSRF-Token`；业务写入还需要 `Idempotency-Key`，每次独立业务操作使用一个唯一键。同一键配同一载荷重试时，返回原操作结果。
 
-任务操作携带用户当前查看的 `version`。成果验收还需 `submissionId`，清单勾选还需 `expectedDone`。列表采用有数量上限的游标分页；任务与事件列表返回 `{items,nextCursor}`。错误结构为 `{error:{code,requestId,details}}`，状态码包括 401/403/404/409/422/429/500。前端将稳定错误码转为界面语言。登录后可通过 `/api/v1/openapi.json` 获取 OpenAPI 描述。
+任务操作携带用户当前查看的 `version`。成果验收还需 `submissionId`，清单勾选还需 `expectedDone`。列表采用有数量上限的游标分页；任务与事件列表返回 `{items,nextCursor}`。错误结构为 `{error:{code,requestId,details}}`，状态码包括 401/403/404/409/422/429/500。前端将稳定错误码转为界面语言。登录后可通过 `/api/v1/openapi.json` 获取 OpenAPI 描述。启用 `OPEN_TASK_HIDE_API_DOCS=1` 的部署不提供该描述，已登录请求返回 404。
 
 PostgreSQL 事务保证写入完成后能读到相应结果。业务写入共用一个短时 advisory lock（咨询锁），避免关系编辑与成果验收同时发生而破坏约束。业务事务内不进行外部调用；v1 内的数据结构按增量方式演进。
 
@@ -27,7 +27,7 @@ PostgreSQL 事务保证写入完成后能读到相应结果。业务写入共用
 | POST /tasks/:id/relations       | `{version,targetId,kind,reason,remove?}`                              |
 | GET /relations                  | UUID `cursor`、`limit` ≤ 1000 → `{items,nextCursor}`                  |
 | GET /events                     | 游标、limit ≤ 200，以及 taskId/projectId/actorId/search 筛选          |
-| GET /followups                  | 当前处理人或团队负责人可见的活跃事实                                  |
+| GET /followups                  | 当前处理人或团队负责人有权限查看的待处理事项                                  |
 
 操作字段由服务端校验。`edit` 和 `adjust` 的 `fields` 包含全部约定字段；adjust 还需要 reason 和 confirmBy。`progress` 需要 text、next 和 feedbackBy。`submitResult` 需要 text、reviewBy，以及可选 links。`pass` 和 `returnResult` 需要 submissionId；退回还需要 reason 和 feedbackBy。清单申请包含稳定条目 ID、text、scopeChanged 和 reason；批准包含 requestId，涉及范围变更时还需 confirmBy。关系类型为 parent（子 → 父）、dependency（后置 → 前置）和 related（对称）。
 
@@ -65,4 +65,4 @@ PostgreSQL 事务保证写入完成后能读到相应结果。业务写入共用
 
 ### 时间偏好接口
 
-`GET /time-preferences` 返回当前会话用户的 `{global: TimeFilter, projects: Record<projectId, TimeFilter>}`。`PUT /time-preferences` 接受 `{scope: "global" | projectId, filter: TimeFilter | null}`，使用常规 CSRF 与幂等请求头。项目 filter 为 null 时删除覆盖；global 不能为 null。没有操作人选择参数。`TimeFilter` 包含 `mode`、`start`、`end`、`includeUnscheduled`、`includeEarlier`。项目覆盖完整替代全局筛选，不求交集。迁移 `003_time_preferences.sql` 为增量且可重复执行。
+`GET /time-preferences` 返回当前会话用户的 `{global: TimeFilter, projects: Record<projectId, TimeFilter>}`。`PUT /time-preferences` 接受 `{scope: "global" | projectId, filter: TimeFilter | null}`，使用常规 CSRF 与幂等请求头。项目 filter 为 null 时删除覆盖；global 不能为 null。没有操作人选择参数。`TimeFilter` 包含 `mode`、`start`、`end`、`includeUnscheduled`、`includeEarlier`。项目的单独筛选设置会完整替代全局设置，两者不取交集。迁移 `003_time_preferences.sql` 为增量且可重复执行。

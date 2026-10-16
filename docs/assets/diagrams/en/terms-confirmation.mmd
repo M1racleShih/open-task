@@ -2,7 +2,7 @@ flowchart TB
   accTitle: Confirmation after an agreement version change
   accDescr: An adjustment creates a new version. The existing owner reads differences and confirms; a new owner accepts again. Results cannot be submitted before confirming the current version.
   old["Owner has accepted agreement vN"] --> adjust["Team leader adjusts agreement<br/>Reason and confirmation deadline required"]
-  adjust --> latest["New agreement vN+1<br/>Prior commitment retained; awaiting confirmation"]
+  adjust --> latest["New agreement vN+1<br/>Previously accepted agreement retained<br/>Awaiting confirmation"]
   latest --> changed{"Owner changed?"}
   changed -->|No| compare["Existing owner reads differences"]
   compare -->|Confirm this version| confirm["Current agreement vN+1 confirmed"]

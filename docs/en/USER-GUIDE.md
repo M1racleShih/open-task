@@ -1,122 +1,189 @@
-# User guide
+# User guide: find the next action
 
 [简体中文](../zh-CN/USER-GUIDE.md)
 
-## Roles and visibility
+Start with [your first task](FIRST-TASK.md). Use this page to look up day-to-day controls and rules. The [advanced case](CASE-CSV-EXPORT.md) covers multi-person approval, changes and returned results. Screenshots below show the English interface.
 
-The team leader creates projects, issues tasks, gives final creation approval, adjusts issued agreements and approves checklist changes. Project managers manage project membership and handle project tasks along their approval routes. Task owners accept work, report progress and submit results; reviewers decide whether to accept or return them.
+For common questions about roles, checklists, progress versus delivery and date formats, see [Everyday collaboration Q&A](FAQ.md).
 
-The creator, owner and reviewer may be different people. For a project task owned by an ordinary member, the project manager is the default reviewer; for a task owned by the project manager, the team leader is the default. You can explicitly choose a valid reviewer. Only a team leader may review their own task. Administrators manage accounts and cannot bypass business approvals through their administrator role.
+Workspace controls below follow the latest merged `mvp` (`143e9e7`). See [release notes](RELEASE-NOTES.md) for tagged-version scope. Earlier walkthrough captures retain their original interface and date.
 
-Drafts are visible only to their creators. After submission, tasks are visible to the whole team. Project membership does not control visibility, so do not treat sensitive material as visible only to project members.
+## Check the action inbox and operation history
 
-## Workspace
+Open **Action inbox** using the bell or side navigation. **Assigned to me** contains your required responses; a leader also sees **Following team**. Click an item to open its task. Creation approval, acceptance, checklist approval, version confirmation, progress, helper replies and result review each go to the appropriate handler. Overdue dates add overdue followups.
 
-The left task tree groups tasks by project and parent/child structure. The center opens with a Gantt chart; switch to the retained task graph or team updates using the workspace buttons. The Gantt chart and task graph share project, search, state and time filters and the selected task, while preserving their own view state. The task graph retains zoom, drag and focus controls; dragging changes only layout, not business relations. Selecting a task opens its agreement, checklist, progress, connections, results and activity in the right panel. Open followups from the side navigation or bottom-panel button; team updates show operation history.
+Time filters do not hide followups. A quiet filtered graph does not mean there is nothing to handle. If reminders stop updating, see [startup troubleshooting](QUICKSTART.md#common-startup-problems).
 
-### Panel layout
+For “what happened?”, open the task's **Activity**. For “what changed across the team?”, open **Team updates** and filter by **Author**. **Load more** fetches older available records where shown.
 
-On desktop, **Hide center workspace** in the center header hides the whole center, including Gantt, graph, updates and the bottom panel. Task details take the released space. **Focus details** in the detail header temporarily hides the tree and center; **Restore layout** restores the previous panels and widths. Focus is temporary: refreshing restores the saved layout.
+![Team updates filtered to operations by Test Member](../assets/walkthrough/en/31-team-updates.svg)
 
-The fixed side navigation can show or hide the task tree, center workspace and details, even when all panels are hidden. Opening Gantt, graph, updates or the inbox also restores the center. Hiding panels preserves the selected task, filters and the current Gantt/graph view. Use Tab and Enter/Space for buttons; focused dividers resize with arrow keys. Desktop panel visibility, widths and bottom-panel height are saved in this browser for each signed-in account. If browser storage is unavailable, controls still work for the current session. Phones keep their existing three tabs, independently of desktop panel visibility.
+After a workflow action, a feedback banner identifies the task, resulting stage and next handlers. Colored stage icons retain text labels. Detected teammate stage changes can show the actor and event time when the corresponding history record is available; missing metadata is not inferred. Use the banner’s activity control to inspect the task history. Closing the banner dismisses the message without undoing the action.
 
-### Task stage feedback
+Events retain who acted, when, the version, notes and field changes. Results stay in **Submissions** with Returned, Accepted or Superseded labels, so the operation timeline and delivered artifacts can be read separately.
 
-State labels keep their text and use a circular task icon background in the same seven lifecycle colors as the graph and Gantt chart. A stage change briefly emphasizes this icon rather than outlining the status or next-handler fields.
+## Read a task before acting
 
-After the server confirms an action, a dismissible receipt names its business result (for example, Result submitted or Review passed), task number/title, previous and new stages, and the next response responsibilities. An intermediate approval or an inability to accept can keep the same stage; their receipts explain the result without a false stage transition. Completed and cancelled tasks have no next handler. Confirmed task data appears immediately; a later read failure keeps the result and receipt and offers a read retry.
+Select a task in the tree, Gantt chart or graph. At the top of its details, read **Status**, **Owner**, **Reviewer** and **Waiting for**, then its expected result, acceptance criteria and dates. Scroll inside the right panel to reach the actions below its content. Buttons depend on your role and the task's stage.
 
-The existing 15-second refresh also detects stage changes to the selected task in other sessions. A banner above the panels stays visible in focus mode, with panels hidden, and on all phone tabs. Operator and transition time come only from matching task-event snapshots in the currently loaded, unfiltered task history. If the event cannot be verified within that pagination boundary or history cannot be read, the banner says so; it never substitutes the task update time or polling time. First load, task/account switching and unchanged refreshes stay quiet. Closing a banner prevents the same transition from returning. Same-stage reassignment quietly retires advice that has become outdated.
+**Task content** holds the agreement, checklist, latest progress and **Connections & delivery** tabs: **Relations**, **Blockers**, **Submissions**. **Activity** holds the task's operation history and field differences. The bottom panel also provides Action inbox, Activity and Relations shortcuts.
 
-**View task activity** opens this task's activity tab; **Close stage feedback** dismisses the banner. Both buttons work with Tab and Enter/Space, and banners do not move keyboard focus or scroll the workspace. When a change takes a matching task outside the filters, the banner identifies the filter; selected details, history and unsaved checklist checks remain available. Filters are retained. A task already outside the results is described as outside, rather than newly removed. These banners are temporary feedback in this browser, with no unread store or external messages.
+Expected result, acceptance criteria and scope appear in separate Markdown sections. A long scope starts collapsed and can be expanded. When creating or adjusting an agreement, use **Edit / Preview** to inspect the text before submitting. **Bold**, **List** and **Link** format selected text; their keyboard shortcuts are shown in the editor. Preview checkboxes are for reading and do not update the execution checklist.
 
-### Gantt chart
+Copy the URL with `?task=<UUID>` to reopen or share the selected task with another team account. Private-draft permissions still apply. Refresh reads current server state; it does not save an unsubmitted form or checklist.
 
-Choose Overview, Day, Week or Month to change the time scale, and use Today or Locate selected to navigate. Project groups can collapse. Dates use Shanghai calendar days. A bar shows the planned start through the delivery deadline, rather than a completion percentage. Tasks with both dates show a bar; a deadline without a planned start shows a due flag; an absent deadline shows Not scheduled. Creation dates never fill in missing durations.
+## Know who can decide
 
-Colors follow the task lifecycle, with separate unresolved-blocker and delivery-overdue indicators. Unconfirmed agreement changes retain the previously accepted deadline for overdue checks. Enable Prerequisite to show result-acceptance dependencies: dependent tasks may start earlier, and the chart does not automatically reschedule work or change agreements.
+| Person | Responsibility |
+| --- | --- |
+| Team leader | Create projects, issue tasks, give final creation approval, approve checklists, adjust agreements and cancel unfinished tasks |
+| Project manager | Maintain project membership and color; handle project creation approvals; review tasks when assigned as reviewer |
+| Task owner | Accept the task, start work, save progress/checklist completion and submit results |
+| Reviewer | Accept or return the submitted result against the agreed criteria |
+| Administrator | Create and enable/disable accounts; this role grants no automatic business approval authority |
 
-Selecting a task adds `?task=<UUID>` to the URL. Share this with other team accounts; access still follows task visibility permissions.
+The creator, owner and reviewer can differ. A member's project task defaults to the project manager as reviewer; a project manager's task defaults to the team leader. You can explicitly choose another valid active reviewer. Only a leader may review their own task. The owner need not be on the project's member list.
 
-## Creation and acceptance
+A draft is private to its creator. Once submitted, a task is team-visible, including after creation approval is returned. Project membership is not a privacy boundary.
 
-New task first saves a private draft. Fill in the title, expected result, acceptance criteria, owner, reviewer and project. Planned start is optional; deadline, acceptance deadline and next feedback time are required before submission or issue. The interface uses Shanghai time and the format `YYYY-MM-DD HH:mm`.
+## Task workflow from creation to review
 
-Expected result, acceptance criteria and scope support Markdown. Select text and use Bold, List or Link (also Ctrl/⌘ B, Ctrl/⌘ Shift 8 and Ctrl/⌘ K); after adding a link, type its URL in the selected destination. Edit / Preview keeps the original Markdown and ordinary line breaks, including when you save. Mark emphasis yourself; existing text is never rewritten automatically. Task details show the result and criteria in full, with a separate expandable section for long scope. Headings, lists, quotes, tables and code remain readable in narrow panels; wide tables and code scroll within the text. Markdown checkboxes are read-only and do not update the execution checklist. Raw HTML and unsafe links do not execute, and embedded external images are shown as text without loading them.
+![Task lifecycle from drafting through approval, acceptance, execution and result review](../assets/diagrams/en/task-lifecycle.svg)
 
-You can type or paste `YYYY-MM-DD HH:mm`, or use the calendar button to select a date and 24-hour time. Both methods use Shanghai time. Confirm applies your selection; Cancel or Escape leaves the value unchanged. Clear removes the value, subject to the existing task rules. Custom time-range filters offer the same calendar for date-only values (`YYYY-MM-DD`).
+| You want to… | Control and resulting behavior |
+| --- | --- |
+| Capture an idea | **New task → Submit** saves a private draft. Choose **Temporary tasks** when no project is appropriate; dates can wait in a draft. |
+| Refine or discard a draft | **Edit draft** changes its agreement. **Delete draft → Submit** deletes only your unsubmitted draft; inspect carefully before confirming. **Discard form** merely closes a form. |
+| Propose work | **Submit for approval** makes it team-visible. The handler can **Approve creation** or **Return for editing** with a reason. Edit a returned task and resubmit it. |
+| Issue your own draft as leader | **Issue task** skips creation approval and awaits the owner's acceptance. |
+| Accept the task and start work | **Accept task**, then **Start work**; or use **Accept and start** together. |
+| Decline a task | **Unable to accept** requires a reason. The task stays Awaiting acceptance for the issuer to resolve, adjust or cancel. |
+| Deliver | **Submit result** records text, optional HTTP(S) evidence links and a review deadline. |
+| Review | **Accept result** completes the task. **Return result** requires a gap/reason and next feedback time, and returns it to In progress. |
+| Stop unfinished work | The leader uses **Cancel task** with a reason. Completed and cancelled tasks cannot reopen. Create related follow-up work instead. |
 
-Tasks created by members within a project normally go through the project manager and then the team leader for creation approval. A project manager creating a task in their own project waits directly for the team leader. A team leader can issue a task directly. Follow the current handler shown in task details.
+Before approval submission or issue, provide expected result, acceptance criteria, valid owner/reviewer, delivery deadline, acceptance deadline and next feedback time. Planned start is optional and cannot be later than the delivery deadline. Dates use Asia/Shanghai.
 
-After approval, the task is Awaiting acceptance. The owner may choose Accept task followed by Start work, or Accept and start. If unable to accept, explain why so the issuer can handle it. Assigning an owner's name alone does not mean that person has accepted the work.
+For a date field, type `YYYY-MM-DD HH:mm` in 24-hour format or open **Choose date** beside it to use the calendar. Time-filter ranges use date-only `YYYY-MM-DD` values. Calendar selection and typed dates use the same Shanghai date rules.
 
-### From draft to completion
+![An ordinary member's project task passes through the project manager and then team leader](../assets/diagrams/en/creation-approval.svg)
 
-![Task delivery lifecycle: creation approval, owner acceptance, execution, result submission and review; returned work can be revised and resubmitted](../assets/diagrams/en/task-lifecycle.svg)
+The diagram shows an ordinary member creating project work. A project manager creating work in their own project goes directly to the leader. If the project manager is the leader, there is only one approval level. Approval and owner acceptance remain separate decisions.
 
-The diagram shows the main delivery flow. A complete checklist does not complete a task; the reviewer must accept its result. If the owner refuses to accept, the task remains Awaiting acceptance for the issuer to handle. The team leader may cancel unfinished tasks; completed and cancelled tasks cannot reopen. Blockers and pending version confirmation are recorded on the task without changing its state, so the diagram has no states for them.
+## Keep execution, discussion and feedback clear
 
-### Who acts when
+| Record | Use it for | What it does not do |
+| --- | --- | --- |
+| Execution checklist | Agreed steps and saved completion marks | A 100% checklist does not complete the task |
+| Record progress | Current result, next step and next feedback time | It is not a final result submission |
+| Add comment | Discussion and clarification | It does not satisfy or extend formal feedback |
+| Blocker | A reason, requested help and named helper | It does not automatically extend delivery dates |
 
-![An ordinary project member creates a task: the project manager reviews first, the team leader gives final approval and issues it, then the owner accepts](../assets/diagrams/en/creation-approval.svg)
+Use **Request checklist edit** to propose items. A reason is optional when the agreed scope and criteria stay the same. If you mark **Changes scope or acceptance criteria**, a reason is required; approval also requires a confirmation deadline and creates a new agreement version for the owner to confirm. The leader can **Approve checklist** or **Reject checklist**; the active checklist stays unchanged until approval. Pending proposals are separate from the collapsible **Checklist change records**.
 
-This example shows a task created by an ordinary project member; the creator and owner may differ. Project managers creating tasks in their own projects skip the first approval level. If the project manager is also the team leader, only team-leader approval is needed. Team leaders can issue their own tasks directly. Approval is the issuer's decision; acceptance is the executor's commitment. These are separate actions.
+**Saved progress** shows what the server has stored. Changing a checkmark adds an **Unsaved** marker and enables **Save checked progress**; the saved count stays unchanged until saving succeeds. **Undo unsaved checks** restores the saved values. Saving, success and error messages appear beside the controls; a failed save keeps the unsaved checks for correction or retry. Earlier walkthrough images call the request and save controls **Request checklist change** and **Confirm submission**.
 
-## Execution checklist and formal progress
+[![English checklist card showing saved progress at 2 of 4, save feedback and separate change records](../assets/updates/2026-10-16/checklist-progress-en.jpg)](../assets/updates/2026-10-16/checklist-progress-en.jpg)
 
-Use Request checklist edit beside the checklist title to submit the execution checklist (one item per line) and whether the change affects scope or acceptance criteria. A reason is optional when scope and acceptance criteria are unchanged; otherwise it is required. The checklist takes effect only after the team leader approves it. Scope changes produce a new agreement version that the owner must also confirm.
+**Record progress** renders both the current result and next step as Markdown. For help, choose **Report blocker**; the helper replies under **Connections & delivery → Blockers**, and the owner uses **Resolve blocker**. [Walkthrough steps 5–8](CASE-CSV-EXPORT.md#5-accept-the-task-and-request-a-checklist) show the full exchange.
 
-Checking checklist items creates a local draft. The bottom bar shows the number of unsaved items; choose Save checked progress to save them together, or Undo unsaved checks to discard only local checks without a server action. The progress bar and counts always use saved server data. Save success and failure appear in the card; failures and version conflicts preserve local checks, and leaving with unsaved checks prompts you. Pending content edits appear separately; approved and rejected requests retain their full content, reason and status in the collapsed Checklist change records. Saving checked progress does not change checklist content or approve a request. A checklist at 100% still does not end the task: the owner must submit a result and the reviewer must accept it.
+## Change requirements and confirm the new version
 
-Record progress requires the current result, next step and next feedback time. Comments are for discussion; neither comments nor checklist checks count as formal feedback or postpone its deadline.
+Any non-leader participant can **Request agreement change**. The leader may **Adjust agreement**, giving a reason and confirmation deadline, or **Close adjustment request with response** without changing the agreement.
 
-## Blockers and agreement changes
+![Requirement changes retain the previously accepted agreement; the owner confirms the new version, or a replacement owner accepts](../assets/diagrams/en/terms-confirmation.svg)
 
-Report blocker requires a reason, requested help and helper. Helpers can find the task in Followups and respond under Connections & delivery → Blockers. After receiving a solution, the owner uses Resolve blocker. Reporting a blocker does not automatically change the delivery deadline.
+Read the before/after values under **Agreement changes**, then **Confirm this version**. Before submitting a final result, the owner must confirm the current agreement version. A reassigned task returns to Awaiting acceptance; its new owner accepts again. An adjustment while Awaiting review supersedes the pending submission and returns the task to In progress.
 
-Members can Request agreement change; the team leader decides whether to Adjust agreement. A change requires a reason and confirmation deadline. The owner reads the differences and selects Confirm this version. Previously accepted commitments remain until confirmation; final result submission must use the current confirmed version. If the owner changes, the new owner must accept again.
+![The follow-up proposal's previous result is retained as Superseded after an adjustment](../assets/walkthrough/en/25-superseded-result.svg)
 
-![Agreement changes and version confirmation: the existing owner reads and confirms the new version; a new owner accepts again; unconfirmed versions cannot be used to submit results](../assets/diagrams/en/terms-confirmation.svg)
+The leader's **Title** action corrects a label without making a new agreement version. Use **Adjust agreement** for a substantive expectation, person or date change. [The import follow-up](CASE-CSV-EXPORT.md#13-adjust-and-cancel-a-follow-up-task) demonstrates reassignment, checklist rejection, scope change, request closure, supersession and cancellation.
 
-Here vN is the accepted version and vN+1 is the adjusted version. After an owner change, Accept task or Accept and start accepts the new version; no separate Confirm this version action is needed. An adjustment during Awaiting review supersedes the pending submission and returns the task to In progress, requiring a new result under the revised agreement.
+## Read the delivery schedule
 
-## Results and review
+The workspace opens on **Gantt chart**. Switch between it, **Task graph** and **Team updates** using the center tabs or side navigation. Selecting a task in the tree or timeline opens the same task details.
 
-The owner uses Submit result with verifiable text, optional HTTP(S) evidence links and a review deadline. The system stores text and links; it does not upload files or verify remote file content.
+Use **Overview**, **Day**, **Week** or **Month** to change the scale; **Today** and **Locate selected** move to the corresponding dates. Project headings collapse or expand their rows. A task with a planned start and deadline has a range bar; one with only a deadline has a deadline marker; an undated task is **Not scheduled**. Colors reflect lifecycle state, with separate overdue and unresolved-blocker indicators.
 
-The reviewer chooses Accept result or Return result. A return requires an explanation of gaps and a next feedback time, and returns the same task to In progress. The owner can improve and resubmit; previous submissions and return reasons remain. Task content → Connections & delivery → Submissions lists results; Activity records who did what and when.
+[![English Gantt workspace with planned task ranges and prerequisite arrows](../assets/updates/2026-10-16/workspace-current-en.jpg)](../assets/updates/2026-10-16/workspace-current-en.jpg)
 
-Completed and cancelled tasks cannot reopen. Create a new task for follow-up fixes and relate it to the original.
+Enable **Prerequisite** to show arrows from prerequisite results to dependent tasks. These are result-acceptance conditions: work may start before the prerequisite completes. The chart displays plan dates, and checklist completion still requires result review. To change an issued task's dates, use the agreement-adjustment process; dragging a timeline bar does not reschedule it.
 
-## Three task relation types
+## Set task relations and use the graph
 
-| Relation       | Purpose                                  | How to add                                      | Effect on completion                                                          |
-| -------------- | ---------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------- |
-| Primary parent | Split a goal into tasks                  | Select the parent from a child task             | Children do not complete the parent automatically                             |
-| Prerequisite   | One result is needed by another task     | Select the prerequisite from the dependent task | The dependent task cannot pass review until the prerequisite completes review |
-| Related task   | Keep background or follow-up connections | Select the other task from either task          | Does not block review or change dates or status                               |
+In **Connections & delivery → Relations → Add relation**, search by title or number, select a target and type, and give a reason.
 
-Two additional rules:
+| Relation | Choose from | Consequence |
+| --- | --- | --- |
+| Primary parent | From the child, choose its parent task | Groups the child under that parent; children never complete the parent automatically |
+| Prerequisite | From the dependent task, choose the task providing the needed result | The dependent result cannot pass review before that prerequisite is Completed |
+| Related task | Either task → the other | Records context without changing status, dates or review eligibility |
 
-- A parent task is never completed by its children; while children are unfinished, accepting the parent requires the reviewer to explain why.
-- Cancelling the prerequisite does not release the rule that a dependent task cannot pass review first.
+A task has at most one primary parent. Parent and dependency cycles are rejected; tasks in the same ancestor/descendant chain cannot also depend on one another. Cancelling a prerequisite does not satisfy it. To accept a parent while children remain unfinished, the reviewer must explain why.
 
-Under Connections & delivery → Relations → Add relation, search by title or task number, select the target and relation type, and explain why. The team leader maintains relations for issued tasks. Parent/child tasks cannot depend on one another; parent and dependency relations cannot form cycles. Prerequisites are enforced at result acceptance and do not prevent dependent tasks from starting early.
+The leader can maintain issued-task relations. A creator can maintain their own draft relations, with prerequisite removal reserved for the leader. Use **Remove relation** beside the correct link and provide a reason. A relation edit does not delete either task.
 
-## Filters and followups
+In the graph, use **Zoom in/out**, **Fit view**, **Locate selected**, **Direct relations only** and **Reset layout**. Drag nodes to arrange them, or drag the canvas to pan. Solid parent lines, directed prerequisite lines and related links describe different relationships; the tutorial diagram's result acceptance order should not be mistaken for the graph's dependent-to-prerequisite arrow direction.
 
-Title or number search, project, status and time range jointly filter the tree, graph, match count and team activity. Time uses the current plan, without inferring dates from titles. Choose all time, this week, this month or custom dates.
+## Filter tasks by member
 
-Use **All tasks / By member** above the task filters to focus on one member's responsibilities. The member selector defaults to you and also includes other accounts, including inactive accounts for historical work. The summary identifies the selected member. **Owned**, **Created or issued**, and **Approval or review** are all selected initially. Expand the scope summary to select any combination; a task matching more than one selection appears once. Clearing all selections shows no matches. All tasks exits relationship filtering and retains the member and scopes for reuse. The active mode, member and scopes are saved per signed-in account in this browser and restored after refresh or signing in again. If browser storage is unavailable, filtering still works but cannot be remembered. Selecting another member still uses your viewing permissions; their private drafts remain hidden.
+Choose **By member**, then select **Related member**. **Me** selects your own responsibilities. Expand the relationship summary and combine **Owned**, **Created or issued** and **Approval or review**. A task matching any selected scope appears once; clearing all scopes produces no matches. **All tasks** exits relationship filtering while retaining your member and scope choices for reuse.
 
-Approval and review scopes describe responsibilities at every stage, including future approval turns and completed work. The selection also filters the Gantt, graph and team activity, together with project, search, status and time. Visible parent tasks provide context without increasing the match count. Followups remain available, and a selected task keeps its details and complete history even outside the selection.
+[![English By member filter with Test Other Member selected and all three relationship scopes](../assets/updates/2026-10-16/member-filter-en.jpg)](../assets/updates/2026-10-16/member-filter-en.jpg)
 
-All projects uses the user's global time range. Projects initially follow it; applying a range inside a project creates a personal project override. Follow global removes the override. Time preferences are saved per account in the database; language and theme are saved per browser.
+The mode, chosen member and scopes are remembered per signed-in account in this browser. Refreshing or signing in again restores them; if browser storage is unavailable, filtering works without that memory. Selecting someone else does not grant access to their private drafts.
 
-Include tasks without a deadline and Include earlier unfinished tasks can include drafts without dates and unfinished tasks before the range. Time filters do not hide followups. A selected task outside the current filters still shows its details and complete history; the ancestor context shown for it does not count as a new matching task.
+The selection works together with project, status, search and time across the tree, Gantt, graph and team activity. Approval/review scopes include responsibilities at every workflow stage. Visible parents may appear as context without increasing the match count. Followups stay available, and a selected task outside the result set retains its details and history.
 
-## When an operation fails
+## Search and filter by project, status and time
 
-Read the interface error and check permissions, required dates, the current version and prerequisite states. Failed requests are not successful operations; form content is retained. For a version conflict, refresh the latest task, read the changes and retry. Repeated clicking is not a way to advance a task's state.
+Search by title or the numeric part of a task number (for `OT-3`, enter `3` without `OT-`), select a **Project** and **Stage**, then open the time control. **All time**, **This week**, **This month** and **Custom range** filter by the task's planned start and delivery deadline, using Shanghai dates. Weeks start Monday; custom end dates are inclusive.
 
-Next: [Complete a delivery with the case](CASE-CSV-EXPORT.md).
+![Project, status and personal time range are separate filters](../assets/walkthrough/en/28-time-filter.svg)
+
+**① Project + ② Stage + ③ time range** filter the tree, Gantt, graph, matching count and team updates together, alongside any member filter. Select a range and click **Apply range**; merely editing the controls does not save it.
+
+**All projects** uses your global preference. Projects initially use the global settings. Applying a range inside a project saves separate filter settings for it. **Follow global** removes those separate settings so the project uses the global filter again. The preference is stored per account. After refreshing, select the project again to see its saved range.
+
+**Include tasks without a deadline** shows undated drafts within the selected date range. **Include earlier unfinished tasks** keeps overdue unfinished work in view. A selected task outside the filters still shows its full details/history. Parent tasks you have permission to view can appear to explain the hierarchy; they do not increase the matching count.
+
+![Searching Implement CSV export retains its parent as context without counting it as a second match](../assets/walkthrough/en/29-search-context.svg)
+
+The task tree can collapse/expand. Desktop panel separators resize the tree, details and bottom panel. Use side navigation to toggle the tree, center workspace and details independently, and **Toggle bottom panel** for the lower panel. Visibility and sizes are remembered per account in this browser. **Focus details** temporarily expands the task; **Restore layout** brings back the previous arrangement. On small screens, use **Task tree / Workspace / Task details**; Workspace contains the Gantt and graph tabs.
+
+## Maintain the project and accounts
+
+The top **Account** menu shows your account and roles. During a demo, **Switch user** ends the current session so you can sign in as another account. Use **Sign out** when finished. Save unsubmitted forms and checklist changes before switching or signing out.
+
+As the leader or project manager, select **Manage project members** beneath the project. Both can update members/color; only the leader can change its manager. Transfer outstanding responsibilities before attempting a manager replacement. The project context menu also provides a color shortcut.
+
+![Project settings: 1 manager, 2 members, 3 project color](../assets/walkthrough/en/33-project-settings.svg)
+
+As `admin`, choose **Accounts → Accounts +** to enter username, display name, password and roles. A password must have at least 12 characters.
+
+![Administrator account creation form with username and roles marked](../assets/walkthrough/en/35-new-account.svg)
+
+Use **Disable account** or **Enable account** on the intended account. Disabling requires outstanding owner/reviewer/issuer/approval responsibilities and project management to be transferred first; a leader account or your own account cannot be disabled this way. Changing active status revokes that user's existing sessions.
+
+## Change language, theme and mobile view
+
+The top **Language** selector changes controls between English and Simplified Chinese; it does not translate task text. **Switch theme** changes light/dark appearance. These choices stay in this browser; time preferences stay with the account.
+
+![English mobile task details in dark mode](../assets/walkthrough/en/37-mobile-detail.svg)
+
+At phone width, choose **Task details** and scroll within the panel. You still read the same task and history.
+
+## Recover from an unexpected result
+
+| Symptom | Next action |
+| --- | --- |
+| A button is missing | Check your account, Owner/Reviewer/Waiting for and task stage; scroll inside the details panel |
+| A new task is still Draft | Use Submit for approval, or Issue task as the leader |
+| Checklist marks disappeared | Save them with Save checked progress before refreshing; check for success beside the checklist |
+| A result cannot be submitted | Confirm the current agreement; refresh and reread after a version conflict |
+| A result cannot pass review | Finish its prerequisites; explain unfinished children if accepting a parent |
+| A changed task is not in the tree | Clear search/status/time filters; open its direct URL to inspect it |
+| The form reports an error | Read the message; input is retained. Correct the stated cause, then retry |
+| A login or reminder fails | Follow [startup troubleshooting](QUICKSTART.md#common-startup-problems) |
+
+For integration contracts use [API v1](API.md); for feature explanations use [features and controls](FEATURES.md).

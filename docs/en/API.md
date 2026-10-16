@@ -4,7 +4,7 @@
 
 The frontend is the first client. The same-origin API is under `/api/v1`. Sessions use an HttpOnly, SameSite=Strict cookie. Mutation calls require the session's `X-CSRF-Token`; business writes also require an `Idempotency-Key` unique to the logical operation. Retrying the same payload with the same key returns the original result.
 
-Task actions carry the viewed `version`. Result review also carries `submissionId`, and checklist toggles carry `expectedDone`. Lists use bounded cursor pagination; task and event lists return `{items,nextCursor}`. Errors use `{error:{code,requestId,details}}` with 401/403/404/409/422/429/500 statuses. The frontend translates stable error codes. The OpenAPI description is available at `/api/v1/openapi.json` after login.
+Task actions carry the viewed `version`. Result review also carries `submissionId`, and checklist toggles carry `expectedDone`. Lists use bounded cursor pagination; task and event lists return `{items,nextCursor}`. Errors use `{error:{code,requestId,details}}` with 401/403/404/409/422/429/500 statuses. The frontend translates stable error codes. The OpenAPI description is available at `/api/v1/openapi.json` after login. Deployments with `OPEN_TASK_HIDE_API_DOCS=1` do not expose this description; authenticated requests return 404.
 
 PostgreSQL transactions provide read-after-write consistency. Business mutations share a short advisory lock so relation edits cannot race result acceptance. No external calls run inside business transactions. Schema evolution is additive within v1.
 
@@ -27,7 +27,7 @@ PostgreSQL transactions provide read-after-write consistency. Business mutations
 | POST /tasks/:id/relations       | `{version,targetId,kind,reason,remove?}`                                                  |
 | GET /relations                  | UUID `cursor`, `limit` ≤ 1000 → `{items,nextCursor}`                                      |
 | GET /events                     | Cursor, limit ≤ 200, taskId/projectId/actorId/search filters                              |
-| GET /followups                  | Active facts visible to the current handler or team leader                                |
+| GET /followups                  | Pending actions visible to the current handler or team leader                                |
 
 Action fields are validated on the server. `edit` and `adjust` use `fields` containing all agreement fields; adjust additionally requires reason and confirmBy. `progress` requires text, next and feedbackBy. `submitResult` requires text, reviewBy and optional links. `pass` and `returnResult` require submissionId; return requires reason and feedbackBy. Checklist requests carry stable item IDs, text, scopeChanged and reason; approval carries requestId and confirmBy for scope changes. Relation kinds are parent (child → parent), dependency (dependent → prerequisite), and related (symmetric).
 
