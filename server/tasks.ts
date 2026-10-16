@@ -491,14 +491,18 @@ export async function action(
         .max(200)
         .parse(b.items);
       ensure(new Set(items.map((x) => x.id)).size === items.length, "invalid");
+      const scopeChanged = z.boolean().parse(b.scopeChanged);
+      const reason = scopeChanged
+        ? note(b.reason)
+        : z.string().max(20000).default("").parse(b.reason).trim();
       t.checklistRequests.push({
         id: randomUUID(),
         baseVersion: t.checklistVersion,
         items,
-        scopeChanged: z.boolean().parse(b.scopeChanged),
+        scopeChanged,
         authorId: u.id,
         status: "pending",
-        reason: note(b.reason),
+        reason,
       });
       break;
     }

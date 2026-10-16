@@ -50,6 +50,12 @@ export function TaskForm({
   const [error, setError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
   const [key] = useState(() => crypto.randomUUID());
+  const checklistRequest = spec.title === "requestChecklist";
+  const reasonRequired = checklistRequest && values.scopeChanged === true;
+  const fieldLabel = (field: string) =>
+    field === "reason" && checklistRequest
+      ? t(reasonRequired ? "requiredReason" : "optionalReason")
+      : t(field);
   const set = (k: string, v: any) =>
     setValues((x) => {
       const next = { ...x, [k]: v };
@@ -68,6 +74,10 @@ export function TaskForm({
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (busy) return;
+    if (reasonRequired && !values.reason?.trim()) {
+      setError(new ApiError("reasonRequired"));
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -114,7 +124,7 @@ export function TaskForm({
           {spec.fields.map((k) => (
             <FormField
               key={k}
-              label={t(k)}
+              label={fieldLabel(k)}
               date={[
                 "plannedStart",
                 "deadline",
@@ -188,7 +198,10 @@ export function TaskForm({
                   aria-label={t(k)}
                   type="checkbox"
                   checked={values[k] ?? false}
-                  onChange={(e) => set(k, e.target.checked)}
+                  onChange={(e) => {
+                    set(k, e.target.checked);
+                    if (error?.code === "reasonRequired") setError(null);
+                  }}
                 />
               ) : k === "memberIds" || k === "roles" ? (
                 <select
@@ -250,8 +263,9 @@ export function TaskForm({
                 />
               ) : (
                 <textarea
-                  aria-label={t(k)}
-                  rows={k === "items" ? 7 : 3}
+                  aria-label={fieldLabel(k)}
+                  required={k === "reason" && reasonRequired}
+                  rows={k === "items" ? 10 : 5}
                   value={values[k] ?? ""}
                   onChange={(e) => set(k, e.target.value)}
                 />
