@@ -322,6 +322,14 @@ a {
 .workspace {
   flex: 1;
 }
+.workspace > header {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.workspace > header > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 .bottom {
   height: 240px;
   min-height: 0;
@@ -784,12 +792,13 @@ dd {
   margin-left: auto;
   font-size: 12px;
 }
+.gantt-host,
 .graph-host {
   display: flex;
   flex: 1;
   min-height: 0;
 }
-.graph-host[hidden] {
+.gantt-host[hidden] {
   display: none;
 }
 .graph .node rect {
