@@ -75,6 +75,7 @@ export function App() {
   const [timeBusy, setTimeBusy] = useState(false);
   const [stageFilter, setStageFilter] = useState("");
   const [relatedActive, setRelatedActive] = useState(false);
+  const [relatedMemberId, setRelatedMemberId] = useState("");
   const [selectedScopes, setSelectedScopes] = useState<RelatedScope[]>([
     ...relatedScopes,
   ]);
@@ -205,12 +206,18 @@ export function App() {
   const loadSequence = useRef(0);
   const leader = me?.roles.includes("leader");
   const name = (id: string) => users.find((u) => u.id === id)?.name ?? "—";
+  const relatedUserId = relatedMemberId || me?.id || "";
   const timeFilter = effectiveTimeFilter(timePreferences, project);
   const filterQuery =
     "&" +
     timeQuery(timeFilter) +
     (stageFilter ? "&stage=" + stageFilter : "") +
-    (relatedActive ? "&related=" + selectedScopes.join(",") : "");
+    (relatedActive
+      ? "&related=" +
+        selectedScopes.join(",") +
+        "&relatedUserId=" +
+        encodeURIComponent(relatedUserId)
+      : "");
   const taskQuery =
     "&search=" +
     encodeURIComponent(search) +
@@ -550,7 +557,7 @@ export function App() {
   const visible = [...taskMap.values()];
   const outsideResults =
     detail &&
-    (!relatedMatch(detail, me.id, relatedActive ? selectedScopes : null) ||
+    (!relatedMatch(detail, relatedUserId, relatedActive ? selectedScopes : null) ||
       !timeMatch(detail, timeFilter) ||
       (project && detail.projectId !== project) ||
       (stageFilter && detail.stage !== stageFilter) ||
@@ -966,6 +973,10 @@ export function App() {
             <div className="filters">
               <RelatedFilterControls
                 active={relatedActive}
+                me={me}
+                users={users}
+                memberId={relatedUserId}
+                onMemberChange={setRelatedMemberId}
                 scopes={selectedScopes}
                 onActiveChange={setRelatedActive}
                 onScopesChange={setSelectedScopes}

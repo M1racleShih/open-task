@@ -28,6 +28,14 @@ test("Related selection distinguishes all from empty and matches responsibilitie
 });
 
 test("Related query validates a bounded selection and documents it on both collection routes", () => {
+  assert.equal(taskQuerySchema.parse({}).relatedUserId, undefined);
+  assert(!taskQuerySchema.safeParse({ relatedUserId: "invalid" }).success);
+  assert.equal(
+    taskQuerySchema.parse({
+      relatedUserId: "A60A3DC9-40ED-4FF8-844A-7531A2ECA507",
+    }).relatedUserId,
+    "a60a3dc9-40ed-4ff8-844a-7531a2eca507",
+  );
   assert.equal(taskQuerySchema.parse({}).related, undefined);
   assert.deepEqual(taskQuerySchema.parse({ related: "" }).related, []);
   assert.deepEqual(
@@ -47,6 +55,11 @@ test("Related query validates a bounded selection and documents it on both colle
   };
   describeAPI(doc);
   for (const route of Object.values(doc.paths)) {
+    assert(
+      (route.get as any).parameters.some(
+        (p: any) => p.name === "relatedUserId" && p.schema.format === "uuid",
+      ),
+    );
     assert(
       (route.get as any).parameters.some(
         (p: any) => p.name === "related" && p.in === "query",

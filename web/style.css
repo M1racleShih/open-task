@@ -1328,3 +1328,5 @@ dd {
 .related-filter label { display: flex; flex-direction: row; align-items: center; gap: 7px; margin: 0; }
 .related-filter input { width: auto; flex-shrink: 0; }
 .related-filter small { display: block; color: var(--muted); line-height: 1.5; }
+
+.related-filter .related-member { flex-direction: column; align-items: stretch; margin-top: 8px; font-size: 12px; }

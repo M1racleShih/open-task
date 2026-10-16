@@ -413,7 +413,7 @@ export async function buildApp() {
     const match = matchedTasks(req.user.id, q);
     const r = await pool.query(
       `WITH RECURSIVE ${match.sql},
-      page AS (SELECT * FROM matched WHERE number>$10 ORDER BY number LIMIT $11),
+      page AS (SELECT * FROM matched WHERE number>$11 ORDER BY number LIMIT $12),
       ancestors(id) AS (
         SELECT id FROM page
         UNION
@@ -513,6 +513,7 @@ export async function buildApp() {
             stage: undefined,
             time: "all",
             related: undefined,
+            relatedUserId: undefined,
           }
         : { ...q, search: q.taskSearch ?? "" },
     );
@@ -520,9 +521,9 @@ export async function buildApp() {
       `WITH ${match.sql}
       SELECT t.data->>'title' AS "taskTitle",t.number AS "taskNumber",e.id,e.task_id AS "taskId",e.actor_id AS "actorId",e.type,e.version,e.before_value AS before,e.after_value AS after,e.note,e.at
       FROM events e JOIN matched t ON t.id=e.task_id
-      WHERE ($10::bigint=0 OR e.id<$10) AND ($11::uuid IS NULL OR e.task_id=$11)
-        AND ($12::uuid IS NULL OR e.actor_id=$12)
-        AND ($14::text='' OR e.note ILIKE '%'||$14||'%' OR t.data->>'title' ILIKE '%'||$14||'%') ORDER BY e.id DESC LIMIT $13`,
+      WHERE ($11::bigint=0 OR e.id<$11) AND ($12::uuid IS NULL OR e.task_id=$12)
+        AND ($13::uuid IS NULL OR e.actor_id=$13)
+        AND ($15::text='' OR e.note ILIKE '%'||$15||'%' OR t.data->>'title' ILIKE '%'||$15||'%') ORDER BY e.id DESC LIMIT $14`,
       [
         ...match.values,
         q.cursor,
